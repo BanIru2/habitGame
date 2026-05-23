@@ -8,6 +8,8 @@ public class AttributeRuleSO : ScriptableObject
     public float neutralMultiplier = 1f;
     public float disadvantageMultiplier = 0.8f;
 
+    // 상성 관계를 따져 상성 배율 반환
+    // 실제 데미지 연산 시 호출
     public float GetMatchupMultiplier(AttributeType attacker, AttributeType defender)
     {
         if (attacker == AttributeType.None || defender == AttributeType.None)
@@ -25,6 +27,7 @@ public class AttributeRuleSO : ScriptableObject
         return disadvantageMultiplier;
     }
 
+    // attacker가 이기는 상황에 대해 true
     private bool IsAdvantage(AttributeType attacker, AttributeType defender)
     {
         switch (attacker)
