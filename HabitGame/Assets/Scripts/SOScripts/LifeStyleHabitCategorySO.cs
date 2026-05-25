@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // *** DB연결 시 enum -> string 변환 필요 ***
-// 클래스 내부 string CategoryID로 변환 기능
+// 클래스 내부 string CategoryId로 변환 기능
 public enum HabitCategory
 {
     Physical,    // 신체활동 (불)
@@ -23,7 +23,6 @@ public enum StatType
 }
 
 [CreateAssetMenu(menuName = "Habit/LifeStyleCategory")]
-
 public class LifeStyleHabitCategorySO : ScriptableObject
 {
     public HabitCategory category;      // 드롭다운으로 선택
@@ -70,6 +69,7 @@ public class LifeStyleHabitCategorySO : ScriptableObject
     };
     public Sprite icon;
 
+    // 카테고리ID(DB등 연결 용 식별자) 종속
     public string CategoryId => category switch
     {
         HabitCategory.Physical => "physical",
