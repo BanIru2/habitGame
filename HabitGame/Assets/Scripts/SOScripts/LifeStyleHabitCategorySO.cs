@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// *** DB연결 시 enum -> string 변환 필요 ***
-// 클래스 내부 string CategoryId로 변환 기능
 public enum HabitCategory
 {
     Physical,    // 신체활동 (불)
@@ -70,12 +68,5 @@ public class LifeStyleHabitCategorySO : ScriptableObject
     public Sprite icon;
 
     // 카테고리ID(DB등 연결 용 식별자) 종속
-    public string CategoryId => category switch
-    {
-        HabitCategory.Physical => "physical",
-        HabitCategory.Biorhythm => "biorhythm",
-        HabitCategory.Environment => "environment",
-        HabitCategory.SelfDev => "selfdev",
-        _ => throw new System.ArgumentOutOfRangeException()
-    };
+    public string CategoryId => HabitCategoryMapper.ToCategoryId(category);
 }
