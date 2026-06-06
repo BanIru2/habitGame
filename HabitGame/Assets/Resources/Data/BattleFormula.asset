@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e49c8fd656683c340b14d738d551c84f, type: 3}
   m_Name: BattleFormula
   m_EditorClassIdentifier: 
-  defenseConstantK: 0
-  critMultiplier: 0
-  randomMultiplierMin: 0
-  randomMultiplierMax: 0
-  attributeLevelScale: 0
-  auroraStackMax: 0
-  auroraMultiplierPerStack: 0
+  defenseConstantK: 100
+  critMultiplier: 1.3
+  randomMultiplierMin: 0.9
+  randomMultiplierMax: 1.1
+  attributeLevelScale: 0.05
+  auroraStackMax: 10
+  auroraMultiplierPerStack: 0.8

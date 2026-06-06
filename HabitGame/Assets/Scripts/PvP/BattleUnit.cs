@@ -4,11 +4,12 @@ using UnityEngine;
 
 public class BattleUnit
 {
-    public int hp;
+    public string name;
+    public float hp;
     public int atk;
     public int def;
     public int spd;
-    public float crtk;
+    public float crtk;    // 0~1
 
     public AttributeType attribute;
     public int attributeLevel;
