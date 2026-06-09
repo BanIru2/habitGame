@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a0b544f77403114db58208ad6674b52, type: 3}
+  m_Name: HpPotion
+  m_EditorClassIdentifier: 
+  itemType: 1
+  itemId: 
+  displayName: "\uCCB4\uB825\uBC84\uD504 \uD3EC\uC158"
+  description: "\uC804\uD22C 1\uD68C\uC5D0 \uD55C\uD574 \uCCB4\uB825\uC774 \uC99D\uAC00\uD55C"
+  cost: 0
+  icon: {fileID: 0}
+  unlockCondition:
+    requiredAttributeLevel: 0
+    requiredAttribute: 0
+    requiredDailyStreak: 0
+    requiredWeeklyStreak: 0
+  useTiming: 0
+  effectType: 0
+  targetStat: 3
+  targetHabitDomain: 0
+  targetAttribute: 0
+  value: 10
+  maxStack: 99

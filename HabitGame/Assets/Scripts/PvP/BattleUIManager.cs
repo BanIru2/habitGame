@@ -1,0 +1,209 @@
+using System.Collections;
+using System.Collections.Generic;
+using TMPro;
+using Unity.VisualScripting;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class BattleUIManager : MonoBehaviour
+{
+    [SerializeField]
+    private GameObject lobbyPanel;
+    [SerializeField]
+    private GameObject loadingPanel;
+    [SerializeField]
+    private GameObject readyPanel;
+    [SerializeField]
+    private GameObject battlePanel;
+    
+    // Loadinig Panel
+    [SerializeField]
+    private RectTransform loadingSpinner;
+    [SerializeField]
+    private float spinSpeed;
+
+    [SerializeField]
+    private Button matchStartButton;
+    [SerializeField]
+    private Button matchCancelButton;
+
+    [SerializeField]
+    private TextMeshProUGUI currentParticipantsCount;
+
+    private bool isMatching = false;
+
+    // Ready Panel
+    [SerializeField]
+    private Button checkOppAttrButton;
+    [SerializeField]
+    private TextMeshProUGUI[] oppAttrText;
+    [SerializeField]
+    private CanvasGroup[] oppAttrTextCanvasGroup;
+    [SerializeField]
+    private Button[] attrButtons;
+    [SerializeField]
+    private Button[] consumableItemButtons;
+    [SerializeField]
+    private Button[] equipItemButtons;
+    [SerializeField]
+    private Button readyButton;
+    [SerializeField]
+    private TextMeshProUGUI myNameText;
+    [SerializeField]
+    private TextMeshProUGUI oppNameText;
+    [SerializeField]
+    private TextMeshProUGUI isMeReadyText;
+    [SerializeField]
+    private TextMeshProUGUI isOppReadyText;
+
+    // 선택된 특성 (외부참조 가능 -> 전투 로직에 사용)
+    public AttributeType selectedAttrType { get; private set; }
+    // 선택된 아이템 (외부참조 가능 -> 전투 로직에 사용)
+    public ConsumableDataSO selectedItem { get; private set; }
+    // 가장 최근에 착용했던 장비 아이템 데이터 (DB에서 불러와야 함)
+    // Ready 차례가 되면 바로 출력될 수 있도록 순서를 정해야 함
+    private Dictionary<EquipmentType, EquipmentDataSO> lastSelectedEquipData = new Dictionary<EquipmentType, EquipmentDataSO>();
+    // 이번에 착용할 선택된 장비 아이템 데이터
+    // Ready 차례가 되면 lastSelectedEquipData를 복사해 넣기
+    public Dictionary<EquipmentType, EquipmentDataSO> selectedEquipData;
+    private EquipmentType equipType;
+    bool isReady = false;
+
+    private void Awake()
+    {
+        matchStartButton.onClick.AddListener(OnClickStartMatchmaking);
+        matchCancelButton.onClick.AddListener(OnClickCancelMatchmaking);
+        checkOppAttrButton.onClick.AddListener(OnClickCheckOppAttr);
+        foreach(var button in attrButtons)
+        {
+            button.onClick.AddListener(() => OnClickAttributeButton(button));
+        }
+        foreach(var button in consumableItemButtons)
+        {
+            button.onClick.AddListener(() => OnClickConsumableItemButton(button));
+        }
+        foreach(var button in equipItemButtons)
+        {
+            button.onClick.AddListener(() => OnClickEquipItemButton(button));
+        }
+        readyButton.onClick.AddListener(OnClickReadyButton);
+    }
+
+    private void Update()
+    {
+        // 매칭 중 중앙 스피너 돌리기
+        if (isMatching)
+        {
+            loadingSpinner.Rotate(0, 0, -spinSpeed * Time.deltaTime);
+        }
+    }
+
+    // -----------------------------Lobby Panel-----------------------------------
+    // 매칭 시작 버튼 클릭 시 화면 전환
+    private void OnClickStartMatchmaking()
+    {
+        lobbyPanel.SetActive(false);
+        loadingPanel.SetActive(true);
+        isMatching = true;
+    }
+    // ------------------------------Loading Pannel---------------------------------
+    // 매칭 취소 버튼 클릭 시 화면 전환
+    private void OnClickCancelMatchmaking()
+    {
+        loadingPanel.SetActive(false); 
+        lobbyPanel.SetActive(true);
+        isMatching = false;
+    }
+
+    // 로딩 완료 시 화면 전환
+    public void LoadingComplete()
+    {
+        loadingPanel.SetActive(false);
+        readyPanel.SetActive(true);
+        isMatching = false;
+        selectedEquipData = new Dictionary<EquipmentType, EquipmentDataSO>(lastSelectedEquipData);
+    }
+
+    //-------------------------------Ready Panel-----------------------------------
+    // 준비 단계 완료 시(양 측 다 준비 완료 or 준비 시간 끝) 화면 전환
+    public void ReadyComplete()
+    {
+        readyPanel.SetActive(false);
+        battlePanel.SetActive(true);
+    }
+
+    // 상대 특성 확인 버튼 클릭 시 동작
+    private void OnClickCheckOppAttr()
+    {
+        // 사용 가능 여부 확인 및 횟수 차감
+        // 상대방 특성 레벨 체크(받아와야함)  << 이단계에서 이미 상대의 특성 정보를 갖고 있어야 함
+        // 텍스트 상대방 특성 레벨에 맞춰 변경
+        // 출력 (알파값 활성화)
+        foreach(var canvasGroup in oppAttrTextCanvasGroup){
+            canvasGroup.alpha = 1f;
+        }
+    }
+
+    // 사용할 특성 선택 버튼 클릭 시 동작
+    private void OnClickAttributeButton(Button clickedButton)
+    {
+        // 선택된 버튼은 색깔강조, 그 외 버튼은 흰색으로 초기화
+        foreach(var btn in attrButtons)
+        {
+            btn.image.color = (btn == clickedButton) ? new Color(1f, 0.56f, 0f, 0.2f) : Color.white;
+        }
+        // 선택된 버튼의 속성을 사용
+        selectedAttrType = clickedButton.GetComponent<AttributeButtonInfo>().attrType;
+    }
+
+    // 사용할 소비 아이템 선택 버튼 클릭 시 동작
+
+    private void OnClickConsumableItemButton(Button clickedButton)
+    {
+        // 선택된 버튼은 색깔강조, 그 외 버튼은 흰색으로 초기화
+        foreach (var btn in consumableItemButtons)
+        {
+            btn.image.color = (btn == clickedButton) ? new Color(1f, 0.56f, 0f, 0.2f) : Color.white;
+        }
+        selectedItem = clickedButton.GetComponent<ConsumableButtonInfo>().itemData;
+    }
+
+    // InventoryManager(가명)에서 현재 보유중인 장비 아이템 정보를 불러올 수 있도록 하는 기능 필요
+    // InventoryManager 작성 후 기능 구현 예정
+
+    // DB에서 불러온 데이터로 가장 최근에 착용했던 장비 아이템 데이터를 받아와야 함
+    // 최근전투뿐만 아니라 전투 외 인벤토리에서 착용한 경우 이부분까지 최신화 된 데이터로
+
+    // 사용할 장비 아이템 선택 버튼 클릭 시 동작
+
+    private void OnClickEquipItemButton(Button clickedButton)
+    {
+        // 클릭한 버튼의 장비 부위 정보 저장
+        equipType = clickedButton.GetComponent<EquipButtonInfo>().type;
+        // 보유중인 아이템을 부위에 따라 버튼으로 만들어 보여주고 선택 시 교체할 수 있도록 하는 기능 필요
+
+    }
+
+    // 준비완료 버튼 클릭 시
+    // 실제 준비 완료 데이터를 상대방에게 넘겨줘야할 수도?
+    private void OnClickReadyButton()
+    {
+        var buttonText = readyButton.GetComponentInChildren<TextMeshProUGUI>();
+        if (!isReady)
+        {
+            isReady = true;
+            readyButton.image.color = Color.red;
+            buttonText.text = "준비 완료";
+            isMeReadyText.text = "READY";
+            isMeReadyText.color = Color.green;
+        }
+        else
+        {
+            isReady = false;
+            readyButton.image.color = Color.blue;
+            buttonText.text = "취소";
+            isMeReadyText.text = "WAITING";
+            isMeReadyText.color = Color.black;
+        }
+    }
+}
