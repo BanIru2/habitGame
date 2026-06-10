@@ -5,6 +5,7 @@ using UnityEngine;
 public class BattleUnit
 {
     public string name;
+    public float maxHp;
     public float hp;
     public int atk;
     public int def;

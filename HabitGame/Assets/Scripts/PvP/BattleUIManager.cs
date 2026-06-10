@@ -5,7 +5,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class BattleUIManager : MonoBehaviour
+public class BattleUIManager : Singleton<BattleUIManager>
 {
     [SerializeField]
     private GameObject lobbyPanel;
@@ -15,15 +15,19 @@ public class BattleUIManager : MonoBehaviour
     private GameObject readyPanel;
     [SerializeField]
     private GameObject battlePanel;
-    
+
+    // Lobby Panel
+    [Header("Lobby Panel")]
+    [SerializeField]
+    private Button matchStartButton;
+
     // Loadinig Panel
+    [Header("Loading Panel")]
     [SerializeField]
     private RectTransform loadingSpinner;
     [SerializeField]
     private float spinSpeed;
 
-    [SerializeField]
-    private Button matchStartButton;
     [SerializeField]
     private Button matchCancelButton;
 
@@ -33,6 +37,7 @@ public class BattleUIManager : MonoBehaviour
     private bool isMatching = false;
 
     // Ready Panel
+    [Header("Ready Panel")]
     [SerializeField]
     private Button checkOppAttrButton;
     [SerializeField]
@@ -67,10 +72,34 @@ public class BattleUIManager : MonoBehaviour
     // Ready 차례가 되면 lastSelectedEquipData를 복사해 넣기
     public Dictionary<EquipmentType, EquipmentDataSO> selectedEquipData;
     private EquipmentType equipType;
-    bool isReady = false;
+    private bool isReady = false;
 
-    private void Awake()
+    // Battle Panel
+    [Header("Battle Panel")]
+    [SerializeField]
+    private TextMeshProUGUI myName;
+    [SerializeField]
+    private TextMeshProUGUI oppName;
+    [SerializeField]
+    private TextMeshProUGUI timerText;
+    [SerializeField]
+    private Image myHpBar;
+    [SerializeField]
+    private Image oppHpBar;
+    [SerializeField]
+    private Image myCharacterImage;
+    [SerializeField]
+    private Image oppCharacterImage;
+
+    private bool isBattle = true;
+    private float remainTime;
+    private int remainTimeForDisplay;
+
+
+
+    protected override void Awake()
     {
+        base.Awake();
         matchStartButton.onClick.AddListener(OnClickStartMatchmaking);
         matchCancelButton.onClick.AddListener(OnClickCancelMatchmaking);
         checkOppAttrButton.onClick.AddListener(OnClickCheckOppAttr);
@@ -95,6 +124,19 @@ public class BattleUIManager : MonoBehaviour
         if (isMatching)
         {
             loadingSpinner.Rotate(0, 0, -spinSpeed * Time.deltaTime);
+        }
+        if (isBattle)
+        {
+            if(remainTime > 0)
+            {
+                remainTime -= Time.deltaTime;
+                UpdateTimerText();
+            }
+            else
+            {
+                isBattle = false;
+                TimeOver();
+            }
         }
     }
 
@@ -205,5 +247,71 @@ public class BattleUIManager : MonoBehaviour
             isMeReadyText.text = "WAITING";
             isMeReadyText.color = Color.black;
         }
+    }
+
+    //------------------------------Battle Panel-------------------------------
+    // UI 초기화에 필요한 기능 추가할 것
+    // 전투 시작 전 호출되어야 함
+    public void InitBattleUI()
+    {
+        isBattle = true;
+        remainTime = 60f;
+        remainTimeForDisplay = -1;
+        InitCharacterHp();
+    }
+
+    // 각 플레이어 이름 정보 받아와서 출력하기
+    // 각 플레이어 유닛 정보를 앞전에 미리 받아온다면 private으로 받고 InitBattleUI에서 호출 가능
+    public void GetName(string myNameSTr, string oppNameStr)
+    {
+        myNameText.text = myNameSTr;
+        oppNameText.text = oppNameStr;
+        myName.text = myNameSTr;
+        oppName.text = oppNameStr;
+    }
+
+    // 체력바 초기화
+    private void InitCharacterHp()
+    {
+        myHpBar.fillAmount = 1f;
+        oppHpBar.fillAmount = 1f;
+    }
+
+    // 체력바 업데이트
+    public void UpdateCharacterHpBar(bool isPlayer, float currentHp, float maxHp)
+    {
+        float ratio = Mathf.Clamp01(currentHp / maxHp);
+
+        if (isPlayer)
+        {
+            myHpBar.fillAmount = ratio;
+        }
+        else
+        {
+            oppHpBar.fillAmount = ratio;
+        }
+    }
+
+    private void UpdateTimerText()
+    {
+        int currentSecond = Mathf.CeilToInt(remainTime);
+
+        if(currentSecond != remainTimeForDisplay)
+        {
+            timerText.text = $"{currentSecond}";
+            remainTimeForDisplay = currentSecond;
+
+            timerText.color = (currentSecond <= 10) ? Color.red : Color.black;
+        }
+    }
+
+    public void FinishBattle()
+    {
+        isBattle = false;
+    }
+
+    private void TimeOver()
+    {
+        BattleManager.Instance.TreatTimeOver();
     }
 }
