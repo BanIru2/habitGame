@@ -1,8 +1,6 @@
-using Newtonsoft.Json.Bson;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Experimental.Rendering;
 
 public class BattleManager : Singleton<BattleManager>
 {
@@ -13,29 +11,34 @@ public class BattleManager : Singleton<BattleManager>
     {
         if (my.spd > opp.spd) return my;
         if (my.spd < opp.spd) return opp;
-        // ¼Óµµ°¡ µ¿ÀÏÇÏ¸é ¹Ý¹ÝÈ®·ü·Î ·£´ý °áÁ¤
+        // ì†ë„ ë™ì¼ ì‹œ ë°˜ë°˜ í™•ë¥ 
         return (Random.value < 0.5f) ? my : opp;
     }
 
     private void PerformAttack(BattleUnit attacker, BattleUnit defender, int turn)
     {
-        // µ¥¹ÌÁö °è»ê
+        // ë°ë¯¸ì§€ ê³„ì‚°
         bool isCrit = Random.value < attacker.crtk;
         float damage = BattleCalculator.CalculateDamage(attacker, defender, isCrit, turn);
-        defender.hp -= damage;
-        Debug.Log($"{attacker.name}ÀÌ(°¡) °ø°Ý, µ¥¹ÌÁö : {damage}, »ó´ë ³²Àº Ã¼·Â : {defender.hp}");
-        // Ã¼·Â¹Ù ¾÷µ¥ÀÌÆ®
+
+        // ìµœì¢… ë°ë¯¸ì§€ ì •ìˆ˜ ë³€í™˜ (ë²„ë¦¼) ì ìš©
+        int finalDamage = (int)damage;
+        defender.hp -= finalDamage;
+
+        Debug.Log($"{attacker.name}ì˜ ê³µê²©, ë°ë¯¸ì§€ : {finalDamage}, ë‚¨ì€ ìƒëŒ€ ì²´ë ¥ : {defender.hp}");
+
+        // ì²´ë ¥ë°” ì—…ë°ì´íŠ¸
         bool isPlayer = (defender == player) ? true : false;
         BattleUIManager.Instance.UpdateCharacterHpBar(isPlayer, defender.hp, defender.maxHp);
-        // ++ ÀÌÆåÆ® µî ±× ¿Ü µ¿ÀÛ
     }
 
     private void FinishBattle(BattleUnit winner)
     {
-        // ÀüÅõ Á¾·á µ¿ÀÛ
-        if (winner == player) Debug.Log("ÀüÅõÁ¾·á : ÇÃ·¹ÀÌ¾î ½Â¸®");
-        else if (winner == null) Debug.Log("ÀüÅõÁ¾·á : ºñ±è");
-        else Debug.Log("ÀüÅõ Á¾·á : ÇÃ·¹ÀÌ¾î ÆÐ¹è");
+        // ê²°ê³¼ ë¡œê·¸ ì¶œë ¥
+        if (winner == player) Debug.Log("ì „íˆ¬ ì¢…ë£Œ : í”Œë ˆì´ì–´ ìŠ¹ë¦¬");
+        else if (winner == null) Debug.Log("ì „íˆ¬ ì¢…ë£Œ : ë¬´ìŠ¹ë¶€");
+        else Debug.Log("ì „íˆ¬ ì¢…ë£Œ : í”Œë ˆì´ì–´ íŒ¨ë°°");
+        
         player = null;
         isBattle = false;
         BattleUIManager.Instance.FinishBattle();
