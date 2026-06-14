@@ -4,9 +4,16 @@ using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
+using Photon;
+using Photon.Pun;
+using ExitGames.Client.Photon;
+using Hashtable = ExitGames.Client.Photon.Hashtable;    // 모호성 방지
 
 public class BattleUIManager : Singleton<BattleUIManager>
 {
+    [SerializeField]
+    private PhotonManager photonManager;
+
     [SerializeField]
     private GameObject lobbyPanel;
     [SerializeField]
@@ -91,7 +98,7 @@ public class BattleUIManager : Singleton<BattleUIManager>
     [SerializeField]
     private Image oppCharacterImage;
 
-    private bool isBattle = true;
+    private bool isBattle = false;
     private float remainTime;
     private int remainTimeForDisplay;
 
@@ -100,6 +107,7 @@ public class BattleUIManager : Singleton<BattleUIManager>
     protected override void Awake()
     {
         base.Awake();
+
         matchStartButton.onClick.AddListener(OnClickStartMatchmaking);
         matchCancelButton.onClick.AddListener(OnClickCancelMatchmaking);
         checkOppAttrButton.onClick.AddListener(OnClickCheckOppAttr);
@@ -144,17 +152,50 @@ public class BattleUIManager : Singleton<BattleUIManager>
     // 매칭 시작 버튼 클릭 시 화면 전환
     private void OnClickStartMatchmaking()
     {
+        if (photonManager == null)
+        {
+            photonManager = FindObjectOfType<PhotonManager>();
+        }
+
         lobbyPanel.SetActive(false);
         loadingPanel.SetActive(true);
         isMatching = true;
+
+        photonManager.StartMatchmaking();
     }
     // ------------------------------Loading Pannel---------------------------------
     // 매칭 취소 버튼 클릭 시 화면 전환
     private void OnClickCancelMatchmaking()
     {
-        loadingPanel.SetActive(false); 
+        if (photonManager == null)
+        {
+            photonManager = FindObjectOfType<PhotonManager>();
+        }
+
+        photonManager.CancelMatchmaking();
+    }
+
+    public void CancelMatchingComplete()
+    {
+        loadingPanel.SetActive(false);
         lobbyPanel.SetActive(true);
         isMatching = false;
+
+        UpdatePlayerCount(0);
+        ResetReadyUI();
+    }
+
+    public void BackToMatchingAfterOpponentLeft()
+    {
+        readyPanel.SetActive(false);
+        battlePanel.SetActive(false);
+        loadingPanel.SetActive(true);
+        lobbyPanel.SetActive(false);
+
+        isMatching = true;
+        isReady = false;
+
+        UpdatePlayerCount(PhotonNetwork.CurrentRoom.PlayerCount);
     }
 
     // 로딩 완료 시 화면 전환
@@ -164,6 +205,12 @@ public class BattleUIManager : Singleton<BattleUIManager>
         readyPanel.SetActive(true);
         isMatching = false;
         selectedEquipData = new Dictionary<EquipmentType, EquipmentDataSO>(lastSelectedEquipData);
+        ResetReadyUI();
+    }
+
+    public void UpdatePlayerCount(int current)
+    {
+        currentParticipantsCount.text = current.ToString();
     }
 
     //-------------------------------Ready Panel-----------------------------------
@@ -172,6 +219,15 @@ public class BattleUIManager : Singleton<BattleUIManager>
     {
         readyPanel.SetActive(false);
         battlePanel.SetActive(true);
+    }
+
+    private void ResetReadyUI()
+    {
+        isReady = false;
+        isMeReadyText.text = "WAITING";
+        isMeReadyText.color = Color.black;
+        isOppReadyText.text = "WAITING";
+        isOppReadyText.color = Color.black;
     }
 
     // 상대 특성 확인 버튼 클릭 시 동작
@@ -247,6 +303,31 @@ public class BattleUIManager : Singleton<BattleUIManager>
             isMeReadyText.text = "WAITING";
             isMeReadyText.color = Color.black;
         }
+        // RPC 송신 (상대방 READY 글자 실시간 변경)
+        BattleManager.Instance.SendReadyState(isReady);
+        // 포톤 서버에 준비 상태 등록 (방장의 전투 시작 체크)
+        Hashtable props = new Hashtable();
+        props.Add("IsReady", isReady);
+        PhotonNetwork.LocalPlayer.SetCustomProperties(props);
+    }
+
+    [PunRPC]
+    public void RPC_UpdateOpponentReady(bool ready)
+    {
+        isOppReadyText.text = ready ? "READY" : "WAITING";
+        isOppReadyText.color = ready ? Color.green : Color.red;
+    }
+
+    // 상대방의 정보를 받아 UI 텍스트에 출력
+    public void SetOppoentInfoUI(string name, int fire, int water, int grass, int aurora)
+    {
+        oppNameText.text = name;
+        oppName.text = name;
+
+        oppAttrText[0].text = $"Lv.{fire}";
+        oppAttrText[1].text = $"Lv.{water}";
+        oppAttrText[2].text = $"Lv.{grass}";
+        oppAttrText[3].text = $"Lv.{aurora}";
     }
 
     //------------------------------Battle Panel-------------------------------

@@ -1,11 +1,19 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Photon.Pun;
 
 public class BattleManager : Singleton<BattleManager>
 {
     private BattleUnit player;
     private bool isBattle = false;
+    private PhotonView photonView;
+
+    private void Awake()
+    {
+        base.Awake();
+        photonView = GetComponent<PhotonView>();
+    }
 
     private BattleUnit GetFirstAttack(BattleUnit my, BattleUnit opp)
     {
@@ -87,5 +95,29 @@ public class BattleManager : Singleton<BattleManager>
         BattleUnit second = (first == my) ? opp : my;
 
         StartCoroutine(BattleRoutine(first, second));
+    }
+
+    public void SendReadyState(bool ready)
+    {
+        photonView.RPC("SyncReadyState", RpcTarget.Others, ready);
+    }
+
+    [PunRPC]
+    public void SyncReadyState(bool ready)
+    {
+        BattleUIManager.Instance.RPC_UpdateOpponentReady(ready);
+    }
+
+    public void BroadcastStartBattle()
+    {
+        if (!PhotonNetwork.IsMasterClient) return;
+
+        photonView.RPC("RPC_StartBattle", RpcTarget.All);
+    }
+
+    [PunRPC]
+    public void RPC_StartBattle()
+    {
+        BattleUIManager.Instance.ReadyComplete();
     }
 }

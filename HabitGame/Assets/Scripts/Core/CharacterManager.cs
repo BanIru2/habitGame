@@ -8,6 +8,11 @@ public class CharacterManager : Singleton<CharacterManager>
     // 외부에서 직접적으로 참조할 일이 없다면 private으로 잠구는게 낫긴 함
     public CharacterResponse characterStatusData { get; private set; }
 
+    private void Start()
+    {
+        UpdateCharacterStatus(new CharacterResponse { UserId = 123, Atk = 100, Def = 50, Hp = 1000, Spd = 10, FireLv = 5, WaterLv = 3, GrassLv = 1, AuroraLv = 0 }); 
+    }
+
     // 캐릭터 최신 정보 업데이트
     // 캐릭터 정보에 대한 수정 발생 시(생활 습관 목표 보상 수령) 받아오는 응답데이터에서 CharacterResponse를 추 출해서 호출
     // 항상 최신 상태를 유지하도록
