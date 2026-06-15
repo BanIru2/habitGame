@@ -7,7 +7,7 @@ using UnityEngine.UI;
 using Photon;
 using Photon.Pun;
 using ExitGames.Client.Photon;
-using Hashtable = ExitGames.Client.Photon.Hashtable;    // ¸ğÈ£¼º ¹æÁö
+using Hashtable = ExitGames.Client.Photon.Hashtable;    // ëª¨í˜¸ì„± ë°©ì§€
 
 public class BattleUIManager : Singleton<BattleUIManager>
 {
@@ -42,6 +42,7 @@ public class BattleUIManager : Singleton<BattleUIManager>
     private TextMeshProUGUI currentParticipantsCount;
 
     private bool isMatching = false;
+    public bool IsMatching => isMatching;
 
     // Ready Panel
     [Header("Ready Panel")]
@@ -68,18 +69,20 @@ public class BattleUIManager : Singleton<BattleUIManager>
     [SerializeField]
     private TextMeshProUGUI isOppReadyText;
 
-    // ¼±ÅÃµÈ Æ¯¼º (¿ÜºÎÂüÁ¶ °¡´É -> ÀüÅõ ·ÎÁ÷¿¡ »ç¿ë)
+    // ì„ íƒëœ íŠ¹ì„± (ì™¸ë¶€ì°¸ì¡° ê°€ëŠ¥ -> ì „íˆ¬ ë¡œì§ì— ì‚¬ìš©)
     public AttributeType selectedAttrType { get; private set; }
-    // ¼±ÅÃµÈ ¾ÆÀÌÅÛ (¿ÜºÎÂüÁ¶ °¡´É -> ÀüÅõ ·ÎÁ÷¿¡ »ç¿ë)
+    // ì„ íƒëœ ì•„ì´í…œ (ì™¸ë¶€ì°¸ì¡° ê°€ëŠ¥ -> ì „íˆ¬ ë¡œì§ì— ì‚¬ìš©)
     public ConsumableDataSO selectedItem { get; private set; }
-    // °¡Àå ÃÖ±Ù¿¡ Âø¿ëÇß´ø Àåºñ ¾ÆÀÌÅÛ µ¥ÀÌÅÍ (DB¿¡¼­ ºÒ·¯¿Í¾ß ÇÔ)
-    // Ready Â÷·Ê°¡ µÇ¸é ¹Ù·Î Ãâ·ÂµÉ ¼ö ÀÖµµ·Ï ¼ø¼­¸¦ Á¤ÇØ¾ß ÇÔ
+    // ê°€ì¥ ìµœê·¼ì— ì°©ìš©í–ˆë˜ ì¥ë¹„ ì•„ì´í…œ ë°ì´í„° (DBì—ì„œ ë¶ˆëŸ¬ì™€ì•¼ í•¨)
+    // Ready ì°¨ë¡€ê°€ ë˜ë©´ ë°”ë¡œ ì¶œë ¥ë  ìˆ˜ ìˆë„ë¡ ìˆœì„œë¥¼ ì •í•´ì•¼ í•¨
     private Dictionary<EquipmentType, EquipmentDataSO> lastSelectedEquipData = new Dictionary<EquipmentType, EquipmentDataSO>();
-    // ÀÌ¹ø¿¡ Âø¿ëÇÒ ¼±ÅÃµÈ Àåºñ ¾ÆÀÌÅÛ µ¥ÀÌÅÍ
-    // Ready Â÷·Ê°¡ µÇ¸é lastSelectedEquipData¸¦ º¹»çÇØ ³Ö±â
+    // ì´ë²ˆì— ì°©ìš©í•  ì„ íƒëœ ì¥ë¹„ ì•„ì´í…œ ë°ì´í„°
+    // Ready ì°¨ë¡€ê°€ ë˜ë©´ lastSelectedEquipDataë¥¼ ë³µì‚¬í•´ ë„£ê¸°
     public Dictionary<EquipmentType, EquipmentDataSO> selectedEquipData;
     private EquipmentType equipType;
     private bool isReady = false;
+    private Color readyButtonDefaultColor;
+    private string readyButtonDefaultText;
 
     // Battle Panel
     [Header("Battle Panel")]
@@ -108,6 +111,8 @@ public class BattleUIManager : Singleton<BattleUIManager>
     {
         base.Awake();
 
+        CacheReadyButtonDefaultState();
+
         matchStartButton.onClick.AddListener(OnClickStartMatchmaking);
         matchCancelButton.onClick.AddListener(OnClickCancelMatchmaking);
         checkOppAttrButton.onClick.AddListener(OnClickCheckOppAttr);
@@ -128,7 +133,7 @@ public class BattleUIManager : Singleton<BattleUIManager>
 
     private void Update()
     {
-        // ¸ÅÄª Áß Áß¾Ó ½ºÇÇ³Ê µ¹¸®±â
+        // ë§¤ì¹­ ì¤‘ ì¤‘ì•™ ìŠ¤í”¼ë„ˆ ëŒë¦¬ê¸°
         if (isMatching)
         {
             loadingSpinner.Rotate(0, 0, -spinSpeed * Time.deltaTime);
@@ -149,27 +154,30 @@ public class BattleUIManager : Singleton<BattleUIManager>
     }
 
     // -----------------------------Lobby Panel-----------------------------------
-    // ¸ÅÄª ½ÃÀÛ ¹öÆ° Å¬¸¯ ½Ã È­¸é ÀüÈ¯
+    // ë§¤ì¹­ ì‹œì‘ ë²„íŠ¼ í´ë¦­ ì‹œ í™”ë©´ ì „í™˜
     private void OnClickStartMatchmaking()
     {
-        if (photonManager == null)
+        if (!TryResolvePhotonManager()) return;
+
+        if (!photonManager.StartMatchmaking())
         {
-            photonManager = FindObjectOfType<PhotonManager>();
+            return;
         }
 
         lobbyPanel.SetActive(false);
         loadingPanel.SetActive(true);
+        readyPanel.SetActive(false);
+        battlePanel.SetActive(false);
         isMatching = true;
-
-        photonManager.StartMatchmaking();
     }
     // ------------------------------Loading Pannel---------------------------------
-    // ¸ÅÄª Ãë¼Ò ¹öÆ° Å¬¸¯ ½Ã È­¸é ÀüÈ¯
+    // ë§¤ì¹­ ì·¨ì†Œ ë²„íŠ¼ í´ë¦­ ì‹œ í™”ë©´ ì „í™˜
     private void OnClickCancelMatchmaking()
     {
-        if (photonManager == null)
+        if (!TryResolvePhotonManager())
         {
-            photonManager = FindObjectOfType<PhotonManager>();
+            CancelMatchingComplete();
+            return;
         }
 
         photonManager.CancelMatchmaking();
@@ -178,6 +186,8 @@ public class BattleUIManager : Singleton<BattleUIManager>
     public void CancelMatchingComplete()
     {
         loadingPanel.SetActive(false);
+        readyPanel.SetActive(false);
+        battlePanel.SetActive(false);
         lobbyPanel.SetActive(true);
         isMatching = false;
 
@@ -193,12 +203,12 @@ public class BattleUIManager : Singleton<BattleUIManager>
         lobbyPanel.SetActive(false);
 
         isMatching = true;
-        isReady = false;
+        ResetReadyUI();
 
         UpdatePlayerCount(PhotonNetwork.CurrentRoom.PlayerCount);
     }
 
-    // ·Îµù ¿Ï·á ½Ã È­¸é ÀüÈ¯
+    // ë¡œë”© ì™„ë£Œ ì‹œ í™”ë©´ ì „í™˜
     public void LoadingComplete()
     {
         loadingPanel.SetActive(false);
@@ -214,7 +224,7 @@ public class BattleUIManager : Singleton<BattleUIManager>
     }
 
     //-------------------------------Ready Panel-----------------------------------
-    // ÁØºñ ´Ü°è ¿Ï·á ½Ã(¾ç Ãø ´Ù ÁØºñ ¿Ï·á or ÁØºñ ½Ã°£ ³¡) È­¸é ÀüÈ¯
+    // ì¤€ë¹„ ë‹¨ê³„ ì™„ë£Œ ì‹œ(ì–‘ ì¸¡ ë‹¤ ì¤€ë¹„ ì™„ë£Œ or ì¤€ë¹„ ì‹œê°„ ë) í™”ë©´ ì „í™˜
     public void ReadyComplete()
     {
         readyPanel.SetActive(false);
@@ -228,37 +238,64 @@ public class BattleUIManager : Singleton<BattleUIManager>
         isMeReadyText.color = Color.black;
         isOppReadyText.text = "WAITING";
         isOppReadyText.color = Color.black;
+
+        readyButton.image.color = readyButtonDefaultColor;
+        var buttonText = readyButton.GetComponentInChildren<TextMeshProUGUI>();
+        if (buttonText != null)
+        {
+            buttonText.text = readyButtonDefaultText;
+        }
     }
 
-    // »ó´ë Æ¯¼º È®ÀÎ ¹öÆ° Å¬¸¯ ½Ã µ¿ÀÛ
+    private void CacheReadyButtonDefaultState()
+    {
+        readyButtonDefaultColor = readyButton.image.color;
+        var buttonText = readyButton.GetComponentInChildren<TextMeshProUGUI>();
+        readyButtonDefaultText = buttonText != null ? buttonText.text : string.Empty;
+    }
+
+    private bool TryResolvePhotonManager()
+    {
+        if (photonManager == null)
+        {
+            photonManager = FindObjectOfType<PhotonManager>();
+        }
+
+        if (photonManager != null) return true;
+
+        Debug.LogError("PhotonManager not found.");
+        return false;
+    }
+
+    // ìƒëŒ€ íŠ¹ì„± í™•ì¸ ë²„íŠ¼ í´ë¦­ ì‹œ ë™ì‘
     private void OnClickCheckOppAttr()
     {
-        // »ç¿ë °¡´É ¿©ºÎ È®ÀÎ ¹× È½¼ö Â÷°¨
-        // »ó´ë¹æ Æ¯¼º ·¹º§ Ã¼Å©(¹Ş¾Æ¿Í¾ßÇÔ)  << ÀÌ´Ü°è¿¡¼­ ÀÌ¹Ì »ó´ëÀÇ Æ¯¼º Á¤º¸¸¦ °®°í ÀÖ¾î¾ß ÇÔ
-        // ÅØ½ºÆ® »ó´ë¹æ Æ¯¼º ·¹º§¿¡ ¸ÂÃç º¯°æ
-        // Ãâ·Â (¾ËÆÄ°ª È°¼ºÈ­)
+        // ì‚¬ìš© ê°€ëŠ¥ ì—¬ë¶€ í™•ì¸ ë° íšŸìˆ˜ ì°¨ê°
+        // ìƒëŒ€ë°© íŠ¹ì„± ë ˆë²¨ ì²´í¬(ë°›ì•„ì™€ì•¼í•¨)  << ì´ë‹¨ê³„ì—ì„œ ì´ë¯¸ ìƒëŒ€ì˜ íŠ¹ì„± ì •ë³´ë¥¼ ê°–ê³  ìˆì–´ì•¼ í•¨
+        // í…ìŠ¤íŠ¸ ìƒëŒ€ë°© íŠ¹ì„± ë ˆë²¨ì— ë§ì¶° ë³€ê²½
+        // ì¶œë ¥ (ì•ŒíŒŒê°’ í™œì„±í™”)
         foreach(var canvasGroup in oppAttrTextCanvasGroup){
             canvasGroup.alpha = 1f;
         }
     }
 
-    // »ç¿ëÇÒ Æ¯¼º ¼±ÅÃ ¹öÆ° Å¬¸¯ ½Ã µ¿ÀÛ
+    // ì‚¬ìš©í•  íŠ¹ì„± ì„ íƒ ë²„íŠ¼ í´ë¦­ ì‹œ ë™ì‘
     private void OnClickAttributeButton(Button clickedButton)
     {
-        // ¼±ÅÃµÈ ¹öÆ°Àº »ö±ò°­Á¶, ±× ¿Ü ¹öÆ°Àº Èò»öÀ¸·Î ÃÊ±âÈ­
+        // ì„ íƒëœ ë²„íŠ¼ì€ ìƒ‰ê¹”ê°•ì¡°, ê·¸ ì™¸ ë²„íŠ¼ì€ í°ìƒ‰ìœ¼ë¡œ ì´ˆê¸°í™”
         foreach(var btn in attrButtons)
         {
             btn.image.color = (btn == clickedButton) ? new Color(1f, 0.56f, 0f, 0.2f) : Color.white;
         }
-        // ¼±ÅÃµÈ ¹öÆ°ÀÇ ¼Ó¼ºÀ» »ç¿ë
+        // ì„ íƒëœ ë²„íŠ¼ì˜ ì†ì„±ì„ ì‚¬ìš©
         selectedAttrType = clickedButton.GetComponent<AttributeButtonInfo>().attrType;
     }
 
-    // »ç¿ëÇÒ ¼Òºñ ¾ÆÀÌÅÛ ¼±ÅÃ ¹öÆ° Å¬¸¯ ½Ã µ¿ÀÛ
+    // ì‚¬ìš©í•  ì†Œë¹„ ì•„ì´í…œ ì„ íƒ ë²„íŠ¼ í´ë¦­ ì‹œ ë™ì‘
 
     private void OnClickConsumableItemButton(Button clickedButton)
     {
-        // ¼±ÅÃµÈ ¹öÆ°Àº »ö±ò°­Á¶, ±× ¿Ü ¹öÆ°Àº Èò»öÀ¸·Î ÃÊ±âÈ­
+        // ì„ íƒëœ ë²„íŠ¼ì€ ìƒ‰ê¹”ê°•ì¡°, ê·¸ ì™¸ ë²„íŠ¼ì€ í°ìƒ‰ìœ¼ë¡œ ì´ˆê¸°í™”
         foreach (var btn in consumableItemButtons)
         {
             btn.image.color = (btn == clickedButton) ? new Color(1f, 0.56f, 0f, 0.2f) : Color.white;
@@ -266,24 +303,24 @@ public class BattleUIManager : Singleton<BattleUIManager>
         selectedItem = clickedButton.GetComponent<ConsumableButtonInfo>().itemData;
     }
 
-    // InventoryManager(°¡¸í)¿¡¼­ ÇöÀç º¸À¯ÁßÀÎ Àåºñ ¾ÆÀÌÅÛ Á¤º¸¸¦ ºÒ·¯¿Ã ¼ö ÀÖµµ·Ï ÇÏ´Â ±â´É ÇÊ¿ä
-    // InventoryManager ÀÛ¼º ÈÄ ±â´É ±¸Çö ¿¹Á¤
+    // InventoryManager(ê°€ëª…)ì—ì„œ í˜„ì¬ ë³´ìœ ì¤‘ì¸ ì¥ë¹„ ì•„ì´í…œ ì •ë³´ë¥¼ ë¶ˆëŸ¬ì˜¬ ìˆ˜ ìˆë„ë¡ í•˜ëŠ” ê¸°ëŠ¥ í•„ìš”
+    // InventoryManager ì‘ì„± í›„ ê¸°ëŠ¥ êµ¬í˜„ ì˜ˆì •
 
-    // DB¿¡¼­ ºÒ·¯¿Â µ¥ÀÌÅÍ·Î °¡Àå ÃÖ±Ù¿¡ Âø¿ëÇß´ø Àåºñ ¾ÆÀÌÅÛ µ¥ÀÌÅÍ¸¦ ¹Ş¾Æ¿Í¾ß ÇÔ
-    // ÃÖ±ÙÀüÅõ»Ó¸¸ ¾Æ´Ï¶ó ÀüÅõ ¿Ü ÀÎº¥Åä¸®¿¡¼­ Âø¿ëÇÑ °æ¿ì ÀÌºÎºĞ±îÁö ÃÖ½ÅÈ­ µÈ µ¥ÀÌÅÍ·Î
+    // DBì—ì„œ ë¶ˆëŸ¬ì˜¨ ë°ì´í„°ë¡œ ê°€ì¥ ìµœê·¼ì— ì°©ìš©í–ˆë˜ ì¥ë¹„ ì•„ì´í…œ ë°ì´í„°ë¥¼ ë°›ì•„ì™€ì•¼ í•¨
+    // ìµœê·¼ì „íˆ¬ë¿ë§Œ ì•„ë‹ˆë¼ ì „íˆ¬ ì™¸ ì¸ë²¤í† ë¦¬ì—ì„œ ì°©ìš©í•œ ê²½ìš° ì´ë¶€ë¶„ê¹Œì§€ ìµœì‹ í™” ëœ ë°ì´í„°ë¡œ
 
-    // »ç¿ëÇÒ Àåºñ ¾ÆÀÌÅÛ ¼±ÅÃ ¹öÆ° Å¬¸¯ ½Ã µ¿ÀÛ
+    // ì‚¬ìš©í•  ì¥ë¹„ ì•„ì´í…œ ì„ íƒ ë²„íŠ¼ í´ë¦­ ì‹œ ë™ì‘
 
     private void OnClickEquipItemButton(Button clickedButton)
     {
-        // Å¬¸¯ÇÑ ¹öÆ°ÀÇ Àåºñ ºÎÀ§ Á¤º¸ ÀúÀå
+        // í´ë¦­í•œ ë²„íŠ¼ì˜ ì¥ë¹„ ë¶€ìœ„ ì •ë³´ ì €ì¥
         equipType = clickedButton.GetComponent<EquipButtonInfo>().type;
-        // º¸À¯ÁßÀÎ ¾ÆÀÌÅÛÀ» ºÎÀ§¿¡ µû¶ó ¹öÆ°À¸·Î ¸¸µé¾î º¸¿©ÁÖ°í ¼±ÅÃ ½Ã ±³Ã¼ÇÒ ¼ö ÀÖµµ·Ï ÇÏ´Â ±â´É ÇÊ¿ä
+        // ë³´ìœ ì¤‘ì¸ ì•„ì´í…œì„ ë¶€ìœ„ì— ë”°ë¼ ë²„íŠ¼ìœ¼ë¡œ ë§Œë“¤ì–´ ë³´ì—¬ì£¼ê³  ì„ íƒ ì‹œ êµì²´í•  ìˆ˜ ìˆë„ë¡ í•˜ëŠ” ê¸°ëŠ¥ í•„ìš”
 
     }
 
-    // ÁØºñ¿Ï·á ¹öÆ° Å¬¸¯ ½Ã
-    // ½ÇÁ¦ ÁØºñ ¿Ï·á µ¥ÀÌÅÍ¸¦ »ó´ë¹æ¿¡°Ô ³Ñ°ÜÁà¾ßÇÒ ¼öµµ?
+    // ì¤€ë¹„ì™„ë£Œ ë²„íŠ¼ í´ë¦­ ì‹œ
+    // ì‹¤ì œ ì¤€ë¹„ ì™„ë£Œ ë°ì´í„°ë¥¼ ìƒëŒ€ë°©ì—ê²Œ ë„˜ê²¨ì¤˜ì•¼í•  ìˆ˜ë„?
     private void OnClickReadyButton()
     {
         var buttonText = readyButton.GetComponentInChildren<TextMeshProUGUI>();
@@ -291,7 +328,7 @@ public class BattleUIManager : Singleton<BattleUIManager>
         {
             isReady = true;
             readyButton.image.color = Color.red;
-            buttonText.text = "ÁØºñ ¿Ï·á";
+            buttonText.text = "Ready";
             isMeReadyText.text = "READY";
             isMeReadyText.color = Color.green;
         }
@@ -299,13 +336,13 @@ public class BattleUIManager : Singleton<BattleUIManager>
         {
             isReady = false;
             readyButton.image.color = Color.blue;
-            buttonText.text = "Ãë¼Ò";
+            buttonText.text = "Cancel";
             isMeReadyText.text = "WAITING";
             isMeReadyText.color = Color.black;
         }
-        // RPC ¼Û½Å (»ó´ë¹æ READY ±ÛÀÚ ½Ç½Ã°£ º¯°æ)
+        // RPC ì†¡ì‹  (ìƒëŒ€ë°© READY ê¸€ì ì‹¤ì‹œê°„ ë³€ê²½)
         BattleManager.Instance.SendReadyState(isReady);
-        // Æ÷Åæ ¼­¹ö¿¡ ÁØºñ »óÅÂ µî·Ï (¹æÀåÀÇ ÀüÅõ ½ÃÀÛ Ã¼Å©)
+        // í¬í†¤ ì„œë²„ì— ì¤€ë¹„ ìƒíƒœ ë“±ë¡ (ë°©ì¥ì˜ ì „íˆ¬ ì‹œì‘ ì²´í¬)
         Hashtable props = new Hashtable();
         props.Add("IsReady", isReady);
         PhotonNetwork.LocalPlayer.SetCustomProperties(props);
@@ -318,8 +355,14 @@ public class BattleUIManager : Singleton<BattleUIManager>
         isOppReadyText.color = ready ? Color.green : Color.red;
     }
 
-    // »ó´ë¹æÀÇ Á¤º¸¸¦ ¹Ş¾Æ UI ÅØ½ºÆ®¿¡ Ãâ·Â
-    public void SetOppoentInfoUI(string name, int fire, int water, int grass, int aurora)
+    public void SetMyInfoUI(string name)
+    {
+        myNameText.text = name;
+        myName.text = name;
+    }
+
+    // ìƒëŒ€ë°©ì˜ ì •ë³´ë¥¼ ë°›ì•„ UI í…ìŠ¤íŠ¸ì— ì¶œë ¥
+    public void SetOpponentInfoUI(string name, int fire, int water, int grass, int aurora)
     {
         oppNameText.text = name;
         oppName.text = name;
@@ -330,9 +373,14 @@ public class BattleUIManager : Singleton<BattleUIManager>
         oppAttrText[3].text = $"Lv.{aurora}";
     }
 
+    public void SetOppoentInfoUI(string name, int fire, int water, int grass, int aurora)
+    {
+        SetOpponentInfoUI(name, fire, water, grass, aurora);
+    }
+
     //------------------------------Battle Panel-------------------------------
-    // UI ÃÊ±âÈ­¿¡ ÇÊ¿äÇÑ ±â´É Ãß°¡ÇÒ °Í
-    // ÀüÅõ ½ÃÀÛ Àü È£ÃâµÇ¾î¾ß ÇÔ
+    // UI ì´ˆê¸°í™”ì— í•„ìš”í•œ ê¸°ëŠ¥ ì¶”ê°€í•  ê²ƒ
+    // ì „íˆ¬ ì‹œì‘ ì „ í˜¸ì¶œë˜ì–´ì•¼ í•¨
     public void InitBattleUI()
     {
         isBattle = true;
@@ -341,8 +389,8 @@ public class BattleUIManager : Singleton<BattleUIManager>
         InitCharacterHp();
     }
 
-    // °¢ ÇÃ·¹ÀÌ¾î ÀÌ¸§ Á¤º¸ ¹Ş¾Æ¿Í¼­ Ãâ·ÂÇÏ±â
-    // °¢ ÇÃ·¹ÀÌ¾î À¯´Ö Á¤º¸¸¦ ¾ÕÀü¿¡ ¹Ì¸® ¹Ş¾Æ¿Â´Ù¸é privateÀ¸·Î ¹Ş°í InitBattleUI¿¡¼­ È£Ãâ °¡´É
+    // ê° í”Œë ˆì´ì–´ ì´ë¦„ ì •ë³´ ë°›ì•„ì™€ì„œ ì¶œë ¥í•˜ê¸°
+    // ê° í”Œë ˆì´ì–´ ìœ ë‹› ì •ë³´ë¥¼ ì•ì „ì— ë¯¸ë¦¬ ë°›ì•„ì˜¨ë‹¤ë©´ privateìœ¼ë¡œ ë°›ê³  InitBattleUIì—ì„œ í˜¸ì¶œ ê°€ëŠ¥
     public void GetName(string myNameSTr, string oppNameStr)
     {
         myNameText.text = myNameSTr;
@@ -351,14 +399,14 @@ public class BattleUIManager : Singleton<BattleUIManager>
         oppName.text = oppNameStr;
     }
 
-    // Ã¼·Â¹Ù ÃÊ±âÈ­
+    // ì²´ë ¥ë°” ì´ˆê¸°í™”
     private void InitCharacterHp()
     {
         myHpBar.fillAmount = 1f;
         oppHpBar.fillAmount = 1f;
     }
 
-    // Ã¼·Â¹Ù ¾÷µ¥ÀÌÆ®
+    // ì²´ë ¥ë°” ì—…ë°ì´íŠ¸
     public void UpdateCharacterHpBar(bool isPlayer, float currentHp, float maxHp)
     {
         float ratio = Mathf.Clamp01(currentHp / maxHp);
