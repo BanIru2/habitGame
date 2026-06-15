@@ -8,6 +8,8 @@ using Hashtable = ExitGames.Client.Photon.Hashtable;
 
 public class PhotonManager : MonoBehaviourPunCallbacks
 {
+    private const string GameVersion = "0.1";
+    private const string FixedRegion = "asia";
     private const string PropUserId = "UserId";
     private const string PropPlayerName = "PlayerName";
     private const string PropFireLv = "FireLv";
@@ -18,6 +20,8 @@ public class PhotonManager : MonoBehaviourPunCallbacks
 
     void Start()
     {
+        PhotonNetwork.GameVersion = GameVersion;
+        PhotonNetwork.PhotonServerSettings.AppSettings.FixedRegion = FixedRegion;
         PhotonNetwork.ConnectUsingSettings();
         PhotonNetwork.AutomaticallySyncScene = true;
     }
@@ -26,7 +30,7 @@ public class PhotonManager : MonoBehaviourPunCallbacks
     {
         base.OnConnectedToMaster();
         PhotonNetwork.JoinLobby();
-        Debug.Log("Photon connected to master.");
+        Debug.Log($"Photon connected to master. Region: {PhotonNetwork.CloudRegion}, GameVersion: {PhotonNetwork.GameVersion}");
     }
 
     public bool StartMatchmaking()
@@ -37,18 +41,21 @@ public class PhotonManager : MonoBehaviourPunCallbacks
             return false;
         }
 
-        return PhotonNetwork.JoinRandomRoom();
+        RoomOptions options = new RoomOptions { MaxPlayers = 2 };
+        return PhotonNetwork.JoinRandomOrCreateRoom(null, 2, MatchmakingMode.FillRoom, TypedLobby.Default, null, null, options);
     }
 
     public override void OnJoinRandomFailed(short returnCode, string message)
     {
         base.OnJoinRandomFailed(returnCode, message);
+        Debug.LogWarning($"JoinRandom failed. Code: {returnCode}, Message: {message}");
         RoomOptions options = new RoomOptions { MaxPlayers = 2 };
         PhotonNetwork.CreateRoom(null, options);
     }
 
     public override void OnJoinedRoom()
     {
+        Debug.Log($"Joined room. Name: {PhotonNetwork.CurrentRoom.Name}, Players: {PhotonNetwork.CurrentRoom.PlayerCount}/{PhotonNetwork.CurrentRoom.MaxPlayers}, Region: {PhotonNetwork.CloudRegion}");
         UpdateUI();
         RegisterLocalPlayerProperties();
         RefreshMyInfoUI();
@@ -91,6 +98,7 @@ public class PhotonManager : MonoBehaviourPunCallbacks
 
     public override void OnPlayerEnteredRoom(Player newPlayer)
     {
+        Debug.Log($"Player entered room. Players: {PhotonNetwork.CurrentRoom.PlayerCount}/{PhotonNetwork.CurrentRoom.MaxPlayers}");
         UpdateUI();
         ScheduleReadyPanelCheck();
     }

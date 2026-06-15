@@ -83,6 +83,10 @@ public class BattleUIManager : Singleton<BattleUIManager>
     private bool isReady = false;
     private Color readyButtonDefaultColor;
     private string readyButtonDefaultText;
+    private string oppNameTextDefaultText;
+    private string oppBattleNameDefaultText;
+    private string[] oppAttrTextDefaultTexts;
+    private float[] oppAttrTextDefaultAlphas;
 
     // Battle Panel
     [Header("Battle Panel")]
@@ -112,6 +116,7 @@ public class BattleUIManager : Singleton<BattleUIManager>
         base.Awake();
 
         CacheReadyButtonDefaultState();
+        CacheOpponentInfoDefaultState();
 
         matchStartButton.onClick.AddListener(OnClickStartMatchmaking);
         matchCancelButton.onClick.AddListener(OnClickCancelMatchmaking);
@@ -164,6 +169,7 @@ public class BattleUIManager : Singleton<BattleUIManager>
             return;
         }
 
+        ClearOpponentInfoUI();
         lobbyPanel.SetActive(false);
         loadingPanel.SetActive(true);
         readyPanel.SetActive(false);
@@ -193,6 +199,7 @@ public class BattleUIManager : Singleton<BattleUIManager>
 
         UpdatePlayerCount(0);
         ResetReadyUI();
+        ClearOpponentInfoUI();
     }
 
     public void BackToMatchingAfterOpponentLeft()
@@ -204,6 +211,7 @@ public class BattleUIManager : Singleton<BattleUIManager>
 
         isMatching = true;
         ResetReadyUI();
+        ClearOpponentInfoUI();
 
         UpdatePlayerCount(PhotonNetwork.CurrentRoom.PlayerCount);
     }
@@ -252,6 +260,24 @@ public class BattleUIManager : Singleton<BattleUIManager>
         readyButtonDefaultColor = readyButton.image.color;
         var buttonText = readyButton.GetComponentInChildren<TextMeshProUGUI>();
         readyButtonDefaultText = buttonText != null ? buttonText.text : string.Empty;
+    }
+
+    private void CacheOpponentInfoDefaultState()
+    {
+        oppNameTextDefaultText = oppNameText.text;
+        oppBattleNameDefaultText = oppName.text;
+
+        oppAttrTextDefaultTexts = new string[oppAttrText.Length];
+        for (int i = 0; i < oppAttrText.Length; i++)
+        {
+            oppAttrTextDefaultTexts[i] = oppAttrText[i].text;
+        }
+
+        oppAttrTextDefaultAlphas = new float[oppAttrTextCanvasGroup.Length];
+        for (int i = 0; i < oppAttrTextCanvasGroup.Length; i++)
+        {
+            oppAttrTextDefaultAlphas[i] = oppAttrTextCanvasGroup[i].alpha;
+        }
     }
 
     private bool TryResolvePhotonManager()
@@ -359,6 +385,22 @@ public class BattleUIManager : Singleton<BattleUIManager>
     {
         myNameText.text = name;
         myName.text = name;
+    }
+
+    public void ClearOpponentInfoUI()
+    {
+        oppNameText.text = oppNameTextDefaultText;
+        oppName.text = oppBattleNameDefaultText;
+
+        for (int i = 0; i < oppAttrText.Length; i++)
+        {
+            oppAttrText[i].text = i < oppAttrTextDefaultTexts.Length ? oppAttrTextDefaultTexts[i] : string.Empty;
+        }
+
+        for (int i = 0; i < oppAttrTextCanvasGroup.Length; i++)
+        {
+            oppAttrTextCanvasGroup[i].alpha = i < oppAttrTextDefaultAlphas.Length ? oppAttrTextDefaultAlphas[i] : 0f;
+        }
     }
 
     // 상대방의 정보를 받아 UI 텍스트에 출력

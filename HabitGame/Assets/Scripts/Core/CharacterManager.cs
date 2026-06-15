@@ -8,8 +8,9 @@ public class CharacterManager : Singleton<CharacterManager>
     // 외부에서 직접적으로 참조할 일이 없다면 private으로 잠구는게 낫긴 함
     public CharacterResponse characterStatusData { get; private set; }
 
-    private void Start()
+    private void Awake()
     {
+        base.Awake();
         UpdateCharacterStatus(new CharacterResponse { UserId = 123, Atk = 100, Def = 50, Hp = 1000, Spd = 10, FireLv = 5, WaterLv = 3, GrassLv = 1, AuroraLv = 0 }); 
     }
 
