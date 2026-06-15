@@ -101,6 +101,10 @@ public class BattleUIManager : Singleton<BattleUIManager>
     [SerializeField]
     private Image oppHpBar;
     [SerializeField]
+    private TextMeshProUGUI myHpText;
+    [SerializeField]
+    private TextMeshProUGUI oppHpText;
+    [SerializeField]
     private Image myCharacterImage;
     [SerializeField]
     private Image oppCharacterImage;
@@ -237,6 +241,7 @@ public class BattleUIManager : Singleton<BattleUIManager>
     {
         readyPanel.SetActive(false);
         battlePanel.SetActive(true);
+        InitBattleUI();
     }
 
     private void ResetReadyUI()
@@ -345,6 +350,29 @@ public class BattleUIManager : Singleton<BattleUIManager>
 
     }
 
+    private BattleSetupData CreateBattleSetupData()
+    {
+        List<EquipmentDataSO> equips = new List<EquipmentDataSO>();
+
+        if (selectedEquipData != null)
+        {
+            foreach (var equip in selectedEquipData.Values)
+            {
+                if (equip != null)
+                {
+                    equips.Add(equip);
+                }
+            }
+        }
+
+        return new BattleSetupData
+        {
+            selectedAttr = selectedAttrType,
+            selectedItem = selectedItem,
+            selectedEquips = equips
+        };
+    }
+
     // 준비완료 버튼 클릭 시
     // 실제 준비 완료 데이터를 상대방에게 넘겨줘야할 수도?
     private void OnClickReadyButton()
@@ -353,6 +381,11 @@ public class BattleUIManager : Singleton<BattleUIManager>
         if (!isReady)
         {
             isReady = true;
+
+            BattleSetupData setup = CreateBattleSetupData();
+            BattleUnit myUnit = CharacterManager.Instance.CreateBattleUnit(setup);
+            photonManager.RegisterBattleUnitProperties(myUnit);
+
             readyButton.image.color = Color.red;
             buttonText.text = "Ready";
             isMeReadyText.text = "READY";
@@ -456,11 +489,21 @@ public class BattleUIManager : Singleton<BattleUIManager>
         if (isPlayer)
         {
             myHpBar.fillAmount = ratio;
+            myHpText.text = $"{currentHp} / {maxHp}";
         }
         else
         {
             oppHpBar.fillAmount = ratio;
+            oppHpText.text = $"{currentHp} / {maxHp}";
         }
+    }
+
+    public void SetBattleHpUI(int myHp,int oppHp)
+    {
+        myHpText.text = $"{myHp} / {myHp}";
+        oppHpText.text = $"{oppHp} / {oppHp}";
+
+        InitCharacterHp();
     }
 
     private void UpdateTimerText()

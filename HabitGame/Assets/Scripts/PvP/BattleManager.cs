@@ -8,11 +8,21 @@ public class BattleManager : Singleton<BattleManager>
     private BattleUnit player;
     private bool isBattle = false;
     private PhotonView photonView;
+    [SerializeField]
+    private PhotonManager photonManager;
 
     private void Awake()
     {
         base.Awake();
         photonView = GetComponent<PhotonView>();
+    }
+
+    private void Start()
+    {
+        if(photonManager == null)
+        {
+            photonManager = FindObjectOfType<PhotonManager>();
+        }
     }
 
     private BattleUnit GetFirstAttack(BattleUnit my, BattleUnit opp)
@@ -118,6 +128,7 @@ public class BattleManager : Singleton<BattleManager>
     [PunRPC]
     public void RPC_StartBattle()
     {
+        photonManager.PrepareBattlePanelUI();
         BattleUIManager.Instance.ReadyComplete();
     }
 }
