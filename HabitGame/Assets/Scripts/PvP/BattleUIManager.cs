@@ -374,7 +374,6 @@ public class BattleUIManager : Singleton<BattleUIManager>
     }
 
     // 준비완료 버튼 클릭 시
-    // 실제 준비 완료 데이터를 상대방에게 넘겨줘야할 수도?
     private void OnClickReadyButton()
     {
         var buttonText = readyButton.GetComponentInChildren<TextMeshProUGUI>();

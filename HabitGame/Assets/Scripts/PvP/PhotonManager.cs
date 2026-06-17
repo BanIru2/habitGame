@@ -1,9 +1,10 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+using ExitGames.Client.Photon;
 using Photon.Pun;
 using Photon.Realtime;
-using ExitGames.Client.Photon;
+using System.Collections;
+using System.Collections.Generic;
+using Unity.VisualScripting;
+using UnityEngine;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 
 public class PhotonManager : MonoBehaviourPunCallbacks
@@ -126,6 +127,18 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         }
     }
 
+    private bool ContainsBattleUnitProperty(Hashtable props)
+    {
+        return props.ContainsKey(PropBattleMaxHp)
+            || props.ContainsKey(PropBattleHp)
+            || props.ContainsKey(PropBattleAtk)
+            || props.ContainsKey(PropBattleDef)
+            || props.ContainsKey(PropBattleSpd)
+            || props.ContainsKey(PropBattleCrit)
+            || props.ContainsKey(PropBattleAttr)
+            || props.ContainsKey(PropBattleAttrLevel);
+    }
+
     public override void OnPlayerPropertiesUpdate(Player targetPlayer, Hashtable changedProps)
     {
         base.OnPlayerPropertiesUpdate(targetPlayer, changedProps);
@@ -133,7 +146,7 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         RefreshOpponentInfoUI();
         ScheduleReadyPanelCheck();
 
-        if (PhotonNetwork.IsMasterClient && changedProps.ContainsKey(PropIsReady))
+        if (PhotonNetwork.IsMasterClient && (changedProps.ContainsKey(PropIsReady) || ContainsBattleUnitProperty(changedProps)))
         {
             CheckAllPlayersReady();
         }
@@ -281,39 +294,11 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         BattleUIManager.Instance.BackToMatchingAfterOpponentLeft();
     }
 
-    private int GetPlayerHp(Player player)
-    {
-        if (player.CustomProperties.TryGetValue(PropHp, out object hp))
-        {
-            return (int)hp;
-        }
-
-        return 0;
-    }
-
-    private void RefreshBattleInfoUI()
-    {
-        if (!PhotonNetwork.InRoom) return;
-
-        int myHp = GetPlayerHp(PhotonNetwork.LocalPlayer);
-        int oppHp = 0;
-
-        foreach (Player player in PhotonNetwork.PlayerList)
-        {
-            if (player == PhotonNetwork.LocalPlayer) continue;
-
-            oppHp = GetPlayerHp(player);
-            break;
-        }
-
-        BattleUIManager.Instance.SetBattleHpUI(myHp, oppHp);
-    }
-
-    public void PrepareBattlePanelUI()
+    public void PrepareBattlePanelUI(BattleUnit myUnit, BattleUnit oppUnit)
     {
         RefreshMyInfoUI();
         RefreshOpponentInfoUI();
-        RefreshBattleInfoUI();
+        BattleUIManager.Instance.SetBattleHpUI(myUnit.maxHp, oppUnit.maxHp);
     }
 
     public void RegisterBattleUnitProperties(BattleUnit unit)
@@ -352,5 +337,41 @@ public class PhotonManager : MonoBehaviourPunCallbacks
             attribute = props.TryGetValue(PropBattleAttr, out object attr) ? (AttributeType)(int)attr : AttributeType.Fire,
             attributeLevel = props.TryGetValue(PropBattleAttrLevel, out object attrLv) ? (int)attrLv : 0
         };
+    }
+
+    // 상대방 Player 찾기
+    private Player GetOpponentPlayer()
+    {
+        foreach (Player player in PhotonNetwork.PlayerList)
+        {
+            if (player != PhotonNetwork.LocalPlayer)
+            {
+                return player;
+            }
+        }
+
+        return null;
+    }
+
+    public bool TryCreateBattleUnits(out BattleUnit myUnit, out BattleUnit oppUnit)
+    {
+        myUnit = null;
+        oppUnit = null;
+
+        if (!PhotonNetwork.InRoom) return false;
+
+        Player opponent = GetOpponentPlayer();
+        if (opponent == null) return false;
+
+        if (!HasRequiredBattleUnitData(PhotonNetwork.LocalPlayer)) return false;
+        if (!HasRequiredBattleUnitData(opponent)) return false;
+
+        myUnit = CreateBattleUnitFromPlayer(PhotonNetwork.LocalPlayer);
+        oppUnit = CreateBattleUnitFromPlayer(opponent);
+
+        Debug.Log($"My BattleUnit: {myUnit.name}, HP:{myUnit.hp}/{myUnit.maxHp}, ATK:{myUnit.atk}, DEF:{myUnit.def}, SPD:{myUnit.spd}");
+        Debug.Log($"Opp BattleUnit: {oppUnit.name}, HP:{oppUnit.hp}/{oppUnit.maxHp}, ATK:{oppUnit.atk}, DEF:{oppUnit.def}, SPD:{oppUnit.spd}");
+
+        return true;
     }
 }

@@ -128,7 +128,14 @@ public class BattleManager : Singleton<BattleManager>
     [PunRPC]
     public void RPC_StartBattle()
     {
-        photonManager.PrepareBattlePanelUI();
+
+        if (!photonManager.TryCreateBattleUnits(out BattleUnit myUnit, out BattleUnit oppUnit))
+        {
+            Debug.LogWarning("Failed to create battle units.");
+            return;
+        }
+
+        photonManager.PrepareBattlePanelUI(myUnit, oppUnit);
         BattleUIManager.Instance.ReadyComplete();
     }
 }
