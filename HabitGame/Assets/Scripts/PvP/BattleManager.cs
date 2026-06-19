@@ -78,6 +78,12 @@ public class BattleManager : Singleton<BattleManager>
         Debug.Log($"Attack result received. Damage:{damage}, Crit:{isCrit}, DefenderIsMe:{defenderIsMe}, HP:{currentHp}/{defenderUnit.maxHp}");
     }
 
+    [PunRPC]
+    public void RPC_UpdateTurn(int turn)
+    {
+        BattleUIManager.Instance.UpdateTurnText(turn);
+    }
+
     private void FinishBattle(BattleUnit winner)
     {
         if (!PhotonNetwork.IsMasterClient) return;
@@ -155,6 +161,8 @@ public class BattleManager : Singleton<BattleManager>
 
         while (first.hp > 0 && second.hp > 0 && isBattle)
         {
+            photonView.RPC("RPC_UpdateTurn", RpcTarget.All, turn);
+
             PerformAttack(first, second, turn);
             yield return new WaitForSeconds(1f);
             if (second.hp > 0)

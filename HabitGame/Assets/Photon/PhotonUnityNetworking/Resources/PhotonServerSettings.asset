@@ -42,6 +42,8 @@ MonoBehaviour:
   - RPC_UpdateOpponentReady
   - SyncReadyState
   - RPC_StartBattle
+  - RPC_ApplyAttackResult
+  - RPC_FinishBattle
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 0

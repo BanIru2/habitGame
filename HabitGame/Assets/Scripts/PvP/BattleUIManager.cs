@@ -108,6 +108,8 @@ public class BattleUIManager : Singleton<BattleUIManager>
     private Image myCharacterImage;
     [SerializeField]
     private Image oppCharacterImage;
+    [SerializeField]
+    private TextMeshProUGUI turnCountText;
 
     private bool isBattle = false;
     private float remainTime;
@@ -467,6 +469,14 @@ public class BattleUIManager : Singleton<BattleUIManager>
 
     // 각 플레이어 이름 정보 받아와서 출력하기
     // 각 플레이어 유닛 정보를 앞전에 미리 받아온다면 private으로 받고 InitBattleUI에서 호출 가능
+    public void UpdateTurnText(int turn)
+    {
+        if(turnCountText != null)
+        {
+            turnCountText.text = turn.ToString();
+        }
+    }
+
     public void GetName(string myNameSTr, string oppNameStr)
     {
         myNameText.text = myNameSTr;
