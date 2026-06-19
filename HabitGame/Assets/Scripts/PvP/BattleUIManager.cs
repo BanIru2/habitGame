@@ -376,6 +376,8 @@ public class BattleUIManager : Singleton<BattleUIManager>
     // 준비완료 버튼 클릭 시
     private void OnClickReadyButton()
     {
+        if (!TryResolvePhotonManager()) return;
+
         var buttonText = readyButton.GetComponentInChildren<TextMeshProUGUI>();
         if (!isReady)
         {
