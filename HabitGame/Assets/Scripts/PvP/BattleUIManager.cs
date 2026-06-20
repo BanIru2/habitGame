@@ -111,9 +111,10 @@ public class BattleUIManager : Singleton<BattleUIManager>
     [SerializeField]
     private TextMeshProUGUI turnCountText;
 
-    private bool isBattle = false;
+    private bool isBattle = false;    // UI 타이머 표시 진행을 위한 플래그
     private float remainTime;
     private int remainTimeForDisplay;
+    private double battleEndTime;
 
 
 
@@ -149,14 +150,14 @@ public class BattleUIManager : Singleton<BattleUIManager>
         {
             loadingSpinner.Rotate(0, 0, -spinSpeed * Time.deltaTime);
         }
+
+        // 타이머 작동
         if (isBattle)
         {
-            if(remainTime > 0)
-            {
-                remainTime -= Time.deltaTime;
-                UpdateTimerText();
-            }
-            else
+            remainTime = Mathf.Max(0f, (float)(battleEndTime - PhotonNetwork.Time));
+            UpdateTimerText();
+
+            if (remainTime <= 0f)
             {
                 isBattle = false;
                 TimeOver();
@@ -239,11 +240,11 @@ public class BattleUIManager : Singleton<BattleUIManager>
 
     //-------------------------------Ready Panel-----------------------------------
     // 준비 단계 완료 시(양 측 다 준비 완료 or 준비 시간 끝) 화면 전환
-    public void ReadyComplete()
+    public void ReadyComplete(double endTime)
     {
         readyPanel.SetActive(false);
         battlePanel.SetActive(true);
-        InitBattleUI();
+        InitBattleUI(endTime);
     }
 
     private void ResetReadyUI()
@@ -459,12 +460,14 @@ public class BattleUIManager : Singleton<BattleUIManager>
     //------------------------------Battle Panel-------------------------------
     // UI 초기화에 필요한 기능 추가할 것
     // 전투 시작 전 호출되어야 함
-    public void InitBattleUI()
+    public void InitBattleUI(double endTime)
     {
+        battleEndTime = endTime;
         isBattle = true;
-        remainTime = 60f;
+        remainTime = Mathf.Max(0f, (float)(battleEndTime - PhotonNetwork.Time));
         remainTimeForDisplay = -1;
         InitCharacterHp();
+        UpdateTimerText();
     }
 
     // 각 플레이어 이름 정보 받아와서 출력하기

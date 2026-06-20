@@ -7,13 +7,16 @@ using UnityEngine;
 
 public class BattleManager : Singleton<BattleManager>
 {
-    private bool isBattle = false;
+    private bool isBattle = false;    // 전투 로직/마스터 클라이언트 계산 진행 여부
     private PhotonView photonView;
     [SerializeField]
     private PhotonManager photonManager;
 
     private BattleUnit myUnit;
     private BattleUnit oppUnit;
+
+    private const double BattleLimitTime = 60.0;
+    private bool isBattleFinished = false;
 
     private void Awake()
     {
@@ -87,6 +90,10 @@ public class BattleManager : Singleton<BattleManager>
     private void FinishBattle(BattleUnit winner)
     {
         if (!PhotonNetwork.IsMasterClient) return;
+        if (isBattleFinished) return;    // 중복 방지
+
+        isBattleFinished = true;
+        isBattle = false;
 
         // 마스터 기준 결과
         int result;
@@ -112,6 +119,7 @@ public class BattleManager : Singleton<BattleManager>
     public void RPC_FinishBattle(int masterResult)
     {
         isBattle = false;
+        isBattleFinished = true;
 
         bool isDraw = masterResult == 0;
         bool iWon = false;
@@ -141,7 +149,12 @@ public class BattleManager : Singleton<BattleManager>
 
     public void TreatTimeOver()
     {
-        isBattle = false;
+        if (!PhotonNetwork.IsMasterClient) return;    // 마스터 클라이언트만 처리
+        if (!isBattle || isBattleFinished) return;    // 중복 호출 방지
+        if (myUnit == null || oppUnit == null) return;
+
+        BattleUnit winner = GetWinner(myUnit, oppUnit);
+        FinishBattle(winner);
     }
 
     private BattleUnit GetWinner(BattleUnit first, BattleUnit second)
@@ -165,11 +178,18 @@ public class BattleManager : Singleton<BattleManager>
 
             PerformAttack(first, second, turn);
             yield return new WaitForSeconds(1f);
+
+            // 턴 사이클이 끝나기 전 타임오버가 되는 경우에 대한 안전장치
+            if (!isBattle || isBattleFinished) break;
+
             if (second.hp > 0)
             {
                 PerformAttack(second, first, turn);
             }
             yield return new WaitForSeconds(1f);
+
+            // 안전장치 동일
+            if (!isBattle || isBattleFinished) break;
 
             turn++;
         }
@@ -180,6 +200,7 @@ public class BattleManager : Singleton<BattleManager>
     private void StartBattle()
     {
         isBattle = true;
+        isBattleFinished = false;
 
         // 방장만 연산
         if (!PhotonNetwork.IsMasterClient) return;
@@ -205,11 +226,12 @@ public class BattleManager : Singleton<BattleManager>
     {
         if (!PhotonNetwork.IsMasterClient) return;
 
-        photonView.RPC("RPC_StartBattle", RpcTarget.All);
+        double battleEndTime = PhotonNetwork.Time + BattleLimitTime;
+        photonView.RPC("RPC_StartBattle", RpcTarget.All, battleEndTime);
     }
 
     [PunRPC]
-    public void RPC_StartBattle()
+    public void RPC_StartBattle(double battleEndTime)
     {
 
         if (!photonManager.TryCreateBattleUnits(out BattleUnit createdMyUnit, out BattleUnit createdOppUnit))
@@ -222,10 +244,9 @@ public class BattleManager : Singleton<BattleManager>
         oppUnit = createdOppUnit;
 
         photonManager.PrepareBattlePanelUI(myUnit, oppUnit);
-        BattleUIManager.Instance.ReadyComplete();
+        BattleUIManager.Instance.ReadyComplete(battleEndTime);
 
  
         StartBattle();
-        
     }
 }
