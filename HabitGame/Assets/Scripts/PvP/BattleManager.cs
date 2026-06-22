@@ -144,7 +144,7 @@ public class BattleManager : Singleton<BattleManager>
         myUnit = null;
         oppUnit = null;
 
-        BattleUIManager.Instance.FinishBattle();
+        BattleUIManager.Instance.FinishBattle(masterResult);
     }
 
     public void TreatTimeOver()

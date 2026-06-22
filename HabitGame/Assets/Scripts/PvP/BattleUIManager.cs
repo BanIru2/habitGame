@@ -7,7 +7,8 @@ using UnityEngine.UI;
 using Photon;
 using Photon.Pun;
 using ExitGames.Client.Photon;
-using Hashtable = ExitGames.Client.Photon.Hashtable;    // 모호성 방지
+using Hashtable = ExitGames.Client.Photon.Hashtable;
+using System.Security.Cryptography;    // 모호성 방지
 
 public class BattleUIManager : Singleton<BattleUIManager>
 {
@@ -111,6 +112,22 @@ public class BattleUIManager : Singleton<BattleUIManager>
     [SerializeField]
     private TextMeshProUGUI turnCountText;
 
+    // BattlePanel / ResultPanel
+    [SerializeField]
+    private GameObject winImage;
+    [SerializeField]
+    private GameObject loseImage;
+    [SerializeField]
+    private GameObject drawImage;
+    [SerializeField]
+    private TextMeshProUGUI currentRankingPointText;
+    [SerializeField]
+    private TextMeshProUGUI operatorText;
+    [SerializeField]
+    private TextMeshProUGUI resultRankingPointText;
+    [SerializeField]
+    private Button checkButton;
+
     private bool isBattle = false;    // UI 타이머 표시 진행을 위한 플래그
     private float remainTime;
     private int remainTimeForDisplay;
@@ -141,6 +158,7 @@ public class BattleUIManager : Singleton<BattleUIManager>
             button.onClick.AddListener(() => OnClickEquipItemButton(button));
         }
         readyButton.onClick.AddListener(OnClickReadyButton);
+        checkButton.onClick.AddListener(OnClickCheckButton);
     }
 
     private void Update()
@@ -184,29 +202,16 @@ public class BattleUIManager : Singleton<BattleUIManager>
         isMatching = true;
     }
     // ------------------------------Loading Pannel---------------------------------
-    // 매칭 취소 버튼 클릭 시 화면 전환
+    // 매칭 취소 버튼 클릭 시 로비로 이동
     private void OnClickCancelMatchmaking()
     {
         if (!TryResolvePhotonManager())
         {
-            CancelMatchingComplete();
+            ReturnToLobby();
             return;
         }
 
-        photonManager.CancelMatchmaking();
-    }
-
-    public void CancelMatchingComplete()
-    {
-        loadingPanel.SetActive(false);
-        readyPanel.SetActive(false);
-        battlePanel.SetActive(false);
-        lobbyPanel.SetActive(true);
-        isMatching = false;
-
-        UpdatePlayerCount(0);
-        ResetReadyUI();
-        ClearOpponentInfoUI();
+        photonManager.ReturnToLobby();
     }
 
     public void BackToMatchingAfterOpponentLeft()
@@ -468,6 +473,8 @@ public class BattleUIManager : Singleton<BattleUIManager>
         remainTimeForDisplay = -1;
         InitCharacterHp();
         UpdateTimerText();
+        InitResultImage();
+        InitRankingPointText();
     }
 
     // 각 플레이어 이름 정보 받아와서 출력하기
@@ -493,6 +500,20 @@ public class BattleUIManager : Singleton<BattleUIManager>
     {
         myHpBar.fillAmount = 1f;
         oppHpBar.fillAmount = 1f;
+    }
+
+    private void InitResultImage()
+    {
+        winImage.SetActive(false);
+        loseImage.SetActive(false);
+        drawImage.SetActive(false);
+    }
+
+    private void InitRankingPointText()
+    {
+        currentRankingPointText.text = "0";
+        operatorText.text = "+";
+        resultRankingPointText.text = "0";
     }
 
     // 체력바 업데이트
@@ -533,13 +554,78 @@ public class BattleUIManager : Singleton<BattleUIManager>
         }
     }
 
-    public void FinishBattle()
+    public void FinishBattle(int masterResult)
     {
         isBattle = false;
+        PrintResult(masterResult);
     }
 
     private void TimeOver()
     {
         BattleManager.Instance.TreatTimeOver();
+    }
+
+    private void PrintResult(int masterResult)
+    {
+        bool isDraw = masterResult == 0;
+        bool iWon = false;
+
+        if (!isDraw)
+        {
+            bool masterWon = masterResult == 1;
+            iWon = PhotonNetwork.IsMasterClient ? masterWon : !masterWon;
+        }
+
+        if (isDraw)
+        {
+            drawImage.SetActive(true);
+        }
+        else if (iWon)
+        {
+            winImage.SetActive(true);
+        }
+        else if (!iWon)
+        {
+            loseImage.SetActive(true);
+        }
+    }
+
+    private void OnClickCheckButton()
+    {
+        if (!TryResolvePhotonManager())
+        {
+            ReturnToLobby();
+            return;
+        }
+
+        photonManager.ReturnToLobby();
+    }
+
+    // 로비로 돌아갈 때 1차적 데이터 초기화
+    // 전투 종료 후 / 매칭 캔슬
+    public void ReturnToLobby()
+    {
+        battlePanel.SetActive(false);
+        readyPanel.SetActive(false);
+        loadingPanel.SetActive(false);
+        lobbyPanel.SetActive(true);
+
+        isMatching = false;
+        isBattle = false;
+
+        UpdatePlayerCount(0);
+        ResetReadyUI();
+        ClearOpponentInfoUI();
+
+        InitResultImage();
+        InitRankingPointText();
+        InitCharacterHp();
+
+        turnCountText.text = "0";
+        timerText.text = "60";
+        timerText.color = Color.black;
+
+        remainTime = 0f;
+        remainTimeForDisplay = -1;
     }
 }

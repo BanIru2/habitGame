@@ -260,25 +260,11 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         }
     }
 
-    public void CancelMatchmaking()
-    {
-        CancelInvoke(nameof(TryGoToReadyPanel));
-
-        if (PhotonNetwork.InRoom)
-        {
-            PhotonNetwork.LeaveRoom();
-        }
-        else
-        {
-            BattleUIManager.Instance.CancelMatchingComplete();
-        }
-    }
-
     public override void OnLeftRoom()
     {
         base.OnLeftRoom();
         CancelInvoke(nameof(TryGoToReadyPanel));
-        BattleUIManager.Instance.CancelMatchingComplete();
+        BattleUIManager.Instance.ReturnToLobby();
     }
 
     public override void OnPlayerLeftRoom(Player otherPlayer)
@@ -373,5 +359,19 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         Debug.Log($"Opp BattleUnit: {oppUnit.name}, HP:{oppUnit.hp}/{oppUnit.maxHp}, ATK:{oppUnit.atk}, DEF:{oppUnit.def}, SPD:{oppUnit.spd}");
 
         return true;
+    }
+
+    public void ReturnToLobby()
+    {
+        CancelInvoke(nameof(TryGoToReadyPanel));
+
+        if (PhotonNetwork.InRoom)
+        {
+            PhotonNetwork.LeaveRoom();
+        }
+        else
+        {
+            BattleUIManager.Instance.ReturnToLobby();
+        }
     }
 }

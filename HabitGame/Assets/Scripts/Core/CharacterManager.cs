@@ -12,7 +12,7 @@ public class CharacterManager : Singleton<CharacterManager>
     {
         base.Awake();
         // 임시 데이터
-        UpdateCharacterStatus(new CharacterResponse { UserId = 123, Atk = 100, Def = 50, Hp = 1000, Spd = 10, FireLv = 5, WaterLv = 3, GrassLv = 1, AuroraLv = 0 }); 
+        UpdateCharacterStatus(new CharacterResponse { UserId = 123, Atk = 10, Def = 50, Hp = 100000, Spd = 10, FireLv = 5, WaterLv = 3, GrassLv = 1, AuroraLv = 0 }); 
     }
 
     // 캐릭터 최신 정보 업데이트
