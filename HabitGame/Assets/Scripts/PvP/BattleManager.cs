@@ -17,6 +17,7 @@ public class BattleManager : Singleton<BattleManager>
 
     private const double BattleLimitTime = 60.0;
     private bool isBattleFinished = false;
+    public bool IsBattleFinished => isBattleFinished;
 
     private void Awake()
     {

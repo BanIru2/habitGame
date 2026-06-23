@@ -23,6 +23,8 @@ public class BattleUIManager : Singleton<BattleUIManager>
     private GameObject readyPanel;
     [SerializeField]
     private GameObject battlePanel;
+    [SerializeField]
+    private GameObject resultPanel;
 
     // Lobby Panel
     [Header("Lobby Panel")]
@@ -507,6 +509,7 @@ public class BattleUIManager : Singleton<BattleUIManager>
         winImage.SetActive(false);
         loseImage.SetActive(false);
         drawImage.SetActive(false);
+        resultPanel.SetActive(false);
     }
 
     private void InitRankingPointText()
@@ -567,6 +570,7 @@ public class BattleUIManager : Singleton<BattleUIManager>
 
     private void PrintResult(int masterResult)
     {
+        resultPanel.SetActive(true);
         bool isDraw = masterResult == 0;
         bool iWon = false;
 

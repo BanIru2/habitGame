@@ -272,6 +272,13 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         base.OnPlayerLeftRoom(otherPlayer);
 
         CancelInvoke(nameof(TryGoToReadyPanel));
+
+        if (BattleManager.Instance.IsBattleFinished)
+        {
+            UpdateUI();
+            return;
+        }
+
         Hashtable props = new Hashtable();
         props.Add(PropIsReady, false);
         PhotonNetwork.LocalPlayer.SetCustomProperties(props);
