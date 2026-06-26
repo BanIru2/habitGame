@@ -19,6 +19,8 @@ public class BattleManager : Singleton<BattleManager>
     private bool isBattleFinished = false;
     public bool IsBattleFinished => isBattleFinished;
 
+    public string myResult { get; private set; }    // 나 자신의 승리여부 저장 (WIN, DRAW, LOSE)
+
     private void Awake()
     {
         base.Awake();
@@ -125,27 +127,28 @@ public class BattleManager : Singleton<BattleManager>
         bool isDraw = masterResult == 0;
         bool iWon = false;
 
-        if (!isDraw)
-        {
-            bool masterWon = masterResult == 1;
-            // 내가 마스터 클라이언트일 때 마스터 클라이언트의 승리여부
-            // 마스터 클라이언트가 아닐 때 마스터가 아닌 클라이언트의 승리여부
-            iWon = PhotonNetwork.IsMasterClient ? masterWon : !masterWon;
-        }
+        myResult = ConvertMasterResultToLocalResult(masterResult);
 
-        if (isDraw)
-        {
-            Debug.Log("전투 종료: Draw");
-        }
-        else
-        {
-            Debug.Log($"전투 종료: {(iWon ? "Win" : "Lose")}");
-        }
+        Debug.Log($"전투 종료: {myResult}");
 
         myUnit = null;
         oppUnit = null;
 
         BattleUIManager.Instance.FinishBattle(masterResult);
+    }
+
+    // 마스터 클라이언트의 결과를 토대로 나의 결과를 산출
+    private string ConvertMasterResultToLocalResult(int masterResult)
+    {
+        if (masterResult == 0)
+        {
+            return "DRAW";
+        }
+
+        bool masterWon = masterResult == 1;
+        bool iWon = PhotonNetwork.IsMasterClient ? masterWon : !masterWon;
+
+        return iWon ? "WIN" : "LOSE";
     }
 
     public void TreatTimeOver()
