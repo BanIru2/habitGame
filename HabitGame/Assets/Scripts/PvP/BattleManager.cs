@@ -20,6 +20,8 @@ public class BattleManager : Singleton<BattleManager>
     public bool IsBattleFinished => isBattleFinished;
 
     public string myResult { get; private set; }    // 나 자신의 승리여부 저장 (WIN, DRAW, LOSE)
+    private string battleId;
+    private long opponentUserId;
 
     private void Awake()
     {
@@ -134,7 +136,11 @@ public class BattleManager : Singleton<BattleManager>
         myUnit = null;
         oppUnit = null;
 
-        BattleUIManager.Instance.FinishBattle(masterResult);
+        BattleBackendManager.Instance.SubmitBattleResult(
+            battleId,
+            myResult,
+            opponentUserId
+        );
     }
 
     // 마스터 클라이언트의 결과를 토대로 나의 결과를 산출
@@ -230,13 +236,21 @@ public class BattleManager : Singleton<BattleManager>
     {
         if (!PhotonNetwork.IsMasterClient) return;
 
+        battleId = System.Guid.NewGuid().ToString();
+
         double battleEndTime = PhotonNetwork.Time + BattleLimitTime;
-        photonView.RPC("RPC_StartBattle", RpcTarget.All, battleEndTime);
+        photonView.RPC("RPC_StartBattle", RpcTarget.All, battleEndTime, battleId);
     }
 
     [PunRPC]
-    public void RPC_StartBattle(double battleEndTime)
+    public void RPC_StartBattle(double battleEndTime, string receivedBattleId)
     {
+        battleId = receivedBattleId;
+        if (!photonManager.TryGetOpponentUserId(out opponentUserId))    // 상대방 id 저장
+        {
+            Debug.LogWarning("Failed to get opponent user id.");
+            return;
+        }
 
         if (!photonManager.TryCreateBattleUnits(out BattleUnit createdMyUnit, out BattleUnit createdOppUnit))
         {

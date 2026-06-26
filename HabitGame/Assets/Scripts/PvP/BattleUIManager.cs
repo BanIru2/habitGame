@@ -557,41 +557,20 @@ public class BattleUIManager : Singleton<BattleUIManager>
         }
     }
 
-    public void FinishBattle(int masterResult)
+    // ------------------------- Battle Finish ----------------------------
+    public void FinishBattle(BattleResultResponse response)
     {
         isBattle = false;
-        PrintResult(masterResult);
+
+        InitResultImage();
+        PrintResultImage(response.Result);
+        SetRankingPointText(response);
+        resultPanel.SetActive(true);
     }
 
     private void TimeOver()
     {
         BattleManager.Instance.TreatTimeOver();
-    }
-
-    private void PrintResult(int masterResult)
-    {
-        resultPanel.SetActive(true);
-        bool isDraw = masterResult == 0;
-        bool iWon = false;
-
-        if (!isDraw)
-        {
-            bool masterWon = masterResult == 1;
-            iWon = PhotonNetwork.IsMasterClient ? masterWon : !masterWon;
-        }
-
-        if (isDraw)
-        {
-            drawImage.SetActive(true);
-        }
-        else if (iWon)
-        {
-            winImage.SetActive(true);
-        }
-        else if (!iWon)
-        {
-            loseImage.SetActive(true);
-        }
     }
 
     private void OnClickCheckButton()
@@ -631,5 +610,43 @@ public class BattleUIManager : Singleton<BattleUIManager>
 
         remainTime = 0f;
         remainTimeForDisplay = -1;
+    }
+
+    private void PrintResultImage(string result)
+    {
+        if (result == "WIN")
+        {
+            winImage.SetActive(true);
+        }
+        else if(result == "LOSE")
+        {
+            loseImage.SetActive(true);
+        }
+        else if (result == "DRAW")
+        {
+            drawImage.SetActive(true);
+        }
+        else
+        {
+            Debug.LogError("[BattleUIManager] PrintResultImage(string result) 매개 변수 명 오류");
+        }
+    }
+
+    private void SetRankingPointText(BattleResultResponse response)
+    {
+        currentRankingPointText.text = response.ScoreBefore.ToString();
+
+        int delta = response.ScoreDelta;
+
+        if(delta >= 0)
+        {
+            operatorText.text = "+";
+        }
+        else
+        {
+            operatorText.text = "-";
+        }
+        resultRankingPointText.text = Mathf.Abs(delta).ToString();
+
     }
 }

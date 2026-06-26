@@ -346,6 +346,22 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         return null;
     }
 
+    public bool TryGetOpponentUserId(out long userId)
+    {
+        userId = 0;
+
+        Player opponent = GetOpponentPlayer();
+        if (opponent == null) return false;
+
+        if (!opponent.CustomProperties.TryGetValue(PropUserId, out object value))
+        {
+            return false;
+        }
+
+        userId = System.Convert.ToInt64(value);
+        return true;
+    }
+
     public bool TryCreateBattleUnits(out BattleUnit myUnit, out BattleUnit oppUnit)
     {
         myUnit = null;
