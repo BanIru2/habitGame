@@ -12,6 +12,10 @@ public class RankingEntryResponse
     [JsonProperty("userId")]
     public long UserId { get; set; }
 
+    // 유저 이름
+    [JsonProperty("nickname")]
+    public string Name { get; set; }
+
     // 현재 시즌 획득 점수
     [JsonProperty("rating")]
     public int Score { get; set; }

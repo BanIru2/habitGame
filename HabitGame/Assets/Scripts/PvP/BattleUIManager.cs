@@ -135,6 +135,8 @@ public class BattleUIManager : Singleton<BattleUIManager>
     private int remainTimeForDisplay;
     private double battleEndTime;
 
+    [SerializeField]
+    private RankingboardManager rankingboardManager;
 
 
     protected override void Awake()
@@ -561,6 +563,8 @@ public class BattleUIManager : Singleton<BattleUIManager>
     public void FinishBattle(BattleResultResponse response)
     {
         isBattle = false;
+
+        rankingboardManager.UseRemainCount();
 
         InitResultImage();
         PrintResultImage(response.Result);
