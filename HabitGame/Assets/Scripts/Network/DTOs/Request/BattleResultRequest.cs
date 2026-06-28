@@ -19,8 +19,4 @@ public class BattleResultRequest
     // 전투 결과 (WIN, DRWA, LOSE)
     [JsonProperty("result")]
     public string Result { get; set; }
-
-    // 배틀 시 선택한 속성 (신체, 자기개발, 환경, 바이오리듬 등)
-    [JsonProperty("selectedAttribute")]
-    public string SelectedAttribute { get; set; }
 }

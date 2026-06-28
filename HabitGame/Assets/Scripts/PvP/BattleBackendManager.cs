@@ -17,7 +17,6 @@ public class BattleBackendManager : Singleton<BattleBackendManager>
             BattleId = battleId,
             OpponentUserId = oppUserId,
             Result = result,
-            SelectedAttribute = ""
         };
 
         BattleResultResponse response = await serviceRegistry.Battle.SubmitResultAsync(request);
