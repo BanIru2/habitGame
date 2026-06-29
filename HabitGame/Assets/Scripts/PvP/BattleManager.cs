@@ -126,9 +126,6 @@ public class BattleManager : Singleton<BattleManager>
         isBattle = false;
         isBattleFinished = true;
 
-        bool isDraw = masterResult == 0;
-        bool iWon = false;
-
         myResult = ConvertMasterResultToLocalResult(masterResult);
 
         Debug.Log($"전투 종료: {myResult}");

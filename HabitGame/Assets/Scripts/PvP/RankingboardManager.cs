@@ -22,6 +22,9 @@ public class RankingboardManager : MonoBehaviour
     [SerializeField]
     private TextMeshProUGUI remainCountText;
 
+    [SerializeField]
+    private ServiceRegistry serviceRegistry;
+
     private const int MaxRemainCount = 5;
     // 마지막으로 전투 횟수 초기화 한 날짜 저장 키
     private const string LastResetDateKey = "Ranking_LastResetDate";
@@ -43,12 +46,13 @@ public class RankingboardManager : MonoBehaviour
 
         StartCoroutine(CheckDailyResetRoutine());
 
-        // 테스트 호출
-        LoadMockRankingBoard();
+        LoadRankingBoard();
+/*        // 테스트 호출
+        LoadMockRankingBoard();*/
     }
 
     // mock 데이터를 통한 테스트용 함수
-    private void LoadMockRankingBoard()
+/*    private void LoadMockRankingBoard()
     {
         List<RankingEntryResponse> list = new List<RankingEntryResponse>();
         for(int i = 0; i < 20; i++)
@@ -75,7 +79,8 @@ public class RankingboardManager : MonoBehaviour
         };
 
         ShowRankingBoard(response);
-    }
+    }*/
+
     //----------------------------- 랭킹 보드 생성 -----------------------------------
     // 최초로 필요한 개수의 Row 생성
     private void InitializeRows()
@@ -106,8 +111,8 @@ public class RankingboardManager : MonoBehaviour
         }
     }
 
-    // 랭킹 보드 정보를 가져와 정렬 후 갱신해주기 위한 외부 호출용 함수
-    public void ShowRankingBoard(RankingListResponse response)
+    // 받아온 랭킹 정보를 정령 후 UI에 반영
+    private void ShowRankingBoard(RankingListResponse response)
     {
         myRanking = response.MyRanking;
         List<RankingEntryResponse> rankings = response.Rankings;
@@ -117,9 +122,30 @@ public class RankingboardManager : MonoBehaviour
         RefreshMyRankingData();
     }
 
+    // 랭킹 보드 정보를 가져오기 위한 외부 호출용 함수
+    public async void LoadRankingBoard()
+    {
+        try
+        {
+            RankingListResponse response = await serviceRegistry.Ranking.GetRankingsAsync();
+            ShowRankingBoard(response);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"[RankingboardManager] Failed to load ranking board: {e.Message}");
+        }
+    }
+
     // -------------------------- 내 랭킹 박스 ---------------------------
     private void RefreshMyRankingData()
     {
+        if (myRanking == null)
+        {
+            myRankingText.text = "-";
+            myScoreText.text = "0";
+            return;
+        }
+
         myRankingText.text = myRanking.Rank.ToString();
         myScoreText.text = myRanking.Score.ToString();
     }
