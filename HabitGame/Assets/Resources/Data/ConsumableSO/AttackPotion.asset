@@ -16,7 +16,7 @@ MonoBehaviour:
   itemId: 
   displayName: "\uACF5\uACA9\uB825 \uBC84\uD504 \uD3EC\uC158"
   description: "\uC804\uD22C 1\uD68C\uC5D0 \uD55C\uD574 \uACF5\uACA9\uB825\uC774
-    \uC99D\uAC00\uD55C"
+    \uC99D\uAC00\uD55C\uB2E4"
   cost: 0
   icon: {fileID: 0}
   unlockCondition:
