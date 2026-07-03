@@ -32,7 +32,7 @@ public class ItemSlotUI : MonoBehaviour
 
     // 외부 호출 - 아이템 슬롯 내부 동작 시작점
     // 어디서 클릭했냐에 따라 각각 다른 기능을 수행할 수 있도록 onClick함수를 받아 실행
-    public void LoadData(InventoryItemResponse response, ItemDataSO so, Action<InventoryItemResponse, ItemDataSO> onClick)
+    public void LoadData(InventoryItemResponse response, ItemDataSO so, Action<InventoryItemViewData> onClick)
     {
         this.data = response;
         this.itemSO = so;
@@ -86,13 +86,13 @@ public class ItemSlotUI : MonoBehaviour
     }
 
     // 버튼 클릭 이벤트 연결
-    private void ApplyClickEvent(Action<InventoryItemResponse, ItemDataSO> onClick)
+    private void ApplyClickEvent(Action<InventoryItemViewData> onClick)
     {
         button.onClick.RemoveAllListeners();
 
         if (onClick != null)
         {
-            button.onClick.AddListener(() => onClick.Invoke(data, itemSO));
+            button.onClick.AddListener(() => onClick.Invoke(new InventoryItemViewData { Response = data, ItemSO = itemSO }));
         }
     }
 }

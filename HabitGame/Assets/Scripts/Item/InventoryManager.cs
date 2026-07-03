@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,16 +9,63 @@ public class InventoryManager : MonoBehaviour
 {
     [SerializeField] private ItemSlotUI itemSlotPrefab;
     [SerializeField] private Transform itemSlotParent;
+
+    private readonly List<InventoryItemViewData> allItems = new List<InventoryItemViewData>();
+    private readonly List<InventoryItemViewData> equipmentItems = new List<InventoryItemViewData>();
+    private readonly List<InventoryItemViewData> consumableItems = new List<InventoryItemViewData>();
+
     [SerializeField] private List<ItemDataSO> testItems;
+
 
     [SerializeField]
     private Button equipButton;
     [SerializeField]
     private Button consumableButton;
 
-    private readonly List<InventoryItemViewData> allItems = new List<InventoryItemViewData>();
-    private readonly List<InventoryItemViewData> equipmentItems = new List<InventoryItemViewData>();
-    private readonly List<InventoryItemViewData> consumableItems = new List<InventoryItemViewData>();
+    [SerializeField]
+    private GameObject popupDim;
+
+    [Header ("장비 상세 정보 팝업")]
+    [SerializeField]
+    private GameObject equipDetail;
+    [SerializeField]
+    private Image equipIcon;
+    [SerializeField]
+    private TextMeshProUGUI equipNameText;
+    [SerializeField]
+    private TextMeshProUGUI equipDescText;
+    [SerializeField]
+    private Button doEquipButton;
+    [SerializeField]
+    private Button equipCloseButton;
+    [Header("소비 상세 정보 팝업")]
+    [SerializeField]
+    private GameObject consumDetail;
+    [SerializeField]
+    private Image consumIcon;
+    [SerializeField]
+    private TextMeshProUGUI consumNameText;
+    [SerializeField]
+    private TextMeshProUGUI consumDescText;
+    [SerializeField]
+    private Button consumCloseButton;
+
+    [Header("기능 소비 상세 정보 팝업")]
+    [SerializeField]
+    private GameObject funcDetail;
+    [SerializeField]
+    private Image funcIcon;
+    [SerializeField]
+    private TextMeshProUGUI funcNameText;
+    [SerializeField]
+    private TextMeshProUGUI funcDescText;
+    [SerializeField]
+    private Button funcUseButton;
+    [SerializeField]
+    private Button funcCloseButton;
+
+    // 현재 보고있는 아이템 데이터 저장
+    private InventoryItemViewData selectedItem;
 
     private readonly List<ItemSlotUI> slotPool = new List<ItemSlotUI>();    // 아이템 정보를 출력할 슬롯 pool
 
@@ -24,18 +73,29 @@ public class InventoryManager : MonoBehaviour
     {
         equipButton.onClick.AddListener(ShowEquipmentItems);
         consumableButton.onClick.AddListener(ShowConsumableItems);
+
+        equipCloseButton.onClick.AddListener(ClosePopup);
+        consumCloseButton.onClick.AddListener(ClosePopup);
+        funcCloseButton.onClick.AddListener(ClosePopup);
+
+        doEquipButton.onClick.AddListener(DoEquipItem);
+        funcUseButton.onClick.AddListener(UseFuncItem);
+
+        ClosePopup();
     }
 
     // InventoryTap이 켜질때 마다 아이템 목록 다시 그리기
-    private void OnEnable()
+    // 인벤토리 탭 여는 버튼 클릭 시 호출하도록
+    public void OpenInventory()
     {
+        // 실제 DB 연결 함수로 변경 필요
         List<InventoryItemResponse> responses = CreateTestInventoryResponses();
 
         BuildViewData(responses);
         ShowEquipmentItems();
     }
 
-    // --------------------------------- 테스트 -----------------------------------------
+    // --------------------------------- 테스트 데이터 생성 -----------------------------------------
 
     // 테스트용 InventoryItemResponse 생성
     private List<InventoryItemResponse> CreateTestInventoryResponses()
@@ -152,8 +212,89 @@ public class InventoryManager : MonoBehaviour
     }
 
     // ItemSlotUI.cs로 넘겨줄 onClick함수
-    private void OnItemSlotClicked(InventoryItemResponse data, ItemDataSO itemSO)
+    // 아이템 상세 정보 창 띄우기
+    private void OnItemSlotClicked(InventoryItemViewData viewData)
     {
-        Debug.Log($"아이템 클릭: {itemSO.displayName}, inventoryId: {data.InventoryId}");
+        ClosePopup();
+
+        var itemSO = viewData.ItemSO;
+        var data = viewData.Response;
+
+        if(itemSO is EquipmentDataSO equipSO)
+        {
+            OpenEquipDetail(data, equipSO);
+            popupDim.SetActive(true);
+        }
+        else if(itemSO is ConsumableDataSO consumSO)
+        {
+            if (consumSO.useTiming == ItemUseTiming.BattlePreparation)
+            {
+                OpenConsumDetail(data, consumSO);
+                popupDim.SetActive(true);
+            }
+            else if (consumSO.useTiming == ItemUseTiming.OutOfBattle)
+            {
+                OpenFuncDetail(data, consumSO);
+                popupDim.SetActive(true);
+            }
+        }
+
+        selectedItem = viewData;
+    }
+
+    // ---------------------------------- detail popup ---------------------------------
+    // 상세 팝업 모두 비활성화
+    private void ClosePopup()
+    {
+        popupDim.SetActive(false);
+        equipDetail.SetActive(false);
+        consumDetail.SetActive(false);
+        funcDetail.SetActive(false);
+        selectedItem = null;
+    }
+
+    private void OpenEquipDetail(InventoryItemResponse data, EquipmentDataSO itemSO)
+    {
+        equipDetail.SetActive(true);
+        equipIcon.sprite = itemSO.icon;
+        equipNameText.text = itemSO.displayName;
+        equipDescText.text = itemSO.description;
+    }
+
+    private void OpenConsumDetail(InventoryItemResponse data, ConsumableDataSO itemSO)
+    {
+        consumDetail.SetActive(true);
+        consumIcon.sprite = itemSO.icon;
+        consumNameText.text = itemSO.displayName;
+        consumDescText.text = itemSO.description;
+    }
+
+    private void OpenFuncDetail(InventoryItemResponse data, ConsumableDataSO itemSO)
+    {
+        funcDetail.SetActive(true);
+        funcIcon.sprite = itemSO.icon;
+        funcNameText.text = itemSO.displayName;
+        funcDescText.text = itemSO.description;
+    }
+
+    // 장착 처리
+    private void DoEquipItem()
+    {
+        if (selectedItem == null) return;
+
+        if(selectedItem.ItemSO is EquipmentDataSO so)
+            Debug.Log($"장착 : {so.displayName}");
+    }
+    
+    // 사용 처리
+    private void UseFuncItem()
+    {
+        if (selectedItem == null) return;
+
+        if (selectedItem.ItemSO is ConsumableDataSO so)
+        {
+            if (so.useTiming == ItemUseTiming.OutOfBattle)
+                Debug.Log($"사용 : {so.displayName}");
+        }
     }
 }
