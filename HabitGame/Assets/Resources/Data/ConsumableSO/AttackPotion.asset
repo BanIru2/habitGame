@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: AttackPotion
   m_EditorClassIdentifier: 
   itemType: 1
-  itemId: 
+  itemId: 1
   displayName: "\uACF5\uACA9\uB825 \uBC84\uD504 \uD3EC\uC158"
   description: "\uC804\uD22C 1\uD68C\uC5D0 \uD55C\uD574 \uACF5\uACA9\uB825\uC774
     \uC99D\uAC00\uD55C\uB2E4"

@@ -1,0 +1,8 @@
+/// <summary>
+/// 아이템에 대한 Response와 SO 데이터를 묶어 놓은 클래스
+/// </summary>
+public class InventoryItemViewData
+{
+    public InventoryItemResponse Response;
+    public ItemDataSO ItemSO;
+}

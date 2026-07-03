@@ -46,7 +46,9 @@ public class RankingboardManager : MonoBehaviour
 
         StartCoroutine(CheckDailyResetRoutine());
 
-        LoadRankingBoard();
+        // DB 연결 오류로 임시 주석처리. 연결 후 주석해제 요망
+        //LoadRankingBoard();
+
 /*        // 테스트 호출
         LoadMockRankingBoard();*/
     }
