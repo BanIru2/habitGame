@@ -5,7 +5,15 @@ using Newtonsoft.Json;
 /// </summary>
 public class LoginResponse
 {
-    // API 호출 시 헤더에 포함할 인증용 JWT 토큰
-    [JsonProperty("accessToken")]
-    public string AccessToken { get; set; }
+    [JsonProperty("userId")]
+    public long UserId { get; set; }
+
+    [JsonProperty("email")]
+    public string Email { get; set; }
+
+    [JsonProperty("nickname")]
+    public string Nickname { get; set; }
+
+    [JsonProperty("message")]
+    public string Message { get; set; }
 }
