@@ -5,7 +5,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class InventoryManager : MonoBehaviour
+public class InventoryManager : Singleton<InventoryManager>
 {
     [SerializeField] private ItemSlotUI itemSlotPrefab;
     [SerializeField] private Transform itemSlotParent;
