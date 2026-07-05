@@ -6,12 +6,8 @@ using Newtonsoft.Json;
 public class InventoryItemResponse
 {
     // 인벤토리 항목의 고유 ID
-    [JsonProperty("id")]
-    public long Id { get; set; }
-
-    // 유저 식별 ID
-    [JsonProperty("userId")]
-    public long UserId { get; set; }
+    [JsonProperty("inventoryId")]
+    public long InventoryId { get; set; }
 
     // 아이템 데이터 ID (ScriptableObject와 매칭)
     [JsonProperty("itemId")]
@@ -33,7 +29,4 @@ public class InventoryItemResponse
     [JsonProperty("slotType")]
     public string SlotType { get; set; }
 
-    // 획득 일시
-    [JsonProperty("acquiredAt")]
-    public string AcquiredAt { get; set; }
 }
