@@ -1,8 +1,19 @@
 using Newtonsoft.Json;
-using System.Collections.Generic;
 
 public class EquipItemResponse
 {
-    [JsonProperty("inventoryItems")]
-    public List<InventoryItemResponse> InventoryItems { get; set; }
+    [JsonProperty("inventoryId")]
+    public long InventoryId { get; set; }
+
+    [JsonProperty("itemId")]
+    public string ItemId { get; set; }
+
+    [JsonProperty("slotType")]
+    public string SlotType { get; set; }
+
+    [JsonProperty("isEquipped")]
+    public bool IsEquipped { get; set; }
+
+    [JsonProperty("message")]
+    public string Message { get; set; }
 }
