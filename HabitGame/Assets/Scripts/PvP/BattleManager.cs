@@ -1,170 +1,49 @@
-using Photon.Pun;
-using Photon.Realtime;
+using Newtonsoft.Json.Bson;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 
 public class BattleManager : Singleton<BattleManager>
 {
-    private bool isBattle = false;    // Ï†ÑÌà¨ Î°úÏßÅ/ÎßàÏä§ÌÑ∞ ÌÅ¥ÎùºÏù¥Ïñ∏Ìä∏ Í≥ÑÏÇ∞ ÏßÑÌñâ Ïó¨Î∂Ä
-    private PhotonView photonView;
-    [SerializeField]
-    private PhotonManager photonManager;
-
-    private BattleUnit myUnit;
-    private BattleUnit oppUnit;
-
-    private const double BattleLimitTime = 60.0;
-    private bool isBattleFinished = false;
-    public bool IsBattleFinished => isBattleFinished;
-
-    public string myResult { get; private set; }    // ÎÇò ÏûêÏã†Ïùò ÏäπÎ¶¨Ïó¨Î∂Ä Ï†ÄÏû• (WIN, DRAW, LOSE)
-    private string battleId;
-    private long opponentUserId;
-
-    private void Awake()
-    {
-        base.Awake();
-        photonView = GetComponent<PhotonView>();
-    }
-
-    private void Start()
-    {
-        if(photonManager == null)
-        {
-            photonManager = FindObjectOfType<PhotonManager>();
-        }
-    }
+    private BattleUnit player;
+    private bool isBattle = false;
 
     private BattleUnit GetFirstAttack(BattleUnit my, BattleUnit opp)
     {
         if (my.spd > opp.spd) return my;
         if (my.spd < opp.spd) return opp;
-        // ÏÜçÎèÑ ÎèôÏùº Ïãú Î∞òÎ∞ò ÌôïÎ•†
+        // º”µµ∞° µø¿œ«œ∏È π›π›»Æ∑¸∑Œ ∑£¥˝ ∞·¡§
         return (Random.value < 0.5f) ? my : opp;
     }
 
     private void PerformAttack(BattleUnit attacker, BattleUnit defender, int turn)
     {
-        if (!PhotonNetwork.IsMasterClient) return;
-
-        // Îç∞ÎØ∏ÏßÄ Í≥ÑÏÇ∞
+        // µ•πÃ¡ˆ ∞ËªÍ
         bool isCrit = Random.value < attacker.crtk;
         float damage = BattleCalculator.CalculateDamage(attacker, defender, isCrit, turn);
-
-        // ÏµúÏ¢Ö Îç∞ÎØ∏ÏßÄ Ï†ïÏàò Î≥ÄÌôò (Î≤ÑÎ¶º) Ï†ÅÏö©
-        int finalDamage = (int)damage;
-        // ÎßàÏßÄÎßâÏóê Ï≤¥Î†•Ïù¥ 0 Î∞ëÏúºÎ°ú Îñ®Ïñ¥ÏßÄÏßÄ ÏïäÍ≤å Í≥†Ï†ï
-        defender.hp = Mathf.Max(0, defender.hp - finalDamage);
-
-        // Í≥µÍ≤©ÏùÑ ÎãπÌïòÎäî Ï£ºÏ≤¥Í∞Ä ÎÇò(Î∞©Ïû•)Ïù¥Î©¥ true
-        bool defenderIsPlayerOnMaster = defender == myUnit;
-
-        photonView.RPC(
-            "RPC_ApplyAttackResult",
-            RpcTarget.All,
-            defenderIsPlayerOnMaster,
-            defender.hp,
-            finalDamage,
-            isCrit
-        );
-    }
-
-    // Í≥µÍ≤© Í≤∞Í≥º RPC
-    [PunRPC]
-    public void RPC_ApplyAttackResult(bool defenderIsPlayerOnMaster, int currentHp, int damage, bool isCrit)
-    {
-        // ÎÇ¥Í∞Ä ÎßàÏä§ÌÑ∞ ÌÅ¥ÎùºÏù¥Ïñ∏Ìä∏Ïù¥Î©¥ÏÑú Î∞©Ïñ¥ÏûêÏù∏ Í≤ΩÏö∞
-        bool defenderIsMe = PhotonNetwork.IsMasterClient ? defenderIsPlayerOnMaster : !defenderIsPlayerOnMaster;
-
-        BattleUnit defenderUnit = defenderIsMe ? myUnit : oppUnit;
-        defenderUnit.hp = currentHp;
-
-        BattleUIManager.Instance.UpdateCharacterHpBar(defenderIsMe, currentHp, defenderUnit.maxHp);
-
-        Debug.Log($"Attack result received. Damage:{damage}, Crit:{isCrit}, DefenderIsMe:{defenderIsMe}, HP:{currentHp}/{defenderUnit.maxHp}");
-    }
-
-    [PunRPC]
-    public void RPC_UpdateTurn(int turn)
-    {
-        BattleUIManager.Instance.UpdateTurnText(turn);
+        defender.hp -= damage;
+        Debug.Log($"{attacker.name}¿Ã(∞°) ∞¯∞›, µ•πÃ¡ˆ : {damage}, ªÛ¥Î ≥≤¿∫ √º∑¬ : {defender.hp}");
+        // √º∑¬πŸ æ˜µ•¿Ã∆Æ
+        bool isPlayer = (defender == player) ? true : false;
+        BattleUIManager.Instance.UpdateCharacterHpBar(isPlayer, defender.hp, defender.maxHp);
+        // ++ ¿Ã∆Â∆Æ µÓ ±◊ ø‹ µø¿€
     }
 
     private void FinishBattle(BattleUnit winner)
     {
-        if (!PhotonNetwork.IsMasterClient) return;
-        if (isBattleFinished) return;    // Ï§ëÎ≥µ Î∞©ÏßÄ
-
-        isBattleFinished = true;
+        // ¿¸≈ı ¡æ∑· µø¿€
+        if (winner == player) Debug.Log("¿¸≈ı¡æ∑· : «√∑π¿ÃæÓ Ω¬∏Æ");
+        else if (winner == null) Debug.Log("¿¸≈ı¡æ∑· : ∫Ò±Ë");
+        else Debug.Log("¿¸≈ı ¡æ∑· : «√∑π¿ÃæÓ ∆–πË");
+        player = null;
         isBattle = false;
-
-        // ÎßàÏä§ÌÑ∞ Í∏∞Ï§Ä Í≤∞Í≥º
-        int result;
-
-        if (winner == null)
-        {
-            result = 0; // ÎπÑÍπÄ
-        }
-        else if (winner == myUnit)
-        {
-            result = 1; // master Ïäπ
-        }
-        else
-        {
-            result = 2; // master Ìå®
-        }
-
-        photonView.RPC("RPC_FinishBattle", RpcTarget.All, result);
-    }
-
-    // Ï†ÑÌà¨ Ï¢ÖÎ£å RPC
-    [PunRPC]
-    public void RPC_FinishBattle(int masterResult)
-    {
-        isBattle = false;
-        isBattleFinished = true;
-
-        bool isDraw = masterResult == 0;
-        bool iWon = false;
-
-        myResult = ConvertMasterResultToLocalResult(masterResult);
-
-        Debug.Log($"Ï†ÑÌà¨ Ï¢ÖÎ£å: {myResult}");
-
-        myUnit = null;
-        oppUnit = null;
-
-        BattleBackendManager.Instance.SubmitBattleResult(
-            battleId,
-            myResult,
-            opponentUserId
-        );
-    }
-
-    // ÎßàÏä§ÌÑ∞ ÌÅ¥ÎùºÏù¥Ïñ∏Ìä∏Ïùò Í≤∞Í≥ºÎ•º ÌÜ†ÎåÄÎ°ú ÎÇòÏùò Í≤∞Í≥ºÎ•º ÏÇ∞Ï∂ú
-    private string ConvertMasterResultToLocalResult(int masterResult)
-    {
-        if (masterResult == 0)
-        {
-            return "DRAW";
-        }
-
-        bool masterWon = masterResult == 1;
-        bool iWon = PhotonNetwork.IsMasterClient ? masterWon : !masterWon;
-
-        return iWon ? "WIN" : "LOSE";
+        BattleUIManager.Instance.FinishBattle();
     }
 
     public void TreatTimeOver()
     {
-        if (!PhotonNetwork.IsMasterClient) return;    // ÎßàÏä§ÌÑ∞ ÌÅ¥ÎùºÏù¥Ïñ∏Ìä∏Îßå Ï≤òÎ¶¨
-        if (!isBattle || isBattleFinished) return;    // Ï§ëÎ≥µ Ìò∏Ï∂ú Î∞©ÏßÄ
-        if (myUnit == null || oppUnit == null) return;
-
-        BattleUnit winner = GetWinner(myUnit, oppUnit);
-        FinishBattle(winner);
+        isBattle = false;
     }
 
     private BattleUnit GetWinner(BattleUnit first, BattleUnit second)
@@ -179,27 +58,17 @@ public class BattleManager : Singleton<BattleManager>
     
     private IEnumerator BattleRoutine(BattleUnit first, BattleUnit second)
     {
-        if (!PhotonNetwork.IsMasterClient) yield break;
         int turn = 1;
 
         while (first.hp > 0 && second.hp > 0 && isBattle)
         {
-            photonView.RPC("RPC_UpdateTurn", RpcTarget.All, turn);
-
             PerformAttack(first, second, turn);
             yield return new WaitForSeconds(1f);
-
-            // ÌÑ¥ ÏÇ¨Ïù¥ÌÅ¥Ïù¥ ÎÅùÎÇòÍ∏∞ Ï†Ñ ÌÉÄÏûÑÏò§Î≤ÑÍ∞Ä ÎêòÎäî Í≤ΩÏö∞Ïóê ÎåÄÌïú ÏïàÏ†ÑÏû•Ïπò
-            if (!isBattle || isBattleFinished) break;
-
             if (second.hp > 0)
             {
                 PerformAttack(second, first, turn);
             }
             yield return new WaitForSeconds(1f);
-
-            // ÏïàÏ†ÑÏû•Ïπò ÎèôÏùº
-            if (!isBattle || isBattleFinished) break;
 
             turn++;
         }
@@ -207,64 +76,13 @@ public class BattleManager : Singleton<BattleManager>
         FinishBattle(winner);
     }
 
-    private void StartBattle()
+    public void StartBattle(BattleUnit my, BattleUnit opp)
     {
+        player = my;
         isBattle = true;
-        isBattleFinished = false;
-
-        // Î∞©Ïû•Îßå Ïó∞ÏÇ∞
-        if (!PhotonNetwork.IsMasterClient) return;
-
-        BattleUnit first = GetFirstAttack(myUnit, oppUnit);
-        BattleUnit second = (first == myUnit) ? oppUnit : myUnit;
+        BattleUnit first = GetFirstAttack(my, opp);
+        BattleUnit second = (first == my) ? opp : my;
 
         StartCoroutine(BattleRoutine(first, second));
-    }
-
-    public void SendReadyState(bool ready)
-    {
-        photonView.RPC("SyncReadyState", RpcTarget.Others, ready);
-    }
-
-    [PunRPC]
-    public void SyncReadyState(bool ready)
-    {
-        BattleUIManager.Instance.RPC_UpdateOpponentReady(ready);
-    }
-
-    public void BroadcastStartBattle()
-    {
-        if (!PhotonNetwork.IsMasterClient) return;
-
-        battleId = System.Guid.NewGuid().ToString();
-
-        double battleEndTime = PhotonNetwork.Time + BattleLimitTime;
-        photonView.RPC("RPC_StartBattle", RpcTarget.All, battleEndTime, battleId);
-    }
-
-    [PunRPC]
-    public void RPC_StartBattle(double battleEndTime, string receivedBattleId)
-    {
-        battleId = receivedBattleId;
-        if (!photonManager.TryGetOpponentUserId(out opponentUserId))    // ÏÉÅÎåÄÎ∞© id Ï†ÄÏû•
-        {
-            Debug.LogWarning("Failed to get opponent user id.");
-            return;
-        }
-
-        if (!photonManager.TryCreateBattleUnits(out BattleUnit createdMyUnit, out BattleUnit createdOppUnit))
-        {
-            Debug.LogWarning("Failed to create battle units.");
-            return;
-        }
-
-        myUnit = createdMyUnit;
-        oppUnit = createdOppUnit;
-
-        photonManager.PrepareBattlePanelUI(myUnit, oppUnit);
-        BattleUIManager.Instance.ReadyComplete(battleEndTime);
-
- 
-        StartBattle();
     }
 }

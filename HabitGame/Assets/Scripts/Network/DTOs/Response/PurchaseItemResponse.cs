@@ -1,34 +1,19 @@
 using Newtonsoft.Json;
 
+/// <summary>
+/// 아이템 구매 정보 응답 DTO
+/// </summary>
 public class PurchaseItemResponse
 {
-    [JsonProperty("message")]
-    public string Message { get; set; }
+    // 구매 기록
+    [JsonProperty("purchaseLog")]
+    public PurchaseLogResponse PurchaseLog { get; set; }
 
-    [JsonProperty("userId")]
-    public long UserId { get; set; }
+    // 구매로 새로 생긴 인벤토리 항목(아이템)
+    [JsonProperty("newItem")]
+    public InventoryItemResponse NewItem { get; set; }
 
-    [JsonProperty("itemId")]
-    public string ItemId { get; set; }
-
-    [JsonProperty("itemName")]
-    public string ItemName { get; set; }
-
-    [JsonProperty("itemType")]
-    public string ItemType { get; set; }
-
-    [JsonProperty("slotType")]
-    public string SlotType { get; set; }
-
-    [JsonProperty("price")]
-    public int Price { get; set; }
-
-    [JsonProperty("remainingGold")]
-    public int RemainingGold { get; set; }
-
-    [JsonProperty("inventoryId")]
-    public long InventoryId { get; set; }
-
-    [JsonProperty("purchaseLogId")]
-    public long PurchaseLogId { get; set; }
+    // 구매 후 남은 골드
+    [JsonProperty("gold")]
+    public int Gold { get; set; }
 }

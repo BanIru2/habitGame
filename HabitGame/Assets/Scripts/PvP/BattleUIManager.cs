@@ -4,17 +4,9 @@ using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
-using Photon;
-using Photon.Pun;
-using ExitGames.Client.Photon;
-using Hashtable = ExitGames.Client.Photon.Hashtable;
-using System.Security.Cryptography;    // ëª¨í˜¸ì„± ë°©ì§€
 
 public class BattleUIManager : Singleton<BattleUIManager>
 {
-    [SerializeField]
-    private PhotonManager photonManager;
-
     [SerializeField]
     private GameObject lobbyPanel;
     [SerializeField]
@@ -23,8 +15,6 @@ public class BattleUIManager : Singleton<BattleUIManager>
     private GameObject readyPanel;
     [SerializeField]
     private GameObject battlePanel;
-    [SerializeField]
-    private GameObject resultPanel;
 
     // Lobby Panel
     [Header("Lobby Panel")]
@@ -45,7 +35,6 @@ public class BattleUIManager : Singleton<BattleUIManager>
     private TextMeshProUGUI currentParticipantsCount;
 
     private bool isMatching = false;
-    public bool IsMatching => isMatching;
 
     // Ready Panel
     [Header("Ready Panel")]
@@ -72,24 +61,18 @@ public class BattleUIManager : Singleton<BattleUIManager>
     [SerializeField]
     private TextMeshProUGUI isOppReadyText;
 
-    // ì„ íƒëœ íŠ¹ì„± (ì™¸ë¶€ì°¸ì¡° ê°€ëŠ¥ -> ì „íˆ¬ ë¡œì§ì— ì‚¬ìš©)
+    // ¼±ÅÃµÈ Æ¯¼º (¿ÜºÎÂüÁ¶ °¡´É -> ÀüÅõ ·ÎÁ÷¿¡ »ç¿ë)
     public AttributeType selectedAttrType { get; private set; }
-    // ì„ íƒëœ ì•„ì´í…œ (ì™¸ë¶€ì°¸ì¡° ê°€ëŠ¥ -> ì „íˆ¬ ë¡œì§ì— ì‚¬ìš©)
+    // ¼±ÅÃµÈ ¾ÆÀÌÅÛ (¿ÜºÎÂüÁ¶ °¡´É -> ÀüÅõ ·ÎÁ÷¿¡ »ç¿ë)
     public ConsumableDataSO selectedItem { get; private set; }
-    // ê°€ì¥ ìµœê·¼ì— ì°©ìš©í–ˆë˜ ì¥ë¹„ ì•„ì´í…œ ë°ì´í„° (DBì—ì„œ ë¶ˆëŸ¬ì™€ì•¼ í•¨)
-    // Ready ì°¨ë¡€ê°€ ë˜ë©´ ë°”ë¡œ ì¶œë ¥ë  ìˆ˜ ìˆë„ë¡ ìˆœì„œë¥¼ ì •í•´ì•¼ í•¨
+    // °¡Àå ÃÖ±Ù¿¡ Âø¿ëÇß´ø Àåºñ ¾ÆÀÌÅÛ µ¥ÀÌÅÍ (DB¿¡¼­ ºÒ·¯¿Í¾ß ÇÔ)
+    // Ready Â÷·Ê°¡ µÇ¸é ¹Ù·Î Ãâ·ÂµÉ ¼ö ÀÖµµ·Ï ¼ø¼­¸¦ Á¤ÇØ¾ß ÇÔ
     private Dictionary<EquipmentType, EquipmentDataSO> lastSelectedEquipData = new Dictionary<EquipmentType, EquipmentDataSO>();
-    // ì´ë²ˆì— ì°©ìš©í•  ì„ íƒëœ ì¥ë¹„ ì•„ì´í…œ ë°ì´í„°
-    // Ready ì°¨ë¡€ê°€ ë˜ë©´ lastSelectedEquipDataë¥¼ ë³µì‚¬í•´ ë„£ê¸°
+    // ÀÌ¹ø¿¡ Âø¿ëÇÒ ¼±ÅÃµÈ Àåºñ ¾ÆÀÌÅÛ µ¥ÀÌÅÍ
+    // Ready Â÷·Ê°¡ µÇ¸é lastSelectedEquipData¸¦ º¹»çÇØ ³Ö±â
     public Dictionary<EquipmentType, EquipmentDataSO> selectedEquipData;
     private EquipmentType equipType;
     private bool isReady = false;
-    private Color readyButtonDefaultColor;
-    private string readyButtonDefaultText;
-    private string oppNameTextDefaultText;
-    private string oppBattleNameDefaultText;
-    private string[] oppAttrTextDefaultTexts;
-    private float[] oppAttrTextDefaultAlphas;
 
     // Battle Panel
     [Header("Battle Panel")]
@@ -104,48 +87,19 @@ public class BattleUIManager : Singleton<BattleUIManager>
     [SerializeField]
     private Image oppHpBar;
     [SerializeField]
-    private TextMeshProUGUI myHpText;
-    [SerializeField]
-    private TextMeshProUGUI oppHpText;
-    [SerializeField]
     private Image myCharacterImage;
     [SerializeField]
     private Image oppCharacterImage;
-    [SerializeField]
-    private TextMeshProUGUI turnCountText;
 
-    // BattlePanel / ResultPanel
-    [SerializeField]
-    private GameObject winImage;
-    [SerializeField]
-    private GameObject loseImage;
-    [SerializeField]
-    private GameObject drawImage;
-    [SerializeField]
-    private TextMeshProUGUI currentRankingPointText;
-    [SerializeField]
-    private TextMeshProUGUI operatorText;
-    [SerializeField]
-    private TextMeshProUGUI resultRankingPointText;
-    [SerializeField]
-    private Button checkButton;
-
-    private bool isBattle = false;    // UI íƒ€ì´ë¨¸ í‘œì‹œ ì§„í–‰ì„ ìœ„í•œ í”Œë˜ê·¸
+    private bool isBattle = true;
     private float remainTime;
     private int remainTimeForDisplay;
-    private double battleEndTime;
 
-    [SerializeField]
-    private RankingboardManager rankingboardManager;
 
 
     protected override void Awake()
     {
         base.Awake();
-
-        CacheReadyButtonDefaultState();
-        CacheOpponentInfoDefaultState();
-
         matchStartButton.onClick.AddListener(OnClickStartMatchmaking);
         matchCancelButton.onClick.AddListener(OnClickCancelMatchmaking);
         checkOppAttrButton.onClick.AddListener(OnClickCheckOppAttr);
@@ -162,24 +116,23 @@ public class BattleUIManager : Singleton<BattleUIManager>
             button.onClick.AddListener(() => OnClickEquipItemButton(button));
         }
         readyButton.onClick.AddListener(OnClickReadyButton);
-        checkButton.onClick.AddListener(OnClickCheckButton);
     }
 
     private void Update()
     {
-        // ë§¤ì¹­ ì¤‘ ì¤‘ì•™ ìŠ¤í”¼ë„ˆ ëŒë¦¬ê¸°
+        // ¸ÅÄª Áß Áß¾Ó ½ºÇÇ³Ê µ¹¸®±â
         if (isMatching)
         {
             loadingSpinner.Rotate(0, 0, -spinSpeed * Time.deltaTime);
         }
-
-        // íƒ€ì´ë¨¸ ì‘ë™
         if (isBattle)
         {
-            remainTime = Mathf.Max(0f, (float)(battleEndTime - PhotonNetwork.Time));
-            UpdateTimerText();
-
-            if (remainTime <= 0f)
+            if(remainTime > 0)
+            {
+                remainTime -= Time.deltaTime;
+                UpdateTimerText();
+            }
+            else
             {
                 isBattle = false;
                 TimeOver();
@@ -188,157 +141,68 @@ public class BattleUIManager : Singleton<BattleUIManager>
     }
 
     // -----------------------------Lobby Panel-----------------------------------
-    // ë§¤ì¹­ ì‹œì‘ ë²„íŠ¼ í´ë¦­ ì‹œ í™”ë©´ ì „í™˜
+    // ¸ÅÄª ½ÃÀÛ ¹öÆ° Å¬¸¯ ½Ã È­¸é ÀüÈ¯
     private void OnClickStartMatchmaking()
     {
-        if (!TryResolvePhotonManager()) return;
-
-        if (!photonManager.StartMatchmaking())
-        {
-            return;
-        }
-
-        ClearOpponentInfoUI();
         lobbyPanel.SetActive(false);
         loadingPanel.SetActive(true);
-        readyPanel.SetActive(false);
-        battlePanel.SetActive(false);
         isMatching = true;
     }
     // ------------------------------Loading Pannel---------------------------------
-    // ë§¤ì¹­ ì·¨ì†Œ ë²„íŠ¼ í´ë¦­ ì‹œ ë¡œë¹„ë¡œ ì´ë™
+    // ¸ÅÄª Ãë¼Ò ¹öÆ° Å¬¸¯ ½Ã È­¸é ÀüÈ¯
     private void OnClickCancelMatchmaking()
     {
-        if (!TryResolvePhotonManager())
-        {
-            ReturnToLobby();
-            return;
-        }
-
-        photonManager.ReturnToLobby();
+        loadingPanel.SetActive(false); 
+        lobbyPanel.SetActive(true);
+        isMatching = false;
     }
 
-    public void BackToMatchingAfterOpponentLeft()
-    {
-        readyPanel.SetActive(false);
-        battlePanel.SetActive(false);
-        loadingPanel.SetActive(true);
-        lobbyPanel.SetActive(false);
-
-        isMatching = true;
-        ResetReadyUI();
-        ClearOpponentInfoUI();
-
-        UpdatePlayerCount(PhotonNetwork.CurrentRoom.PlayerCount);
-    }
-
-    // ë¡œë”© ì™„ë£Œ ì‹œ í™”ë©´ ì „í™˜
+    // ·Îµù ¿Ï·á ½Ã È­¸é ÀüÈ¯
     public void LoadingComplete()
     {
         loadingPanel.SetActive(false);
         readyPanel.SetActive(true);
         isMatching = false;
         selectedEquipData = new Dictionary<EquipmentType, EquipmentDataSO>(lastSelectedEquipData);
-        ResetReadyUI();
-    }
-
-    public void UpdatePlayerCount(int current)
-    {
-        currentParticipantsCount.text = current.ToString();
     }
 
     //-------------------------------Ready Panel-----------------------------------
-    // ì¤€ë¹„ ë‹¨ê³„ ì™„ë£Œ ì‹œ(ì–‘ ì¸¡ ë‹¤ ì¤€ë¹„ ì™„ë£Œ or ì¤€ë¹„ ì‹œê°„ ë) í™”ë©´ ì „í™˜
-    public void ReadyComplete(double endTime)
+    // ÁØºñ ´Ü°è ¿Ï·á ½Ã(¾ç Ãø ´Ù ÁØºñ ¿Ï·á or ÁØºñ ½Ã°£ ³¡) È­¸é ÀüÈ¯
+    public void ReadyComplete()
     {
         readyPanel.SetActive(false);
         battlePanel.SetActive(true);
-        InitBattleUI(endTime);
     }
 
-    private void ResetReadyUI()
-    {
-        isReady = false;
-        isMeReadyText.text = "WAITING";
-        isMeReadyText.color = Color.black;
-        isOppReadyText.text = "WAITING";
-        isOppReadyText.color = Color.black;
-
-        readyButton.image.color = readyButtonDefaultColor;
-        var buttonText = readyButton.GetComponentInChildren<TextMeshProUGUI>();
-        if (buttonText != null)
-        {
-            buttonText.text = readyButtonDefaultText;
-        }
-    }
-
-    private void CacheReadyButtonDefaultState()
-    {
-        readyButtonDefaultColor = readyButton.image.color;
-        var buttonText = readyButton.GetComponentInChildren<TextMeshProUGUI>();
-        readyButtonDefaultText = buttonText != null ? buttonText.text : string.Empty;
-    }
-
-    private void CacheOpponentInfoDefaultState()
-    {
-        oppNameTextDefaultText = oppNameText.text;
-        oppBattleNameDefaultText = oppName.text;
-
-        oppAttrTextDefaultTexts = new string[oppAttrText.Length];
-        for (int i = 0; i < oppAttrText.Length; i++)
-        {
-            oppAttrTextDefaultTexts[i] = oppAttrText[i].text;
-        }
-
-        oppAttrTextDefaultAlphas = new float[oppAttrTextCanvasGroup.Length];
-        for (int i = 0; i < oppAttrTextCanvasGroup.Length; i++)
-        {
-            oppAttrTextDefaultAlphas[i] = oppAttrTextCanvasGroup[i].alpha;
-        }
-    }
-
-    private bool TryResolvePhotonManager()
-    {
-        if (photonManager == null)
-        {
-            photonManager = FindObjectOfType<PhotonManager>();
-        }
-
-        if (photonManager != null) return true;
-
-        Debug.LogError("PhotonManager not found.");
-        return false;
-    }
-
-    // ìƒëŒ€ íŠ¹ì„± í™•ì¸ ë²„íŠ¼ í´ë¦­ ì‹œ ë™ì‘
+    // »ó´ë Æ¯¼º È®ÀÎ ¹öÆ° Å¬¸¯ ½Ã µ¿ÀÛ
     private void OnClickCheckOppAttr()
     {
-        // ì‚¬ìš© ê°€ëŠ¥ ì—¬ë¶€ í™•ì¸ ë° íšŸìˆ˜ ì°¨ê°
-        // ìƒëŒ€ë°© íŠ¹ì„± ë ˆë²¨ ì²´í¬(ë°›ì•„ì™€ì•¼í•¨)  << ì´ë‹¨ê³„ì—ì„œ ì´ë¯¸ ìƒëŒ€ì˜ íŠ¹ì„± ì •ë³´ë¥¼ ê°–ê³  ìˆì–´ì•¼ í•¨
-        // í…ìŠ¤íŠ¸ ìƒëŒ€ë°© íŠ¹ì„± ë ˆë²¨ì— ë§ì¶° ë³€ê²½
-        // ì¶œë ¥ (ì•ŒíŒŒê°’ í™œì„±í™”)
+        // »ç¿ë °¡´É ¿©ºÎ È®ÀÎ ¹× È½¼ö Â÷°¨
+        // »ó´ë¹æ Æ¯¼º ·¹º§ Ã¼Å©(¹Ş¾Æ¿Í¾ßÇÔ)  << ÀÌ´Ü°è¿¡¼­ ÀÌ¹Ì »ó´ëÀÇ Æ¯¼º Á¤º¸¸¦ °®°í ÀÖ¾î¾ß ÇÔ
+        // ÅØ½ºÆ® »ó´ë¹æ Æ¯¼º ·¹º§¿¡ ¸ÂÃç º¯°æ
+        // Ãâ·Â (¾ËÆÄ°ª È°¼ºÈ­)
         foreach(var canvasGroup in oppAttrTextCanvasGroup){
             canvasGroup.alpha = 1f;
         }
     }
 
-    // ì‚¬ìš©í•  íŠ¹ì„± ì„ íƒ ë²„íŠ¼ í´ë¦­ ì‹œ ë™ì‘
+    // »ç¿ëÇÒ Æ¯¼º ¼±ÅÃ ¹öÆ° Å¬¸¯ ½Ã µ¿ÀÛ
     private void OnClickAttributeButton(Button clickedButton)
     {
-        // ì„ íƒëœ ë²„íŠ¼ì€ ìƒ‰ê¹”ê°•ì¡°, ê·¸ ì™¸ ë²„íŠ¼ì€ í°ìƒ‰ìœ¼ë¡œ ì´ˆê¸°í™”
+        // ¼±ÅÃµÈ ¹öÆ°Àº »ö±ò°­Á¶, ±× ¿Ü ¹öÆ°Àº Èò»öÀ¸·Î ÃÊ±âÈ­
         foreach(var btn in attrButtons)
         {
             btn.image.color = (btn == clickedButton) ? new Color(1f, 0.56f, 0f, 0.2f) : Color.white;
         }
-        // ì„ íƒëœ ë²„íŠ¼ì˜ ì†ì„±ì„ ì‚¬ìš©
+        // ¼±ÅÃµÈ ¹öÆ°ÀÇ ¼Ó¼ºÀ» »ç¿ë
         selectedAttrType = clickedButton.GetComponent<AttributeButtonInfo>().attrType;
     }
 
-    // ì‚¬ìš©í•  ì†Œë¹„ ì•„ì´í…œ ì„ íƒ ë²„íŠ¼ í´ë¦­ ì‹œ ë™ì‘
+    // »ç¿ëÇÒ ¼Òºñ ¾ÆÀÌÅÛ ¼±ÅÃ ¹öÆ° Å¬¸¯ ½Ã µ¿ÀÛ
 
     private void OnClickConsumableItemButton(Button clickedButton)
     {
-        // ì„ íƒëœ ë²„íŠ¼ì€ ìƒ‰ê¹”ê°•ì¡°, ê·¸ ì™¸ ë²„íŠ¼ì€ í°ìƒ‰ìœ¼ë¡œ ì´ˆê¸°í™”
+        // ¼±ÅÃµÈ ¹öÆ°Àº »ö±ò°­Á¶, ±× ¿Ü ¹öÆ°Àº Èò»öÀ¸·Î ÃÊ±âÈ­
         foreach (var btn in consumableItemButtons)
         {
             btn.image.color = (btn == clickedButton) ? new Color(1f, 0.56f, 0f, 0.2f) : Color.white;
@@ -346,61 +210,32 @@ public class BattleUIManager : Singleton<BattleUIManager>
         selectedItem = clickedButton.GetComponent<ConsumableButtonInfo>().itemData;
     }
 
-    // InventoryManager(ê°€ëª…)ì—ì„œ í˜„ì¬ ë³´ìœ ì¤‘ì¸ ì¥ë¹„ ì•„ì´í…œ ì •ë³´ë¥¼ ë¶ˆëŸ¬ì˜¬ ìˆ˜ ìˆë„ë¡ í•˜ëŠ” ê¸°ëŠ¥ í•„ìš”
-    // InventoryManager ì‘ì„± í›„ ê¸°ëŠ¥ êµ¬í˜„ ì˜ˆì •
+    // InventoryManager(°¡¸í)¿¡¼­ ÇöÀç º¸À¯ÁßÀÎ Àåºñ ¾ÆÀÌÅÛ Á¤º¸¸¦ ºÒ·¯¿Ã ¼ö ÀÖµµ·Ï ÇÏ´Â ±â´É ÇÊ¿ä
+    // InventoryManager ÀÛ¼º ÈÄ ±â´É ±¸Çö ¿¹Á¤
 
-    // DBì—ì„œ ë¶ˆëŸ¬ì˜¨ ë°ì´í„°ë¡œ ê°€ì¥ ìµœê·¼ì— ì°©ìš©í–ˆë˜ ì¥ë¹„ ì•„ì´í…œ ë°ì´í„°ë¥¼ ë°›ì•„ì™€ì•¼ í•¨
-    // ìµœê·¼ì „íˆ¬ë¿ë§Œ ì•„ë‹ˆë¼ ì „íˆ¬ ì™¸ ì¸ë²¤í† ë¦¬ì—ì„œ ì°©ìš©í•œ ê²½ìš° ì´ë¶€ë¶„ê¹Œì§€ ìµœì‹ í™” ëœ ë°ì´í„°ë¡œ
+    // DB¿¡¼­ ºÒ·¯¿Â µ¥ÀÌÅÍ·Î °¡Àå ÃÖ±Ù¿¡ Âø¿ëÇß´ø Àåºñ ¾ÆÀÌÅÛ µ¥ÀÌÅÍ¸¦ ¹Ş¾Æ¿Í¾ß ÇÔ
+    // ÃÖ±ÙÀüÅõ»Ó¸¸ ¾Æ´Ï¶ó ÀüÅõ ¿Ü ÀÎº¥Åä¸®¿¡¼­ Âø¿ëÇÑ °æ¿ì ÀÌºÎºĞ±îÁö ÃÖ½ÅÈ­ µÈ µ¥ÀÌÅÍ·Î
 
-    // ì‚¬ìš©í•  ì¥ë¹„ ì•„ì´í…œ ì„ íƒ ë²„íŠ¼ í´ë¦­ ì‹œ ë™ì‘
+    // »ç¿ëÇÒ Àåºñ ¾ÆÀÌÅÛ ¼±ÅÃ ¹öÆ° Å¬¸¯ ½Ã µ¿ÀÛ
 
     private void OnClickEquipItemButton(Button clickedButton)
     {
-        // í´ë¦­í•œ ë²„íŠ¼ì˜ ì¥ë¹„ ë¶€ìœ„ ì •ë³´ ì €ì¥
+        // Å¬¸¯ÇÑ ¹öÆ°ÀÇ Àåºñ ºÎÀ§ Á¤º¸ ÀúÀå
         equipType = clickedButton.GetComponent<EquipButtonInfo>().type;
-        // ë³´ìœ ì¤‘ì¸ ì•„ì´í…œì„ ë¶€ìœ„ì— ë”°ë¼ ë²„íŠ¼ìœ¼ë¡œ ë§Œë“¤ì–´ ë³´ì—¬ì£¼ê³  ì„ íƒ ì‹œ êµì²´í•  ìˆ˜ ìˆë„ë¡ í•˜ëŠ” ê¸°ëŠ¥ í•„ìš”
+        // º¸À¯ÁßÀÎ ¾ÆÀÌÅÛÀ» ºÎÀ§¿¡ µû¶ó ¹öÆ°À¸·Î ¸¸µé¾î º¸¿©ÁÖ°í ¼±ÅÃ ½Ã ±³Ã¼ÇÒ ¼ö ÀÖµµ·Ï ÇÏ´Â ±â´É ÇÊ¿ä
 
     }
 
-    private BattleSetupData CreateBattleSetupData()
-    {
-        List<EquipmentDataSO> equips = new List<EquipmentDataSO>();
-
-        if (selectedEquipData != null)
-        {
-            foreach (var equip in selectedEquipData.Values)
-            {
-                if (equip != null)
-                {
-                    equips.Add(equip);
-                }
-            }
-        }
-
-        return new BattleSetupData
-        {
-            selectedAttr = selectedAttrType,
-            selectedItem = selectedItem,
-            selectedEquips = equips
-        };
-    }
-
-    // ì¤€ë¹„ì™„ë£Œ ë²„íŠ¼ í´ë¦­ ì‹œ
+    // ÁØºñ¿Ï·á ¹öÆ° Å¬¸¯ ½Ã
+    // ½ÇÁ¦ ÁØºñ ¿Ï·á µ¥ÀÌÅÍ¸¦ »ó´ë¹æ¿¡°Ô ³Ñ°ÜÁà¾ßÇÒ ¼öµµ?
     private void OnClickReadyButton()
     {
-        if (!TryResolvePhotonManager()) return;
-
         var buttonText = readyButton.GetComponentInChildren<TextMeshProUGUI>();
         if (!isReady)
         {
             isReady = true;
-
-            BattleSetupData setup = CreateBattleSetupData();
-            BattleUnit myUnit = CharacterManager.Instance.CreateBattleUnit(setup);
-            photonManager.RegisterBattleUnitProperties(myUnit);
-
             readyButton.image.color = Color.red;
-            buttonText.text = "Ready";
+            buttonText.text = "ÁØºñ ¿Ï·á";
             isMeReadyText.text = "READY";
             isMeReadyText.color = Color.green;
         }
@@ -408,89 +243,25 @@ public class BattleUIManager : Singleton<BattleUIManager>
         {
             isReady = false;
             readyButton.image.color = Color.blue;
-            buttonText.text = "Cancel";
+            buttonText.text = "Ãë¼Ò";
             isMeReadyText.text = "WAITING";
             isMeReadyText.color = Color.black;
         }
-        // RPC ì†¡ì‹  (ìƒëŒ€ë°© READY ê¸€ì ì‹¤ì‹œê°„ ë³€ê²½)
-        BattleManager.Instance.SendReadyState(isReady);
-        // í¬í†¤ ì„œë²„ì— ì¤€ë¹„ ìƒíƒœ ë“±ë¡ (ë°©ì¥ì˜ ì „íˆ¬ ì‹œì‘ ì²´í¬)
-        Hashtable props = new Hashtable();
-        props.Add("IsReady", isReady);
-        PhotonNetwork.LocalPlayer.SetCustomProperties(props);
-    }
-
-    [PunRPC]
-    public void RPC_UpdateOpponentReady(bool ready)
-    {
-        isOppReadyText.text = ready ? "READY" : "WAITING";
-        isOppReadyText.color = ready ? Color.green : Color.red;
-    }
-
-    public void SetMyInfoUI(string name)
-    {
-        myNameText.text = name;
-        myName.text = name;
-    }
-
-    public void ClearOpponentInfoUI()
-    {
-        oppNameText.text = oppNameTextDefaultText;
-        oppName.text = oppBattleNameDefaultText;
-
-        for (int i = 0; i < oppAttrText.Length; i++)
-        {
-            oppAttrText[i].text = i < oppAttrTextDefaultTexts.Length ? oppAttrTextDefaultTexts[i] : string.Empty;
-        }
-
-        for (int i = 0; i < oppAttrTextCanvasGroup.Length; i++)
-        {
-            oppAttrTextCanvasGroup[i].alpha = i < oppAttrTextDefaultAlphas.Length ? oppAttrTextDefaultAlphas[i] : 0f;
-        }
-    }
-
-    // ìƒëŒ€ë°©ì˜ ì •ë³´ë¥¼ ë°›ì•„ UI í…ìŠ¤íŠ¸ì— ì¶œë ¥
-    public void SetOpponentInfoUI(string name, int fire, int water, int grass, int aurora)
-    {
-        oppNameText.text = name;
-        oppName.text = name;
-
-        oppAttrText[0].text = $"Lv.{fire}";
-        oppAttrText[1].text = $"Lv.{water}";
-        oppAttrText[2].text = $"Lv.{grass}";
-        oppAttrText[3].text = $"Lv.{aurora}";
-    }
-
-    public void SetOppoentInfoUI(string name, int fire, int water, int grass, int aurora)
-    {
-        SetOpponentInfoUI(name, fire, water, grass, aurora);
     }
 
     //------------------------------Battle Panel-------------------------------
-    // UI ì´ˆê¸°í™”ì— í•„ìš”í•œ ê¸°ëŠ¥ ì¶”ê°€í•  ê²ƒ
-    // ì „íˆ¬ ì‹œì‘ ì „ í˜¸ì¶œë˜ì–´ì•¼ í•¨
-    public void InitBattleUI(double endTime)
+    // UI ÃÊ±âÈ­¿¡ ÇÊ¿äÇÑ ±â´É Ãß°¡ÇÒ °Í
+    // ÀüÅõ ½ÃÀÛ Àü È£ÃâµÇ¾î¾ß ÇÔ
+    public void InitBattleUI()
     {
-        battleEndTime = endTime;
         isBattle = true;
-        remainTime = Mathf.Max(0f, (float)(battleEndTime - PhotonNetwork.Time));
+        remainTime = 60f;
         remainTimeForDisplay = -1;
         InitCharacterHp();
-        UpdateTimerText();
-        InitResultImage();
-        InitRankingPointText();
     }
 
-    // ê° í”Œë ˆì´ì–´ ì´ë¦„ ì •ë³´ ë°›ì•„ì™€ì„œ ì¶œë ¥í•˜ê¸°
-    // ê° í”Œë ˆì´ì–´ ìœ ë‹› ì •ë³´ë¥¼ ì•ì „ì— ë¯¸ë¦¬ ë°›ì•„ì˜¨ë‹¤ë©´ privateìœ¼ë¡œ ë°›ê³  InitBattleUIì—ì„œ í˜¸ì¶œ ê°€ëŠ¥
-    public void UpdateTurnText(int turn)
-    {
-        if(turnCountText != null)
-        {
-            turnCountText.text = turn.ToString();
-        }
-    }
-
+    // °¢ ÇÃ·¹ÀÌ¾î ÀÌ¸§ Á¤º¸ ¹Ş¾Æ¿Í¼­ Ãâ·ÂÇÏ±â
+    // °¢ ÇÃ·¹ÀÌ¾î À¯´Ö Á¤º¸¸¦ ¾ÕÀü¿¡ ¹Ì¸® ¹Ş¾Æ¿Â´Ù¸é privateÀ¸·Î ¹Ş°í InitBattleUI¿¡¼­ È£Ãâ °¡´É
     public void GetName(string myNameSTr, string oppNameStr)
     {
         myNameText.text = myNameSTr;
@@ -499,29 +270,14 @@ public class BattleUIManager : Singleton<BattleUIManager>
         oppName.text = oppNameStr;
     }
 
-    // ì²´ë ¥ë°” ì´ˆê¸°í™”
+    // Ã¼·Â¹Ù ÃÊ±âÈ­
     private void InitCharacterHp()
     {
         myHpBar.fillAmount = 1f;
         oppHpBar.fillAmount = 1f;
     }
 
-    private void InitResultImage()
-    {
-        winImage.SetActive(false);
-        loseImage.SetActive(false);
-        drawImage.SetActive(false);
-        resultPanel.SetActive(false);
-    }
-
-    private void InitRankingPointText()
-    {
-        currentRankingPointText.text = "0";
-        operatorText.text = "+";
-        resultRankingPointText.text = "0";
-    }
-
-    // ì²´ë ¥ë°” ì—…ë°ì´íŠ¸
+    // Ã¼·Â¹Ù ¾÷µ¥ÀÌÆ®
     public void UpdateCharacterHpBar(bool isPlayer, float currentHp, float maxHp)
     {
         float ratio = Mathf.Clamp01(currentHp / maxHp);
@@ -529,21 +285,11 @@ public class BattleUIManager : Singleton<BattleUIManager>
         if (isPlayer)
         {
             myHpBar.fillAmount = ratio;
-            myHpText.text = $"{currentHp} / {maxHp}";
         }
         else
         {
             oppHpBar.fillAmount = ratio;
-            oppHpText.text = $"{currentHp} / {maxHp}";
         }
-    }
-
-    public void SetBattleHpUI(int myHp,int oppHp)
-    {
-        myHpText.text = $"{myHp} / {myHp}";
-        oppHpText.text = $"{oppHp} / {oppHp}";
-
-        InitCharacterHp();
     }
 
     private void UpdateTimerText()
@@ -559,98 +305,13 @@ public class BattleUIManager : Singleton<BattleUIManager>
         }
     }
 
-    // ------------------------- Battle Finish ----------------------------
-    public void FinishBattle(BattleResultResponse response)
+    public void FinishBattle()
     {
         isBattle = false;
-
-        rankingboardManager.UseRemainCount();
-
-        InitResultImage();
-        PrintResultImage(response.Result);
-        SetRankingPointText(response);
-        resultPanel.SetActive(true);
     }
 
     private void TimeOver()
     {
         BattleManager.Instance.TreatTimeOver();
-    }
-
-    private void OnClickCheckButton()
-    {
-        if (!TryResolvePhotonManager())
-        {
-            ReturnToLobby();
-            return;
-        }
-
-        photonManager.ReturnToLobby();
-    }
-
-    // ë¡œë¹„ë¡œ ëŒì•„ê°ˆ ë•Œ 1ì°¨ì  ë°ì´í„° ì´ˆê¸°í™”
-    // ì „íˆ¬ ì¢…ë£Œ í›„ / ë§¤ì¹­ ìº”ìŠ¬
-    public void ReturnToLobby()
-    {
-        battlePanel.SetActive(false);
-        readyPanel.SetActive(false);
-        loadingPanel.SetActive(false);
-        lobbyPanel.SetActive(true);
-
-        isMatching = false;
-        isBattle = false;
-
-        UpdatePlayerCount(0);
-        ResetReadyUI();
-        ClearOpponentInfoUI();
-
-        InitResultImage();
-        InitRankingPointText();
-        InitCharacterHp();
-
-        turnCountText.text = "0";
-        timerText.text = "60";
-        timerText.color = Color.black;
-
-        remainTime = 0f;
-        remainTimeForDisplay = -1;
-    }
-
-    private void PrintResultImage(string result)
-    {
-        if (result == "WIN")
-        {
-            winImage.SetActive(true);
-        }
-        else if(result == "LOSE")
-        {
-            loseImage.SetActive(true);
-        }
-        else if (result == "DRAW")
-        {
-            drawImage.SetActive(true);
-        }
-        else
-        {
-            Debug.LogError("[BattleUIManager] PrintResultImage(string result) ë§¤ê°œ ë³€ìˆ˜ ëª… ì˜¤ë¥˜");
-        }
-    }
-
-    private void SetRankingPointText(BattleResultResponse response)
-    {
-        currentRankingPointText.text = response.ScoreBefore.ToString();
-
-        int delta = response.ScoreDelta;
-
-        if(delta >= 0)
-        {
-            operatorText.text = "+";
-        }
-        else
-        {
-            operatorText.text = "-";
-        }
-        resultRankingPointText.text = Mathf.Abs(delta).ToString();
-
     }
 }

@@ -30,7 +30,7 @@ public class CharacterResponse
     public float Spd { get; set; }
 
     // 치명타 확률
-    [JsonProperty("crit_rate")]
+    [JsonProperty("crit")]
     public float Crit { get; set; }
 
     // 불(신체) 속성 경험치
