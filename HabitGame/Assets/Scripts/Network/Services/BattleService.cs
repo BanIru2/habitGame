@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 public class BattleService
@@ -9,12 +10,20 @@ public class BattleService
         this.apiClient = apiClient;
     }
 
-    // PvP ��� ����
-    public Task<BattleResultResponse> SubmitResultAsync(BattleResultRequest request)
+    // PvP 배틀 결과 제출
+    public Task<BattleResultReportResponse> SubmitResultAsync(SubmitBattleResultRequest request)
     {
-        return apiClient.PostAsync<BattleResultRequest, BattleResultResponse>(
-            "/battle/result",
+        return apiClient.PostAsync<SubmitBattleResultRequest, BattleResultReportResponse>(
+            "/battle/results",
             request
+        );
+    }
+
+    // PvP 배틀 결과 목록 조회
+    public Task<List<BattleResultReportResponse>> GetResultsAsync(long userId)
+    {
+        return apiClient.GetAsync<List<BattleResultReportResponse>>(
+            $"/battle/results?userId={userId}"
         );
     }
 }
