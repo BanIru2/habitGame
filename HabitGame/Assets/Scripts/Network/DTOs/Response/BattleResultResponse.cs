@@ -6,10 +6,7 @@ using Newtonsoft.Json;
 public class BattleResultResponse
 {
     [JsonProperty("isWin")]
-    public bool IsWin { get; set; }    // request와 마찬가지 무승부 결과를 저장하지 못해 아래로 변경해야할 것
-
-    [JsonProperty("result")]
-    public string Result { get; set; }
+    public bool IsWin { get; set; }
 
     [JsonProperty("scoreBefore")]
     public int ScoreBefore { get; set; }

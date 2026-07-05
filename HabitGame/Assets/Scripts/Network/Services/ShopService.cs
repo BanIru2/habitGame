@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 public class ShopService
@@ -10,38 +9,11 @@ public class ShopService
         this.apiClient = apiClient;
     }
 
-    public Task<List<ItemResponse>> GetItemsAsync()
-    {
-        return apiClient.GetAsync<List<ItemResponse>>("/shop/items");
-    }
-
+    // 아이템 구매
     public Task<PurchaseItemResponse> PurchaseItemAsync(PurchaseItemRequest request)
     {
         return apiClient.PostAsync<PurchaseItemRequest, PurchaseItemResponse>(
-            "/shop/buy",
-            request
-        );
-    }
-
-    public Task<List<InventoryItemResponse>> GetInventoryAsync(long userId)
-    {
-        return apiClient.GetAsync<List<InventoryItemResponse>>(
-            $"/shop/inventory/me?userId={userId}"
-        );
-    }
-
-    public Task<EquipItemResponse> EquipItemAsync(EquipItemRequest request)
-    {
-        return apiClient.PostAsync<EquipItemRequest, EquipItemResponse>(
-            "/shop/equip",
-            request
-        );
-    }
-
-    public Task<EquipItemResponse> UnequipItemAsync(EquipItemRequest request)
-    {
-        return apiClient.PostAsync<EquipItemRequest, EquipItemResponse>(
-            "/shop/unequip",
+            "/shop/purchase",
             request
         );
     }

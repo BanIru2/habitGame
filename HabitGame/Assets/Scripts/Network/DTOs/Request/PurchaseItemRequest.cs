@@ -5,12 +5,11 @@ using Newtonsoft.Json;
 /// </summary>
 public class PurchaseItemRequest
 {
-
-    [JsonProperty("userId")]
-    public long UserId { get; set; }
-
     // 구매하려는 아이템의 고유 ID
     [JsonProperty("itemId")]
     public string ItemId { get; set; }
 
+    // 구매 수량
+    [JsonProperty("quantity")]
+    public int Quantity { get; set; }
 }
