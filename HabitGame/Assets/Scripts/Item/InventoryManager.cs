@@ -69,8 +69,10 @@ public class InventoryManager : Singleton<InventoryManager>
 
     private readonly List<ItemSlotUI> slotPool = new List<ItemSlotUI>();    // 아이템 정보를 출력할 슬롯 pool
 
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake();
+
         equipButton.onClick.AddListener(ShowEquipmentItems);
         consumableButton.onClick.AddListener(ShowConsumableItems);
 
@@ -170,7 +172,7 @@ public class InventoryManager : Singleton<InventoryManager>
             ItemSlotUI slot = GetSlot(i);
             slot.gameObject.SetActive(true);
 
-            slot.LoadData(item.Response, item.ItemSO, OnItemSlotClicked);
+            slot.LoadData(item, OnItemSlotClicked);
         }
 
         HideUnusedSlots(items.Count);
@@ -282,8 +284,26 @@ public class InventoryManager : Singleton<InventoryManager>
     {
         if (selectedItem == null) return;
 
-        if(selectedItem.ItemSO is EquipmentDataSO so)
+        EquipmentDataSO selectedEquipment = selectedItem.ItemSO as EquipmentDataSO;
+
+        // DB 서버에 대한 장착 요청 추가 예정
+
+        foreach (InventoryItemViewData item in equipmentItems)
+        {
+            if (item.ItemSO is EquipmentDataSO equipmentSO &&
+                equipmentSO.equipmentType == selectedEquipment.equipmentType)
+            {
+                item.Response.IsEquipped = false;
+            }
+        }
+
+        selectedItem.Response.IsEquipped = true;
+
+        if (selectedItem.ItemSO is EquipmentDataSO so)
             Debug.Log($"장착 : {so.displayName}");
+
+        ClosePopup();
+        ShowEquipmentItems();
     }
     
     // 사용 처리
