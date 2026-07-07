@@ -159,6 +159,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 31f146bce61b23a42b362a3d0f2cb69f, type: 2}
   - {fileID: 11400000, guid: 7942240c9678ded4f857f696c2c7af27, type: 2}
   - {fileID: 11400000, guid: 19767d16c09203349933c4e2b62a76f1, type: 2}
+  - {fileID: 11400000, guid: 5e4a1b16deeb44f44bd2f6c3e6fd1461, type: 2}
   equipButton: {fileID: 1295532190}
   consumableButton: {fileID: 1260915917}
   popupDim: {fileID: 792660850}
@@ -168,6 +169,7 @@ MonoBehaviour:
   equipDescText: {fileID: 1097664581}
   doEquipButton: {fileID: 621024263}
   equipCloseButton: {fileID: 1974855070}
+  doEquipButtonText: {fileID: 1825954263}
   consumDetail: {fileID: 727468178}
   consumIcon: {fileID: 1755510083}
   consumNameText: {fileID: 998323215}
@@ -17477,7 +17479,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6660370759225180490, guid: 7645326d3b0679945bd5527fb5da7d02, type: 3}
       propertyPath: items.Array.size
-      value: 5
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 6660370759225180490, guid: 7645326d3b0679945bd5527fb5da7d02, type: 3}
       propertyPath: items.Array.data[0]
@@ -17499,6 +17501,10 @@ PrefabInstance:
       propertyPath: items.Array.data[4]
       value: 
       objectReference: {fileID: 11400000, guid: 31f146bce61b23a42b362a3d0f2cb69f, type: 2}
+    - target: {fileID: 6660370759225180490, guid: 7645326d3b0679945bd5527fb5da7d02, type: 3}
+      propertyPath: items.Array.data[5]
+      value: 
+      objectReference: {fileID: 11400000, guid: 5e4a1b16deeb44f44bd2f6c3e6fd1461, type: 2}
     - target: {fileID: 8535152081107404602, guid: 7645326d3b0679945bd5527fb5da7d02, type: 3}
       propertyPath: m_Name
       value: SORegistry

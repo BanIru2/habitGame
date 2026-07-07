@@ -38,6 +38,9 @@ public class InventoryManager : Singleton<InventoryManager>
     private Button doEquipButton;
     [SerializeField]
     private Button equipCloseButton;
+    [SerializeField]
+    private TextMeshProUGUI doEquipButtonText;
+
     [Header("소비 상세 정보 팝업")]
     [SerializeField]
     private GameObject consumDetail;
@@ -80,7 +83,7 @@ public class InventoryManager : Singleton<InventoryManager>
         consumCloseButton.onClick.AddListener(ClosePopup);
         funcCloseButton.onClick.AddListener(ClosePopup);
 
-        doEquipButton.onClick.AddListener(DoEquipItem);
+        doEquipButton.onClick.AddListener(OnEquipActionButtonClicked);
         funcUseButton.onClick.AddListener(UseFuncItem);
 
         ClosePopup();
@@ -261,6 +264,9 @@ public class InventoryManager : Singleton<InventoryManager>
         equipIcon.sprite = itemSO.icon;
         equipNameText.text = itemSO.displayName;
         equipDescText.text = itemSO.description;
+
+        doEquipButtonText.text = data.IsEquipped ? "해제하기" : "장착하기";
+        doEquipButton.image.color = data.IsEquipped ? Color.red : new Color32(50,184,255, 255);
     }
 
     private void OpenConsumDetail(InventoryItemResponse data, ConsumableDataSO itemSO)
@@ -279,15 +285,43 @@ public class InventoryManager : Singleton<InventoryManager>
         funcDescText.text = itemSO.description;
     }
 
+    // 장착 버튼 클릭 시 동작
+    private void OnEquipActionButtonClicked()
+    {
+        if (selectedItem == null) return;
+
+        if (selectedItem.Response.IsEquipped)
+        {
+            DoUnequipItem();
+        }
+        else
+        {
+            DoEquipItem();
+        }
+    }
+
     // 장착 처리
     private void DoEquipItem()
     {
         if (selectedItem == null) return;
 
         EquipmentDataSO selectedEquipment = selectedItem.ItemSO as EquipmentDataSO;
+        if (selectedEquipment == null) return;
 
-        // DB 서버에 대한 장착 요청 추가 예정
+        // 추후 DB 장착 요청 성공 후 실행
 
+        UnequipSameTypeItemsLocally(selectedEquipment);
+
+        selectedItem.Response.IsEquipped = true;
+
+        Debug.Log($"장착 : {selectedEquipment.displayName}");
+
+        ClosePopup();
+        ShowEquipmentItems();
+    }
+
+    private void UnequipSameTypeItemsLocally(EquipmentDataSO selectedEquipment)
+    {
         foreach (InventoryItemViewData item in equipmentItems)
         {
             if (item.ItemSO is EquipmentDataSO equipmentSO &&
@@ -296,16 +330,25 @@ public class InventoryManager : Singleton<InventoryManager>
                 item.Response.IsEquipped = false;
             }
         }
+    }
 
-        selectedItem.Response.IsEquipped = true;
+    // 장착 해제 처리
+    private void DoUnequipItem()
+    {
+        if (selectedItem == null) return;
 
-        if (selectedItem.ItemSO is EquipmentDataSO so)
-            Debug.Log($"장착 : {so.displayName}");
+        EquipmentDataSO selectedEquipment = selectedItem.ItemSO as EquipmentDataSO;
+        if (selectedEquipment == null) return;
+
+        // 추후 DB 장착 해제 요청 성공 후 실행
+        selectedItem.Response.IsEquipped = false;
+
+        Debug.Log($"장착 해제 : {selectedEquipment.displayName}");
 
         ClosePopup();
         ShowEquipmentItems();
     }
-    
+
     // 사용 처리
     private void UseFuncItem()
     {
