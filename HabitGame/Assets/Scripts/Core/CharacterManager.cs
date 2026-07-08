@@ -8,7 +8,11 @@ public class CharacterManager : Singleton<CharacterManager>
     // 외부에서 직접적으로 참조할 일이 없다면 private으로 잠구는게 낫긴 함
     public CharacterResponse characterStatusData { get; private set; }
 
-    private void Awake()
+    // 착용한 아이템 정보
+    private List<EquipmentDataSO> equippedItems = new List<EquipmentDataSO>();
+
+
+    protected override void Awake()
     {
         base.Awake();
         // 임시 데이터
@@ -91,5 +95,12 @@ public class CharacterManager : Singleton<CharacterManager>
             attribute = setup.selectedAttr,
             attributeLevel = attrLevel
         };
+    }
+
+
+    // -------------------------- 장착 장비 처리 -------------------------------
+    public void SetEquippedItems(List<EquipmentDataSO> items)
+    {
+        equippedItems = items;
     }
 }

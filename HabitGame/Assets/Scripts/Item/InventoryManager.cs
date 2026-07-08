@@ -80,6 +80,7 @@ public class InventoryManager : Singleton<InventoryManager>
 
     private readonly List<ItemSlotUI> slotPool = new List<ItemSlotUI>();    // 아이템 정보를 출력할 슬롯 pool
 
+
     protected override void Awake()
     {
         base.Awake();
@@ -109,6 +110,7 @@ public class InventoryManager : Singleton<InventoryManager>
             List<InventoryItemResponse> responses = await inventoryBackendManager.FetchInventoryAsync();
 
             BuildViewData(responses);
+            UpdateEquippedItemsToCharacterManager();
             ShowEquipmentItems();
         }
         catch (System.Exception e)
@@ -322,6 +324,7 @@ public class InventoryManager : Singleton<InventoryManager>
         List<InventoryItemResponse> responses = await inventoryBackendManager.FetchInventoryAsync();
 
         BuildViewData(responses);
+        UpdateEquippedItemsToCharacterManager();
     }
 
     // 장착 처리
@@ -401,6 +404,31 @@ public class InventoryManager : Singleton<InventoryManager>
         {
             Debug.LogError($"아이템 사용 실패: {e.Message}");
         }
+    }
+
+
+    //---------------------------- 장착 아이템 처리 --------------------------------
+    private List<EquipmentDataSO> GetEquippedEquipmentSOs()
+    {
+        List<EquipmentDataSO> equippedItems = new List<EquipmentDataSO>();
+
+        foreach (InventoryItemViewData item in equipmentItems)
+        {
+            if (!item.Response.IsEquipped) continue;
+
+            if (item.ItemSO is EquipmentDataSO equipmentSO)
+            {
+                equippedItems.Add(equipmentSO);
+            }
+        }
+
+        return equippedItems;
+    }
+
+    private void UpdateEquippedItemsToCharacterManager()
+    {
+        List<EquipmentDataSO> equippedItems = GetEquippedEquipmentSOs();
+        CharacterManager.Instance.SetEquippedItems(equippedItems);
     }
 
 }
