@@ -4,17 +4,25 @@ using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Threading.Tasks;
+
 
 public class InventoryManager : Singleton<InventoryManager>
 {
-    [SerializeField] private ItemSlotUI itemSlotPrefab;
-    [SerializeField] private Transform itemSlotParent;
+    [SerializeField]
+    private InventoryBackendManager inventoryBackendManager;
+
+    [SerializeField] 
+    private ItemSlotUI itemSlotPrefab;
+    [SerializeField] 
+    private Transform itemSlotParent;
 
     private readonly List<InventoryItemViewData> allItems = new List<InventoryItemViewData>();
     private readonly List<InventoryItemViewData> equipmentItems = new List<InventoryItemViewData>();
     private readonly List<InventoryItemViewData> consumableItems = new List<InventoryItemViewData>();
 
-    [SerializeField] private List<ItemDataSO> testItems;
+    [SerializeField] 
+    private List<ItemDataSO> testItems;
 
 
     [SerializeField]
@@ -91,13 +99,22 @@ public class InventoryManager : Singleton<InventoryManager>
 
     // InventoryTap이 켜질때 마다 아이템 목록 다시 그리기
     // 인벤토리 탭 여는 버튼 클릭 시 호출하도록
-    public void OpenInventory()
+    public async void OpenInventory()
     {
-        // 실제 DB 연결 함수로 변경 필요
-        List<InventoryItemResponse> responses = CreateTestInventoryResponses();
+        /*        // 실제 DB 연결 함수로 변경 필요
+                List<InventoryItemResponse> responses = CreateTestInventoryResponses();*/
 
-        BuildViewData(responses);
-        ShowEquipmentItems();
+        try
+        {
+            List<InventoryItemResponse> responses = await inventoryBackendManager.FetchInventoryAsync();
+
+            BuildViewData(responses);
+            ShowEquipmentItems();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"인벤토리 조회 실패: {e.Message}");
+        }
     }
 
     // --------------------------------- 테스트 데이터 생성 -----------------------------------------
@@ -300,70 +317,89 @@ public class InventoryManager : Singleton<InventoryManager>
         }
     }
 
+    private async Task RefreshInventoryAfterChanged()
+    {
+        List<InventoryItemResponse> responses = await inventoryBackendManager.FetchInventoryAsync();
+
+        BuildViewData(responses);
+    }
+
     // 장착 처리
-    private void DoEquipItem()
+    private async void DoEquipItem()
     {
         if (selectedItem == null) return;
 
         EquipmentDataSO selectedEquipment = selectedItem.ItemSO as EquipmentDataSO;
         if (selectedEquipment == null) return;
 
-        // 추후 DB 장착 요청 성공 후 실행
-
-        UnequipSameTypeItemsLocally(selectedEquipment);
-
-        selectedItem.Response.IsEquipped = true;
-
-        Debug.Log($"장착 : {selectedEquipment.displayName}");
-
-        ClosePopup();
-        ShowEquipmentItems();
-    }
-
-    private void UnequipSameTypeItemsLocally(EquipmentDataSO selectedEquipment)
-    {
-        foreach (InventoryItemViewData item in equipmentItems)
+        try
         {
-            if (item.ItemSO is EquipmentDataSO equipmentSO &&
-                equipmentSO.equipmentType == selectedEquipment.equipmentType)
-            {
-                item.Response.IsEquipped = false;
-            }
+            var id = selectedItem.Response.InventoryId;
+            EquipItemResponse equipResponse = await inventoryBackendManager.EquipItemAsync(id);
+
+            Debug.Log($"{selectedEquipment.displayName} 장착");
+
+            await RefreshInventoryAfterChanged();
+
+            ClosePopup();
+            ShowEquipmentItems();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"장착 실패: {e.Message}");
         }
     }
 
     // 장착 해제 처리
-    private void DoUnequipItem()
+    private async void DoUnequipItem()
     {
         if (selectedItem == null) return;
 
         EquipmentDataSO selectedEquipment = selectedItem.ItemSO as EquipmentDataSO;
         if (selectedEquipment == null) return;
 
-        // 추후 DB 장착 해제 요청 성공 후 실행
-        selectedItem.Response.IsEquipped = false;
+        try
+        {
+            var id = selectedItem.Response.InventoryId;
+            EquipItemResponse unequipResponse = await inventoryBackendManager.UnequipItemAsync(id);
 
-        Debug.Log($"장착 해제 : {selectedEquipment.displayName}");
+            Debug.Log($"{selectedEquipment.displayName} 장착 해제");
 
-        ClosePopup();
-        ShowEquipmentItems();
+            await RefreshInventoryAfterChanged();
+
+            ClosePopup();
+            ShowEquipmentItems();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"장착 해제 실패: {e.Message}");
+        }
     }
 
     // 사용 처리
-    private void UseFuncItem()
+    private async void UseFuncItem()
     {
         if (selectedItem == null) return;
 
-        if (selectedItem.ItemSO is ConsumableDataSO so)
-        {
-            // DB 요청 성공 후 실행
-            selectedItem.Response.Quantity--;
+        if (selectedItem.ItemSO is not ConsumableDataSO so) return;
+        if (so.useTiming != ItemUseTiming.OutOfBattle) return;
 
-            if (so.useTiming == ItemUseTiming.OutOfBattle)
-                Debug.Log($"사용 : {so.displayName}");
+        try
+        {
+            long id = selectedItem.Response.InventoryId;
+
+            UseItemResponse useResponse = await inventoryBackendManager.UseItemAsync(id);
+
+            Debug.Log($"사용 : {so.displayName}");
+
+            await RefreshInventoryAfterChanged();
 
             ClosePopup();
             ShowConsumableItems();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"아이템 사용 실패: {e.Message}");
         }
     }
 
