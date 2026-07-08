@@ -127,7 +127,7 @@ public class InventoryManager : Singleton<InventoryManager>
             ItemId = string.IsNullOrEmpty(itemSO.itemId) ? itemSO.name : itemSO.itemId,
             ItemType = itemSO.itemType.ToString(),
             Quantity = itemSO is ConsumableDataSO ? index + 1 : 1,
-            IsEquipped = itemSO is EquipmentDataSO && index == 0,
+            IsEquipped = false,
             SlotType = itemSO is EquipmentDataSO equipmentSO
                 ? equipmentSO.equipmentType.ToString()
                 : null
@@ -356,8 +356,15 @@ public class InventoryManager : Singleton<InventoryManager>
 
         if (selectedItem.ItemSO is ConsumableDataSO so)
         {
+            // DB 요청 성공 후 실행
+            selectedItem.Response.Quantity--;
+
             if (so.useTiming == ItemUseTiming.OutOfBattle)
                 Debug.Log($"사용 : {so.displayName}");
+
+            ClosePopup();
+            ShowConsumableItems();
         }
     }
+
 }
