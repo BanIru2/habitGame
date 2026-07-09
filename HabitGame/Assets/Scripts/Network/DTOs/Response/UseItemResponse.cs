@@ -9,6 +9,15 @@ public class UseItemResponse
     [JsonProperty("itemId")]
     public string ItemId { get; set; }
 
-    [JsonProperty("quantity")]
+    [JsonProperty("itemType")]
+    public string ItemType { get; set; }
+
+    [JsonProperty("remainingQuantity")]
     public int Quantity { get; set; }
+
+    [JsonProperty("isDeleted")]
+    public bool IsDeleted { get; set; }
+
+    [JsonProperty("message")]
+    public string Message { get; set; }
 }
