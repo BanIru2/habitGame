@@ -102,21 +102,27 @@ public class InventoryManager : Singleton<InventoryManager>
     // 인벤토리 탭 여는 버튼 클릭 시 호출하도록
     public async void OpenInventory()
     {
-        /*        // 실제 DB 연결 함수로 변경 필요
+        /*        // 로컬 테스트용 응답 객체 생성
                 List<InventoryItemResponse> responses = CreateTestInventoryResponses();*/
-
         try
         {
-            List<InventoryItemResponse> responses = await inventoryBackendManager.FetchInventoryAsync();
-
-            BuildViewData(responses);
-            UpdateEquippedItemsToCharacterManager();
+            await RefreshInventoryAsync();
             ShowEquipmentItems();
         }
         catch (System.Exception e)
         {
             Debug.LogError($"인벤토리 조회 실패: {e.Message}");
         }
+    }
+
+    // DB기준 인벤토리 상태를 클라이언트 런타임에 동기화하는 함수
+    // PvP 준비 단계에서의 장비 선택에 대해 반응하기 위해 public 함수로 분리
+    public async Task RefreshInventoryAsync()
+    {
+        List<InventoryItemResponse> responses = await inventoryBackendManager.FetchInventoryAsync();
+
+        BuildViewData(responses);
+        UpdateEquippedItemsToCharacterManager();
     }
 
     // --------------------------------- 테스트 데이터 생성 -----------------------------------------
@@ -319,12 +325,30 @@ public class InventoryManager : Singleton<InventoryManager>
         }
     }
 
-    private async Task RefreshInventoryAfterChanged()
+    private async Task SetEquipmentEquippedStateAsync(long id, bool shouldEquip)
     {
-        List<InventoryItemResponse> responses = await inventoryBackendManager.FetchInventoryAsync();
+        if (shouldEquip)
+        {
+            await inventoryBackendManager.EquipItemAsync(id);
+        }
+        else
+        {
+            await inventoryBackendManager.UnequipItemAsync(id);
+        }
 
-        BuildViewData(responses);
-        UpdateEquippedItemsToCharacterManager();
+        await RefreshInventoryAsync();
+    }
+
+    // 장비 아이템 장착/해제 요청
+    // PvP 준비단계에서의 호출을 위해 public 함수로 분리
+    public async Task EquipInventoryItemAsync(long inventoryId)
+    {
+        await SetEquipmentEquippedStateAsync(inventoryId, true);
+    }
+
+    public async Task UnequipInventoryItemAsync(long inventoryId)
+    {
+        await SetEquipmentEquippedStateAsync(inventoryId, false);
     }
 
     // 장착 처리
@@ -338,11 +362,10 @@ public class InventoryManager : Singleton<InventoryManager>
         try
         {
             var id = selectedItem.Response.InventoryId;
-            EquipItemResponse equipResponse = await inventoryBackendManager.EquipItemAsync(id);
+            await EquipInventoryItemAsync(id);
 
             Debug.Log($"{selectedEquipment.displayName} 장착");
 
-            await RefreshInventoryAfterChanged();
 
             ClosePopup();
             ShowEquipmentItems();
@@ -364,11 +387,9 @@ public class InventoryManager : Singleton<InventoryManager>
         try
         {
             var id = selectedItem.Response.InventoryId;
-            EquipItemResponse unequipResponse = await inventoryBackendManager.UnequipItemAsync(id);
+            await UnequipInventoryItemAsync(id);
 
             Debug.Log($"{selectedEquipment.displayName} 장착 해제");
-
-            await RefreshInventoryAfterChanged();
 
             ClosePopup();
             ShowEquipmentItems();
@@ -395,7 +416,7 @@ public class InventoryManager : Singleton<InventoryManager>
 
             Debug.Log($"사용 : {so.displayName}");
 
-            await RefreshInventoryAfterChanged();
+            await RefreshInventoryAsync();
 
             ClosePopup();
             ShowConsumableItems();
@@ -407,7 +428,9 @@ public class InventoryManager : Singleton<InventoryManager>
     }
 
 
-    //---------------------------- 장착 아이템 처리 --------------------------------
+    //---------------------------- 장착 아이템 반영 --------------------------------
+
+    // 장착 중인 아이템의 리스트를 전달하는 함수
     private List<EquipmentDataSO> GetEquippedEquipmentSOs()
     {
         List<EquipmentDataSO> equippedItems = new List<EquipmentDataSO>();
@@ -431,4 +454,20 @@ public class InventoryManager : Singleton<InventoryManager>
         CharacterManager.Instance.SetEquippedItems(equippedItems);
     }
 
+
+    // PvP 준비단계에서 각 부위에 해당하는 보유 장비 리스트를 보내주기 위한 함수
+    public List<InventoryItemViewData> GetEquipmentItems(EquipmentType equipmentType)
+    {
+        List<InventoryItemViewData> result = new List<InventoryItemViewData>();
+
+        foreach (InventoryItemViewData item in equipmentItems)
+        {
+            if (item.ItemSO is EquipmentDataSO equipmentSO && equipmentSO.equipmentType == equipmentType)
+            {
+                result.Add(item);
+            }
+        }
+
+        return result;
+    }
 }
