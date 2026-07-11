@@ -91,6 +91,11 @@ public class PhotonManager : MonoBehaviourPunCallbacks
     {
         CharacterResponse data = await CharacterManager.Instance.RefreshCharacterAsync();
 
+        if (!PhotonNetwork.InRoom || PhotonNetwork.LocalPlayer == null)
+        {
+            return;
+        }
+
         long userId = data != null ? data.UserId : PhotonNetwork.LocalPlayer.ActorNumber;
         string playerName = GetLocalPlayerName(userId);
 
