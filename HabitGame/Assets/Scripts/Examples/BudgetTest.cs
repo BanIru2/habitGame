@@ -9,7 +9,7 @@ public class BudgetTest : MonoBehaviour
 {
     private SpendingService spendingService;
     private CreateSpendingBudgetRequest request;
-    private SpendingOverviewResponse response;
+    private SpendingBudgetResponse response;
     private SpendingBudgetResponse budgetResponse;
 
     [SerializeField]
@@ -44,7 +44,7 @@ public class BudgetTest : MonoBehaviour
             response = await spendingService.CreateBudgetAsync(request);
             if(response != null)
             {
-                Debug.Log($"예산 생성 성공 : {response.Budget.BudgetAmount}원");
+                Debug.Log($"예산 생성 성공 : {response.BudgetAmount}원");
             }
 
         }

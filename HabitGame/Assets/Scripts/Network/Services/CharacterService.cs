@@ -9,9 +9,11 @@ public class CharacterService
         this.apiClient = apiClient;
     }
 
-    // Ä³¸¯ÅÍ Á¤º¸ Á¶È¸
+    // Ä³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¸
     public Task<CharacterResponse> GetMyCharacterAsync()
     {
-        return apiClient.GetAsync<CharacterResponse>("/characters/me");
+        return apiClient.GetAsync<CharacterResponse>(
+            $"/characters/me?userId={apiClient.CurrentUserId}"
+        );
     }
 }

@@ -10,15 +10,15 @@ public class SpendingService
     }
 
     // 거래 내역 조회
-    public Task<SpendingOverviewResponse> GetOverviewAsync()
+    public Task<SpendingOverviewResponse> GetOverviewAsync(long userId)
     {
-        return apiClient.GetAsync<SpendingOverviewResponse>("/spending/overview");
+        return apiClient.GetAsync<SpendingOverviewResponse>($"/spending/overview?userId={userId}");
     }
 
     // 주간 예산 설정
-    public Task<SpendingOverviewResponse> CreateBudgetAsync(CreateSpendingBudgetRequest request)
+    public Task<SpendingBudgetResponse> CreateBudgetAsync(CreateSpendingBudgetRequest request)
     {
-        return apiClient.PostAsync<CreateSpendingBudgetRequest, SpendingOverviewResponse>(
+        return apiClient.PostAsync<CreateSpendingBudgetRequest, SpendingBudgetResponse>(
             "/spending/budgets",
             request
         );

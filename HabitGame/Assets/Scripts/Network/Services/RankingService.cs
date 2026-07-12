@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 public class RankingService
@@ -10,8 +11,8 @@ public class RankingService
     }
 
     // ·©Å· Á¶È¸
-    public Task<RankingListResponse> GetRankingsAsync()
+    public Task<List<RankingEntryResponse>> GetRankingsAsync()
     {
-        return apiClient.GetAsync<RankingListResponse>("/rankings");
+        return apiClient.GetAsync<List<RankingEntryResponse>>("/rankings");
     }
 }

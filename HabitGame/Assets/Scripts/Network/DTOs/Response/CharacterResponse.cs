@@ -5,6 +5,15 @@ using Newtonsoft.Json;
 /// </summary>
 public class CharacterResponse
 {
+    [JsonProperty("characterId")]
+    public long CharacterId { get; set; }
+
+    [JsonProperty("level")]
+    public int Level { get; set; }
+
+    [JsonProperty("exp")]
+    public int Exp { get; set; }
+
     // 유저 식별 ID
     [JsonProperty("userId")]
     public long UserId { get; set; }
@@ -30,7 +39,7 @@ public class CharacterResponse
     public float Spd { get; set; }
 
     // 치명타 확률
-    [JsonProperty("crit_rate")]
+    [JsonProperty("critRate")]
     public float Crit { get; set; }
 
     // 불(신체) 속성 경험치

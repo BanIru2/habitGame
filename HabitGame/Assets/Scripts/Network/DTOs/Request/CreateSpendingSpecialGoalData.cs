@@ -5,6 +5,18 @@ using Newtonsoft.Json;
 /// </summary>
 public class CreateSpendingSpecialGoalData
 {
+    [JsonProperty("userId")]
+    public long UserId { get; set; }
+
+    [JsonProperty("goalName")]
+    public string GoalName { get; set; }
+
+    [JsonProperty("limitAmount")]
+    public int LimitAmount { get; set; }
+
+    [JsonProperty("rewardGold")]
+    public int RewardGold { get; set; }
+
     // 특수 목표의 제목 (예: "커피값 줄이기")
     [JsonProperty("title")]
     public string Title { get; set; }

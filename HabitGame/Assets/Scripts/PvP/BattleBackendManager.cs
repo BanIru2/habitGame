@@ -8,13 +8,14 @@ public class BattleBackendManager : Singleton<BattleBackendManager>
     [SerializeField]
     private ServiceRegistry serviceRegistry;
 
-    public async void SubmitBattleResult(string result, long enemyUserId, BattleUnit myUnit, BattleUnit oppUnit)
+    public async void SubmitBattleResult(string battleId, string result, long enemyUserId, BattleUnit myUnit, BattleUnit oppUnit)
     {
         double myPower = CalculatePower(myUnit);
         double enemyPower = CalculatePower(oppUnit);
 
         SubmitBattleResultRequest request = new SubmitBattleResultRequest
         {
+            BattleId = battleId,
             UserId = ApiClient.Instance.CurrentUserId,
             EnemyUserId = enemyUserId,
             Result = result,

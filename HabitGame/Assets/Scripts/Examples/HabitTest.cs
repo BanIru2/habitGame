@@ -12,7 +12,7 @@ public class HabitTest : MonoBehaviour
 
     [SerializeField]
     private Button button;
-    // ----------------------ÀÓ½Ã ¿äÃ»¿ë µ¥ÀÌÅÍ¼Â-------------------------
+    // ----------------------ì„ì‹œ ìš”ì²­ìš© ë°ì´í„°ì…‹-------------------------
     [SerializeField]
     private HabitCategory targetCategory;
     [SerializeField]
@@ -41,18 +41,18 @@ public class HabitTest : MonoBehaviour
         {
             button.interactable = false;
             request = new CreateHabitGoalRequest { Category = HabitCategoryMapper.ToCategoryId(targetCategory), 
-                TargetAmount = targetAmount, Unit = unit, Period = period };
+                TargetAmount = (int)targetAmount, Unit = unit, Period = period };
             response = await habitService.CreateGoalAsync(request);
             
             if(response != null)
             {
-                Debug.Log($"¸ñÇ¥ »ı¼º ¼º°ø : {response.Category} {response.Unit}");
-                Debug.Log($"¿¹»ó »ó½Â ½ºÅÈ : {categorySO.PrimaryStat}, {categorySO.SecondaryStat}");
+                Debug.Log($"ëª©í‘œ ìƒì„± ì„±ê³µ : {response.Category} {response.Unit}");
+                Debug.Log($"ì˜ˆìƒ ìƒìŠ¹ ìŠ¤íƒ¯ : {categorySO.PrimaryStat}, {categorySO.SecondaryStat}");
             }
         }
         catch (Exception e)
         {
-            Debug.LogError($"[HabitTest] ¸ñÇ¥ »ı¼º ½ÇÆĞ: {e.Message}");
+            Debug.LogError($"[HabitTest] ëª©í‘œ ìƒì„± ì‹¤íŒ¨: {e.Message}");
         }
         finally
         {

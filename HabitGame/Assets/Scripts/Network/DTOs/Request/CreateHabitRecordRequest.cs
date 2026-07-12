@@ -9,7 +9,13 @@ public class CreateHabitRecordRequest
     [JsonProperty("goalId")]
     public long GoalId { get; set; }
 
+    [JsonProperty("userId")]
+    public long UserId { get; set; }
+
     // 실제 실천하여 달성한 수치
     [JsonProperty("achievedAmount")]
-    public float AchievedAmount { get; set; }
+    public int AchievedAmount { get; set; }
+
+    [JsonProperty("proofImageUrl")]
+    public string ProofImageUrl { get; set; }
 }

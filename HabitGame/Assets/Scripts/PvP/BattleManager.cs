@@ -131,6 +131,7 @@ public class BattleManager : Singleton<BattleManager>
         Debug.Log($"전투 종료: {myResult}");
 
     BattleBackendManager.Instance.SubmitBattleResult(
+        battleId,
         myResult,
         opponentUserId,
         myUnit,

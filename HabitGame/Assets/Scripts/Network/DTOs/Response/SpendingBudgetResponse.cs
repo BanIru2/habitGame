@@ -18,6 +18,15 @@ public class SpendingBudgetResponse
     [JsonProperty("budgetAmount")]
     public int BudgetAmount { get; set; }
 
+    [JsonProperty("currentSpent")]
+    public int CurrentSpent { get; set; }
+
+    [JsonProperty("period")]
+    public string Period { get; set; }
+
+    [JsonProperty("message")]
+    public string Message { get; set; }
+
     // 예외 처리 이전 총 지출액
     [JsonProperty("rawTotalSpent")]
     public int RawTotalSpent { get; set; }

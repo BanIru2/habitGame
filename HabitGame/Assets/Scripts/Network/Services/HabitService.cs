@@ -9,29 +9,29 @@ public class HabitService
         this.apiClient = apiClient;
     }
 
-    // »ıÈ° ½À°ü ¸ñÇ¥ »ı¼º
+    // ìƒí™œ ìŠµê´€ ëª©í‘œ ìƒì„±
     public Task<HabitGoalResponse> CreateGoalAsync(CreateHabitGoalRequest request)
     {
         return apiClient.PostAsync<CreateHabitGoalRequest, HabitGoalResponse>(
-            "/habit/goals",
+            "/habit-goals",
             request
         );
     }
 
-    // »ıÈ° ½À°ü ±â·Ï Á¦Ãâ (ÀÎÁõ)
+    // ìƒí™œ ìŠµê´€ ê¸°ë¡ ì œì¶œ (ì¸ì¦)
     public Task<HabitRecordResponse> CreateRecordAsync(CreateHabitRecordRequest request)
     {
         return apiClient.PostAsync<CreateHabitRecordRequest, HabitRecordResponse>(
-            "/habit/records",
+            "/habit-records",
             request
         );
     }
 
-    // »ıÈ° ½À°ü º¸»ó ¼ö·É
+    // ìƒí™œ ìŠµê´€ ë³´ìƒ ìˆ˜ë ¹
     public Task<HabitRewardClaimResponse> ClaimRewardAsync(ClaimHabitRewardRequest request)
     {
         return apiClient.PostAsync<ClaimHabitRewardRequest, HabitRewardClaimResponse>(
-            "/habit/rewards/claim",
+            "/rewards/claim",
             request
         );
     }

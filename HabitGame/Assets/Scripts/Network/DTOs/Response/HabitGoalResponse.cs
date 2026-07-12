@@ -14,12 +14,18 @@ public class HabitGoalResponse
     public long UserId { get; set; }
 
     // 습관 카테고리 (신체, 자기개발, 환경, 바이오리듬 등)
-    [JsonProperty("category")]
+    [JsonProperty("categoryId")]
     public string Category { get; set; }
+
+    [JsonProperty("goalName")]
+    public string GoalName { get; set; }
+
+    [JsonProperty("recordType")]
+    public string RecordType { get; set; }
 
     // 목표로 하는 수치
     [JsonProperty("targetAmount")]
-    public float TargetAmount { get; set; }
+    public int TargetAmount { get; set; }
 
     // 수치 단위 (분, 회, 페이지 등)
     [JsonProperty("unit")]
@@ -40,4 +46,7 @@ public class HabitGoalResponse
     // 목표 생성 일시
     [JsonProperty("createdAt")]
     public string CreatedAt { get; set; }
+
+    [JsonProperty("message")]
+    public string Message { get; set; }
 }

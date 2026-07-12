@@ -5,6 +5,9 @@ using Newtonsoft.Json;
 /// </summary>
 public class SubmitBattleResultRequest
 {
+    [JsonProperty("battleId")]
+    public string BattleId { get; set; }
+
     [JsonProperty("userId")]
     public long UserId { get; set; }
 

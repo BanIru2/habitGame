@@ -15,6 +15,8 @@ public class SpendingTest : MonoBehaviour
     private Button button;
     [SerializeField]
     private TextMeshProUGUI budgetText;
+    [SerializeField]
+    private long userId;
 
     private void Start()
     {
@@ -37,18 +39,10 @@ public class SpendingTest : MonoBehaviour
             // 로딩 중 버튼 비활성화
             button.interactable = false;
             // Service -> ApiClient를 거쳐 was로 Request DTO 전달 후 Response 받아오기
-            response = await spendingService.GetOverviewAsync();
+            response = await spendingService.GetOverviewAsync(userId);
             if (response != null)
             {
-                if (response.Budget != null)
-                {
-                    budgetResponse = response.Budget;
-                    UpdateDisplay();
-                }
-                else
-                {
-                    Debug.LogWarning("Budget 정보 없음");
-                }
+                UpdateDisplay();
             }
         }
         catch (Exception e)
@@ -64,7 +58,7 @@ public class SpendingTest : MonoBehaviour
 
     private void UpdateDisplay()
     {
-        budgetText.text = budgetResponse.BudgetAmount.ToString();
+        budgetText.text = response.BudgetAmount.ToString();
     }
 
     private void OnDestroy()

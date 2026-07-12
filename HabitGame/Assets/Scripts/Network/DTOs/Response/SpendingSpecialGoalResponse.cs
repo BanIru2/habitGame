@@ -9,6 +9,24 @@ public class SpendingSpecialGoalResponse
     [JsonProperty("id")]
     public long Id { get; set; }
 
+    [JsonProperty("userId")]
+    public long UserId { get; set; }
+
+    [JsonProperty("goalName")]
+    public string GoalName { get; set; }
+
+    [JsonProperty("limitAmount")]
+    public int LimitAmount { get; set; }
+
+    [JsonProperty("rewardGold")]
+    public int RewardGold { get; set; }
+
+    [JsonProperty("isCompleted")]
+    public bool IsCompleted { get; set; }
+
+    [JsonProperty("message")]
+    public string Message { get; set; }
+
     // 이 특수 목표가 속한 주간 예산의 ID
     [JsonProperty("budgetId")]
     public long BudgetId { get; set; }

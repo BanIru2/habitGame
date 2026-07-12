@@ -10,6 +10,9 @@ public class BattleResultReportResponse
     [JsonProperty("id")]
     public long Id { get; set; }
 
+    [JsonProperty("battleId")]
+    public string BattleId { get; set; }
+
     [JsonProperty("userId")]
     public long UserId { get; set; }
 
@@ -18,6 +21,9 @@ public class BattleResultReportResponse
 
     [JsonProperty("result")]
     public string Result { get; set; }
+
+    [JsonProperty("status")]
+    public string Status { get; set; }
 
     [JsonProperty("myPower")]
     public double MyPower { get; set; }

@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 /// </summary>
 public class BattleStartRequest
 {
-    [JsonProperty("userId")]
+    [JsonProperty("myUserId")]
     public long UserId { get; set; }
 
     [JsonProperty("enemyUserId")]

@@ -6,9 +6,15 @@ using Newtonsoft.Json;
 /// </summary>
 public class CreateSpendingBudgetRequest
 {
+    [JsonProperty("userId")]
+    public long UserId { get; set; }
+
     // 유저가 설정한 주간 예산 총액
     [JsonProperty("budgetAmount")]
     public int BudgetAmount { get; set; }
+
+    [JsonProperty("period")]
+    public string Period { get; set; }
 
     // 예산 적용 시작 날짜
     [JsonProperty("weekStart")]

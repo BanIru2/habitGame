@@ -19,7 +19,13 @@ public class HabitRecordResponse
 
     // 실제 실천하여 달성한 수치
     [JsonProperty("achievedAmount")]
-    public float AchievedAmount { get; set; }
+    public int AchievedAmount { get; set; }
+
+    [JsonProperty("isVerified")]
+    public bool IsVerified { get; set; }
+
+    [JsonProperty("message")]
+    public string Message { get; set; }
 
     // 보상(스탯/골드 등) 수령 완료 여부
     [JsonProperty("rewardClaimed")]

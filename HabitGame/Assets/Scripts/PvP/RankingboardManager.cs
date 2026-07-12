@@ -114,10 +114,12 @@ public class RankingboardManager : MonoBehaviour
     }
 
     // 받아온 랭킹 정보를 정령 후 UI에 반영
-    private void ShowRankingBoard(RankingListResponse response)
+    private void ShowRankingBoard(List<RankingEntryResponse> rankings)
     {
-        myRanking = response.MyRanking;
-        List<RankingEntryResponse> rankings = response.Rankings;
+        rankings ??= new List<RankingEntryResponse>();
+        myRanking = rankings.Find(
+            ranking => ranking.UserId == ApiClient.Instance.CurrentUserId
+        );
         rankings.Sort((a, b) => a.Rank.CompareTo(b.Rank));
 
         RefreshRows(rankings);
@@ -129,8 +131,8 @@ public class RankingboardManager : MonoBehaviour
     {
         try
         {
-            RankingListResponse response = await serviceRegistry.Ranking.GetRankingsAsync();
-            ShowRankingBoard(response);
+            List<RankingEntryResponse> rankings = await serviceRegistry.Ranking.GetRankingsAsync();
+            ShowRankingBoard(rankings);
         }
         catch (Exception e)
         {

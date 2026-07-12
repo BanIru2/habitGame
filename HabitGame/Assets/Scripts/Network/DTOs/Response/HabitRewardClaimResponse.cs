@@ -5,17 +5,41 @@ using Newtonsoft.Json;
 /// </summary>
 public class HabitRewardClaimResponse
 {
+    [JsonProperty("userId")]
+    public long UserId { get; set; }
+
     // 대상 습관 목표 Id (HabitRecordResponse.Id와 비교하여 어떤 목표에 대한 보상인지 확인)
     [JsonProperty("recordId")]
     public long RecordId { get; set; }
 
+    [JsonProperty("goalId")]
+    public long GoalId { get; set; }
+
+    [JsonProperty("categoryId")]
+    public string CategoryId { get; set; }
+
     // 특성 경험치 증가량
-    [JsonProperty("earnedAttributeExp")]
+    [JsonProperty("attributeExpReward")]
     public int EarnedAttributeExp { get; set; }
 
     // 증가 특성 종류
     [JsonProperty("attributeType")]
     public string AttributeType { get; set; }
+
+    [JsonProperty("achievementRate")]
+    public double AchievementRate { get; set; }
+
+    [JsonProperty("goldReward")]
+    public int GoldReward { get; set; }
+
+    [JsonProperty("attributeLevel")]
+    public int AttributeLevel { get; set; }
+
+    [JsonProperty("totalGold")]
+    public int TotalGold { get; set; }
+
+    [JsonProperty("totalAttributeExp")]
+    public int TotalAttributeExp { get; set; }
 
     // 스탯 증가량1
     [JsonProperty("earnedPrimaryStatExp")]
@@ -38,6 +62,9 @@ public class HabitRewardClaimResponse
     public CharacterResponse UpdatedCharacter { get; set; }
 
     // 중복 수령 방지 플래그
-    [JsonProperty("rewardClaimed")]
+    [JsonProperty("isRewardClaimed")]
     public bool RewardClaimed { get; set; }
+
+    [JsonProperty("message")]
+    public string Message { get; set; }
 }
