@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fde2df7f89627df438c5a16248a68d02, type: 3}
-  m_Name: EquipmentData
+  m_Name: tmpWeapon 2
   m_EditorClassIdentifier: 
   itemType: 0
-  itemId: 4
-  displayName: "\uC784\uC2DC1"
-  description: "\uC774\uAC74 \uC784\uC2DC\uC784"
+  itemId: 6
+  displayName: "\uC784\uC2DC3"
+  description: "\uBB34\uAE30\uC784\uC2DC2"
   cost: 0
   icon: {fileID: 0}
   unlockCondition:

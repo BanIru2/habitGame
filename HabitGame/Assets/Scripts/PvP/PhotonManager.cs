@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using System.Threading.Tasks;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 
 public class PhotonManager : MonoBehaviourPunCallbacks
@@ -32,7 +33,7 @@ public class PhotonManager : MonoBehaviourPunCallbacks
     private const string PropBattleAttr = "BattleAttr";
     private const string PropBattleAttrLevel = "BattleAttrLevel";
 
-    void Start()
+    private void Start()
     {
         PhotonNetwork.GameVersion = GameVersion;
         PhotonNetwork.PhotonServerSettings.AppSettings.FixedRegion = FixedRegion;
@@ -67,18 +68,34 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         PhotonNetwork.CreateRoom(null, options);
     }
 
-    public override void OnJoinedRoom()
+    public override async void OnJoinedRoom()
     {
         Debug.Log($"Joined room. Name: {PhotonNetwork.CurrentRoom.Name}, Players: {PhotonNetwork.CurrentRoom.PlayerCount}/{PhotonNetwork.CurrentRoom.MaxPlayers}, Region: {PhotonNetwork.CloudRegion}");
         UpdateUI();
-        RegisterLocalPlayerProperties();
+
+        try
+        {
+            await RegisterLocalPlayerPropertiesAsync();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Local player properties registration failed: {e.Message}");
+            return;
+        }
+
         RefreshMyInfoUI();
         ScheduleReadyPanelCheck();
     }
 
-    private void RegisterLocalPlayerProperties()
+    private async Task RegisterLocalPlayerPropertiesAsync()
     {
-        var data = CharacterManager.Instance.characterStatusData;
+        CharacterResponse data = await CharacterManager.Instance.RefreshCharacterAsync();
+
+        if (!PhotonNetwork.InRoom || PhotonNetwork.LocalPlayer == null)
+        {
+            return;
+        }
+
         long userId = data != null ? data.UserId : PhotonNetwork.LocalPlayer.ActorNumber;
         string playerName = GetLocalPlayerName(userId);
 
@@ -232,11 +249,14 @@ public class PhotonManager : MonoBehaviourPunCallbacks
             && props.ContainsKey(PropBattleAttr)
             && props.ContainsKey(PropBattleAttrLevel);
     }
+
     private void RefreshMyInfoUI()
     {
-        var data = CharacterManager.Instance.characterStatusData;
-        long userId = data != null ? data.UserId : PhotonNetwork.LocalPlayer.ActorNumber;
-        BattleUIManager.Instance.SetMyInfoUI(GetLocalPlayerName(userId));
+        Hashtable props = PhotonNetwork.LocalPlayer.CustomProperties;
+
+        string name = props.TryGetValue(PropPlayerName, out object value) ? value.ToString() : GetLocalPlayerName(PhotonNetwork.LocalPlayer.ActorNumber);
+
+        BattleUIManager.Instance.SetMyInfoUI(name);
     }
 
     private void RefreshOpponentInfoUI()

@@ -4,17 +4,25 @@ using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Threading.Tasks;
+
 
 public class InventoryManager : Singleton<InventoryManager>
 {
-    [SerializeField] private ItemSlotUI itemSlotPrefab;
-    [SerializeField] private Transform itemSlotParent;
+    [SerializeField]
+    private InventoryBackendManager inventoryBackendManager;
+
+    [SerializeField] 
+    private ItemSlotUI itemSlotPrefab;
+    [SerializeField] 
+    private Transform itemSlotParent;
 
     private readonly List<InventoryItemViewData> allItems = new List<InventoryItemViewData>();
     private readonly List<InventoryItemViewData> equipmentItems = new List<InventoryItemViewData>();
     private readonly List<InventoryItemViewData> consumableItems = new List<InventoryItemViewData>();
 
-    [SerializeField] private List<ItemDataSO> testItems;
+    [SerializeField] 
+    private List<ItemDataSO> testItems;
 
 
     [SerializeField]
@@ -38,6 +46,9 @@ public class InventoryManager : Singleton<InventoryManager>
     private Button doEquipButton;
     [SerializeField]
     private Button equipCloseButton;
+    [SerializeField]
+    private TextMeshProUGUI doEquipButtonText;
+
     [Header("소비 상세 정보 팝업")]
     [SerializeField]
     private GameObject consumDetail;
@@ -69,8 +80,11 @@ public class InventoryManager : Singleton<InventoryManager>
 
     private readonly List<ItemSlotUI> slotPool = new List<ItemSlotUI>();    // 아이템 정보를 출력할 슬롯 pool
 
-    private void Awake()
+
+    protected override void Awake()
     {
+        base.Awake();
+
         equipButton.onClick.AddListener(ShowEquipmentItems);
         consumableButton.onClick.AddListener(ShowConsumableItems);
 
@@ -78,7 +92,7 @@ public class InventoryManager : Singleton<InventoryManager>
         consumCloseButton.onClick.AddListener(ClosePopup);
         funcCloseButton.onClick.AddListener(ClosePopup);
 
-        doEquipButton.onClick.AddListener(DoEquipItem);
+        doEquipButton.onClick.AddListener(OnEquipActionButtonClicked);
         funcUseButton.onClick.AddListener(UseFuncItem);
 
         ClosePopup();
@@ -86,13 +100,29 @@ public class InventoryManager : Singleton<InventoryManager>
 
     // InventoryTap이 켜질때 마다 아이템 목록 다시 그리기
     // 인벤토리 탭 여는 버튼 클릭 시 호출하도록
-    public void OpenInventory()
+    public async void OpenInventory()
     {
-        // 실제 DB 연결 함수로 변경 필요
-        List<InventoryItemResponse> responses = CreateTestInventoryResponses();
+        /*        // 로컬 테스트용 응답 객체 생성
+                List<InventoryItemResponse> responses = CreateTestInventoryResponses();*/
+        try
+        {
+            await RefreshInventoryAsync();
+            ShowEquipmentItems();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"인벤토리 조회 실패: {e.Message}");
+        }
+    }
+
+    // DB기준 인벤토리 상태를 클라이언트 런타임에 동기화하는 함수
+    // PvP 준비 단계에서의 장비 선택에 대해 반응하기 위해 public 함수로 분리
+    public async Task RefreshInventoryAsync()
+    {
+        List<InventoryItemResponse> responses = await inventoryBackendManager.FetchInventoryAsync();
 
         BuildViewData(responses);
-        ShowEquipmentItems();
+        UpdateEquippedItemsToCharacterManager();
     }
 
     // --------------------------------- 테스트 데이터 생성 -----------------------------------------
@@ -122,7 +152,7 @@ public class InventoryManager : Singleton<InventoryManager>
             ItemId = string.IsNullOrEmpty(itemSO.itemId) ? itemSO.name : itemSO.itemId,
             ItemType = itemSO.itemType.ToString(),
             Quantity = itemSO is ConsumableDataSO ? index + 1 : 1,
-            IsEquipped = itemSO is EquipmentDataSO && index == 0,
+            IsEquipped = false,
             SlotType = itemSO is EquipmentDataSO equipmentSO
                 ? equipmentSO.equipmentType.ToString()
                 : null
@@ -170,7 +200,7 @@ public class InventoryManager : Singleton<InventoryManager>
             ItemSlotUI slot = GetSlot(i);
             slot.gameObject.SetActive(true);
 
-            slot.LoadData(item.Response, item.ItemSO, OnItemSlotClicked);
+            slot.LoadData(item, OnItemSlotClicked);
         }
 
         HideUnusedSlots(items.Count);
@@ -259,6 +289,9 @@ public class InventoryManager : Singleton<InventoryManager>
         equipIcon.sprite = itemSO.icon;
         equipNameText.text = itemSO.displayName;
         equipDescText.text = itemSO.description;
+
+        doEquipButtonText.text = data.IsEquipped ? "해제하기" : "장착하기";
+        doEquipButton.image.color = data.IsEquipped ? Color.red : new Color32(50,184,255, 255);
     }
 
     private void OpenConsumDetail(InventoryItemResponse data, ConsumableDataSO itemSO)
@@ -277,24 +310,164 @@ public class InventoryManager : Singleton<InventoryManager>
         funcDescText.text = itemSO.description;
     }
 
-    // 장착 처리
-    private void DoEquipItem()
+    // 장착 버튼 클릭 시 동작
+    private void OnEquipActionButtonClicked()
     {
         if (selectedItem == null) return;
 
-        if(selectedItem.ItemSO is EquipmentDataSO so)
-            Debug.Log($"장착 : {so.displayName}");
-    }
-    
-    // 사용 처리
-    private void UseFuncItem()
-    {
-        if (selectedItem == null) return;
-
-        if (selectedItem.ItemSO is ConsumableDataSO so)
+        if (selectedItem.Response.IsEquipped)
         {
-            if (so.useTiming == ItemUseTiming.OutOfBattle)
-                Debug.Log($"사용 : {so.displayName}");
+            DoUnequipItem();
         }
+        else
+        {
+            DoEquipItem();
+        }
+    }
+
+    private async Task SetEquipmentEquippedStateAsync(long id, bool shouldEquip)
+    {
+        if (shouldEquip)
+        {
+            await inventoryBackendManager.EquipItemAsync(id);
+        }
+        else
+        {
+            await inventoryBackendManager.UnequipItemAsync(id);
+        }
+
+        await RefreshInventoryAsync();
+    }
+
+    // 장비 아이템 장착/해제 요청
+    // PvP 준비단계에서의 호출을 위해 public 함수로 분리
+    public async Task EquipInventoryItemAsync(long inventoryId)
+    {
+        await SetEquipmentEquippedStateAsync(inventoryId, true);
+    }
+
+    public async Task UnequipInventoryItemAsync(long inventoryId)
+    {
+        await SetEquipmentEquippedStateAsync(inventoryId, false);
+    }
+
+    // 장착 처리
+    private async void DoEquipItem()
+    {
+        if (selectedItem == null) return;
+
+        EquipmentDataSO selectedEquipment = selectedItem.ItemSO as EquipmentDataSO;
+        if (selectedEquipment == null) return;
+
+        try
+        {
+            var id = selectedItem.Response.InventoryId;
+            await EquipInventoryItemAsync(id);
+
+            Debug.Log($"{selectedEquipment.displayName} 장착");
+
+
+            ClosePopup();
+            ShowEquipmentItems();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"장착 실패: {e.Message}");
+        }
+    }
+
+    // 장착 해제 처리
+    private async void DoUnequipItem()
+    {
+        if (selectedItem == null) return;
+
+        EquipmentDataSO selectedEquipment = selectedItem.ItemSO as EquipmentDataSO;
+        if (selectedEquipment == null) return;
+
+        try
+        {
+            var id = selectedItem.Response.InventoryId;
+            await UnequipInventoryItemAsync(id);
+
+            Debug.Log($"{selectedEquipment.displayName} 장착 해제");
+
+            ClosePopup();
+            ShowEquipmentItems();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"장착 해제 실패: {e.Message}");
+        }
+    }
+
+    // 사용 처리
+    private async void UseFuncItem()
+    {
+        if (selectedItem == null) return;
+
+        if (selectedItem.ItemSO is not ConsumableDataSO so) return;
+        if (so.useTiming != ItemUseTiming.OutOfBattle) return;
+
+        try
+        {
+            long id = selectedItem.Response.InventoryId;
+
+            UseItemResponse useResponse = await inventoryBackendManager.UseItemAsync(id);
+
+            Debug.Log($"사용 : {so.displayName}");
+
+            await RefreshInventoryAsync();
+
+            ClosePopup();
+            ShowConsumableItems();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"아이템 사용 실패: {e.Message}");
+        }
+    }
+
+
+    //---------------------------- 장착 아이템 반영 --------------------------------
+
+    // 장착 중인 아이템의 리스트를 전달하는 함수
+    private List<EquipmentDataSO> GetEquippedEquipmentSOs()
+    {
+        List<EquipmentDataSO> equippedItems = new List<EquipmentDataSO>();
+
+        foreach (InventoryItemViewData item in equipmentItems)
+        {
+            if (!item.Response.IsEquipped) continue;
+
+            if (item.ItemSO is EquipmentDataSO equipmentSO)
+            {
+                equippedItems.Add(equipmentSO);
+            }
+        }
+
+        return equippedItems;
+    }
+
+    private void UpdateEquippedItemsToCharacterManager()
+    {
+        List<EquipmentDataSO> equippedItems = GetEquippedEquipmentSOs();
+        CharacterManager.Instance.SetEquippedItems(equippedItems);
+    }
+
+
+    // PvP 준비단계에서 각 부위에 해당하는 보유 장비 리스트를 보내주기 위한 함수
+    public List<InventoryItemViewData> GetEquipmentItems(EquipmentType equipmentType)
+    {
+        List<InventoryItemViewData> result = new List<InventoryItemViewData>();
+
+        foreach (InventoryItemViewData item in equipmentItems)
+        {
+            if (item.ItemSO is EquipmentDataSO equipmentSO && equipmentSO.equipmentType == equipmentType)
+            {
+                result.Add(item);
+            }
+        }
+
+        return result;
     }
 }
