@@ -12,10 +12,6 @@ public class CharacterManager : Singleton<CharacterManager>
     // 캐릭터 닉네임
     private string nickname = "Unknown";
 
-    // 착용한 아이템 정보
-    private List<EquipmentDataSO> equippedItems = new List<EquipmentDataSO>();
-
-
     protected override void Awake()
     {
         base.Awake();
@@ -28,8 +24,12 @@ public class CharacterManager : Singleton<CharacterManager>
     {
         CharacterResponse response = await ServiceRegistry.Instance.Character.GetMyCharacterAsync();
 
-        ApplyCharacterResponse(response);
+        if (response == null)
+        {
+            throw new System.InvalidOperationException("캐릭터 정보 응답이 null입니다.");
+        }
 
+        ApplyCharacterResponse(response);
         return response;
     }
 
@@ -37,21 +37,16 @@ public class CharacterManager : Singleton<CharacterManager>
     // 캐릭터 정보에 대한 수정 발생 시(생활 습관 목표 보상 수령) 받아오는 응답데이터에서 CharacterResponse를 추출해서 호출
     // 단순 조회 시에는 RefreshCharacterAsync()에서 호출되어 DB와 동기화시키는 목적
     public void ApplyCharacterResponse(CharacterResponse data)
-    {
+    { 
+        if (data == null)
+        {
+            Debug.LogWarning("CharacterResponse가 null이라 캐릭터 캐시를 갱신하지 않습니다.");
+            return;
+        }
+
         characterStatusData = data;
     }
 
-    private void ApplyBonus(StatBonus bonus, ref float atk, ref float def, ref float hp, ref float spd, ref float crtk)
-    {
-        switch (bonus.statType)
-        {
-            case StatType.ATK: atk += bonus.value; break;
-            case StatType.DEF: def += bonus.value; break;
-            case StatType.HP: hp += bonus.value; break;
-            case StatType.SPD: spd += bonus.value; break;
-            case StatType.CRIT: crtk += bonus.value; break;
-        }
-    }
     public void SetNickname(string nickname)
     {
         this.nickname = string.IsNullOrEmpty(nickname) ? "Unknown" : nickname;
@@ -61,6 +56,16 @@ public class CharacterManager : Singleton<CharacterManager>
     // 전투에 사용할 특성 선택이 반영되므로 선택 이후에 호출하도록
     private BattleUnit CreateBattleUnit(BattleSetupData setup, CharacterResponse characterData)
     {
+        if (setup == null)
+        {
+            throw new System.ArgumentNullException(nameof(setup));
+        }
+
+        if (characterData == null)
+        {
+            throw new System.InvalidOperationException("전투 유닛 생성 실패: 캐릭터 정보가 없습니다.");
+        }
+
         float hp = characterData.Hp;
         float atk = characterData.Atk;
         float def = characterData.Def;
@@ -89,18 +94,6 @@ public class CharacterManager : Singleton<CharacterManager>
             }
         }
 
-        if(equippedItems != null)
-        {
-            foreach(var equip in equippedItems)
-            {
-                if (equip == null) continue;
-                foreach(var bonus in equip.statBonuses)
-                {
-                    ApplyBonus(bonus, ref atk, ref def, ref hp, ref spd, ref crtk);
-                }
-            }
-        }
-
         return new BattleUnit
         {
             name = nickname,    // 이름 어디서 끌어오지 << 어디 저장하지? 이름????? (로그인 관리 스크립트에서 LoginResponse를 받아 저장한 후 받아오도록 해야할 것)
@@ -126,11 +119,5 @@ public class CharacterManager : Singleton<CharacterManager>
     public BattleUnit CreateBattleUnit(BattleSetupData setup)
     {
         return CreateBattleUnit(setup, characterStatusData);
-    }
-
-    // -------------------------- 장착 장비 처리 -------------------------------
-    public void SetEquippedItems(List<EquipmentDataSO> items)
-    {
-        equippedItems = items != null ? new List<EquipmentDataSO>(items) : new List<EquipmentDataSO>();   // 복사 저장
     }
 }

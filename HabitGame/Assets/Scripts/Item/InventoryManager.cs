@@ -122,7 +122,6 @@ public class InventoryManager : Singleton<InventoryManager>
         List<InventoryItemResponse> responses = await inventoryBackendManager.FetchInventoryAsync();
 
         BuildViewData(responses);
-        UpdateEquippedItemsToCharacterManager();
     }
 
     // --------------------------------- 테스트 데이터 생성 -----------------------------------------
@@ -337,6 +336,7 @@ public class InventoryManager : Singleton<InventoryManager>
         }
 
         await RefreshInventoryAsync();
+        await CharacterManager.Instance.RefreshCharacterAsync();
     }
 
     // 장비 아이템 장착/해제 요청
@@ -447,13 +447,6 @@ public class InventoryManager : Singleton<InventoryManager>
 
         return equippedItems;
     }
-
-    private void UpdateEquippedItemsToCharacterManager()
-    {
-        List<EquipmentDataSO> equippedItems = GetEquippedEquipmentSOs();
-        CharacterManager.Instance.SetEquippedItems(equippedItems);
-    }
-
 
     // PvP 준비단계에서 각 부위에 해당하는 보유 장비 리스트를 보내주기 위한 함수
     public List<InventoryItemViewData> GetEquipmentItems(EquipmentType equipmentType)
