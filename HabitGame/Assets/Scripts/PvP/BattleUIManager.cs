@@ -76,12 +76,7 @@ public class BattleUIManager : Singleton<BattleUIManager>
     public AttributeType selectedAttrType { get; private set; }
     // 선택된 아이템 (외부참조 가능 -> 전투 로직에 사용)
     public ConsumableDataSO selectedItem { get; private set; }
-    // 가장 최근에 착용했던 장비 아이템 데이터 (DB에서 불러와야 함)
-    // Ready 차례가 되면 바로 출력될 수 있도록 순서를 정해야 함
-    private Dictionary<EquipmentType, EquipmentDataSO> lastSelectedEquipData = new Dictionary<EquipmentType, EquipmentDataSO>();
-    // 이번에 착용할 선택된 장비 아이템 데이터
-    // Ready 차례가 되면 lastSelectedEquipData를 복사해 넣기
-    public Dictionary<EquipmentType, EquipmentDataSO> selectedEquipData;
+
     private EquipmentType equipType;
     private bool isReady = false;
     private Color readyButtonDefaultColor;
@@ -90,6 +85,20 @@ public class BattleUIManager : Singleton<BattleUIManager>
     private string oppBattleNameDefaultText;
     private string[] oppAttrTextDefaultTexts;
     private float[] oppAttrTextDefaultAlphas;
+
+    [Header("Ready Panel/EquipSelectPanel")]
+    [SerializeField]
+    private GameObject equipSelectPanel;
+    [SerializeField]
+    private TextMeshProUGUI equipTypeText;
+    [SerializeField]
+    private Transform itemSlotParent;
+    [SerializeField]
+    private Button equipSelectCloseButton;
+    [SerializeField]
+    private ItemSlotUI itemSlotPrefab;
+
+    private List<ItemSlotUI> itemSlotPool = new List<ItemSlotUI>();
 
     // Battle Panel
     [Header("Battle Panel")]
@@ -163,6 +172,8 @@ public class BattleUIManager : Singleton<BattleUIManager>
         }
         readyButton.onClick.AddListener(OnClickReadyButton);
         checkButton.onClick.AddListener(OnClickCheckButton);
+
+        equipSelectCloseButton.onClick.AddListener(CloseEquipSelectPanel);
     }
 
     private void Update()
@@ -238,7 +249,6 @@ public class BattleUIManager : Singleton<BattleUIManager>
         loadingPanel.SetActive(false);
         readyPanel.SetActive(true);
         isMatching = false;
-        selectedEquipData = new Dictionary<EquipmentType, EquipmentDataSO>(lastSelectedEquipData);
         ResetReadyUI();
     }
 
@@ -346,42 +356,102 @@ public class BattleUIManager : Singleton<BattleUIManager>
         selectedItem = clickedButton.GetComponent<ConsumableButtonInfo>().itemData;
     }
 
-    // InventoryManager(가명)에서 현재 보유중인 장비 아이템 정보를 불러올 수 있도록 하는 기능 필요
-    // InventoryManager 작성 후 기능 구현 예정
-
-    // DB에서 불러온 데이터로 가장 최근에 착용했던 장비 아이템 데이터를 받아와야 함
-    // 최근전투뿐만 아니라 전투 외 인벤토리에서 착용한 경우 이부분까지 최신화 된 데이터로
-
-    // 사용할 장비 아이템 선택 버튼 클릭 시 동작
-
+    // 장비 아이템 장착--------------------------------------------
     private void OnClickEquipItemButton(Button clickedButton)
     {
         // 클릭한 버튼의 장비 부위 정보 저장
         equipType = clickedButton.GetComponent<EquipButtonInfo>().type;
         // 보유중인 아이템을 부위에 따라 버튼으로 만들어 보여주고 선택 시 교체할 수 있도록 하는 기능 필요
-
+        OpenEquipSelectPanel(equipType);
     }
 
-    private BattleSetupData CreateBattleSetupData()
+    // 아이템 데이터 ItemSlot으로 화면에 생성
+    private void RenderItems(List<InventoryItemViewData> items)
     {
-        List<EquipmentDataSO> equips = new List<EquipmentDataSO>();
-
-        if (selectedEquipData != null)
+        for (int i = 0; i < items.Count; i++)
         {
-            foreach (var equip in selectedEquipData.Values)
-            {
-                if (equip != null)
-                {
-                    equips.Add(equip);
-                }
-            }
+            InventoryItemViewData item = items[i];
+
+            ItemSlotUI slot = GetSlot(i);
+            slot.gameObject.SetActive(true);
+
+            slot.LoadData(item, OnEquipSlotClicked);
         }
 
+        HideUnusedSlots(items.Count);
+    }
+
+    // 슬롯이 남아 있다면 재사용, 없다면 생성
+    private ItemSlotUI GetSlot(int index)
+    {
+        if (index < itemSlotPool.Count)
+        {
+            return itemSlotPool[index];
+        }
+
+        ItemSlotUI slot = Instantiate(itemSlotPrefab, itemSlotParent);
+        itemSlotPool.Add(slot);
+
+        return slot;
+    }
+
+    // 사용하지 않는 슬롯 숨기기
+    private void HideUnusedSlots(int usedCount)
+    {
+        for (int i = usedCount; i < itemSlotPool.Count; i++)
+        {
+            itemSlotPool[i].gameObject.SetActive(false);
+        }
+    }
+
+    private async void OnEquipSlotClicked(InventoryItemViewData item)
+    {
+        try
+        {
+            long inventoryId = item.Response.InventoryId;
+
+            if (item.Response.IsEquipped)
+            {
+                await InventoryManager.Instance.UnequipInventoryItemAsync(inventoryId);
+            }
+            else
+            {
+                await InventoryManager.Instance.EquipInventoryItemAsync(inventoryId);
+            }
+
+            List<InventoryItemViewData> items = InventoryManager.Instance.GetEquipmentItems(equipType);
+            RenderItems(items);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"PvP 장비 변경 실패: {e.Message}");
+        }
+    }
+
+    private async void OpenEquipSelectPanel(EquipmentType equipType)
+    {
+        equipSelectPanel.SetActive(true);
+        equipTypeText.text = equipType.ToString();
+
+        // test
+        await InventoryManager.Instance.RefreshInventoryAsync();
+
+        List<InventoryItemViewData> items = InventoryManager.Instance.GetEquipmentItems(equipType);
+
+        RenderItems(items);
+    }
+
+    private void CloseEquipSelectPanel()
+    {
+        equipSelectPanel.SetActive(false);
+    }
+    // -------------------------------------------------------------
+    private BattleSetupData CreateBattleSetupData()
+    {
         return new BattleSetupData
         {
             selectedAttr = selectedAttrType,
             selectedItem = selectedItem,
-            selectedEquips = equips
         };
     }
 

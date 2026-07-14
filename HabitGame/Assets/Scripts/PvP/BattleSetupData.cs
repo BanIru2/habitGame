@@ -6,5 +6,4 @@ public class BattleSetupData
 {
     public AttributeType selectedAttr;
     public ConsumableDataSO selectedItem;
-    public List<EquipmentDataSO> selectedEquips;
 }

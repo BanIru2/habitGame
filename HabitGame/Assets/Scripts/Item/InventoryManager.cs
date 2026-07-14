@@ -80,6 +80,8 @@ public class InventoryManager : Singleton<InventoryManager>
 
     private readonly List<ItemSlotUI> slotPool = new List<ItemSlotUI>();    // 아이템 정보를 출력할 슬롯 pool
 
+    [SerializeField] 
+    private bool useLocalTestInventory = false;
 
     protected override void Awake()
     {
@@ -119,7 +121,16 @@ public class InventoryManager : Singleton<InventoryManager>
     // PvP 준비 단계에서의 장비 선택에 대해 반응하기 위해 public 함수로 분리
     public async Task RefreshInventoryAsync()
     {
-        List<InventoryItemResponse> responses = await inventoryBackendManager.FetchInventoryAsync();
+        List<InventoryItemResponse> responses;
+
+        if (useLocalTestInventory)
+        {
+            responses = CreateTestInventoryResponses();
+        }
+        else
+        {
+            responses = await inventoryBackendManager.FetchInventoryAsync();
+        }
 
         BuildViewData(responses);
     }
@@ -324,8 +335,59 @@ public class InventoryManager : Singleton<InventoryManager>
         }
     }
 
+    // 로컬 테스트를 위한 분기 생성용 함수
+    private void SetLocalTestEquippedState(long inventoryId, bool shouldEquip)
+    {
+        InventoryItemViewData targetItem = null;
+
+        foreach (InventoryItemViewData item in equipmentItems)
+        {
+            if (item.Response.InventoryId == inventoryId)
+            {
+                targetItem = item;
+                break;
+            }
+        }
+
+        if (targetItem == null)
+        {
+            Debug.LogWarning($"테스트 장착 변경 실패: inventoryId {inventoryId} 아이템을 찾을 수 없습니다.");
+            return;
+        }
+
+        if (targetItem.ItemSO is not EquipmentDataSO targetEquipment)
+        {
+            Debug.LogWarning($"테스트 장착 변경 실패: inventoryId {inventoryId} 아이템은 장비가 아닙니다.");
+            return;
+        }
+
+        // 장착하는 경우: 같은 부위 장비는 하나만 장착되도록 기존 장착 해제
+        if (shouldEquip)
+        {
+            foreach (InventoryItemViewData item in equipmentItems)
+            {
+                if (item.ItemSO is not EquipmentDataSO equipmentSO) continue;
+
+                if (equipmentSO.equipmentType == targetEquipment.equipmentType)
+                {
+                    item.Response.IsEquipped = false;
+                }
+            }
+        }
+
+        targetItem.Response.IsEquipped = shouldEquip;
+    }
+
     private async Task SetEquipmentEquippedStateAsync(long id, bool shouldEquip)
     {
+        // 서버 안 타고 로컬 테스트 데이터의 IsEquipped만 바꾸기
+        if (useLocalTestInventory)
+        {
+            SetLocalTestEquippedState(id, shouldEquip);
+            return;
+        }
+
+
         if (shouldEquip)
         {
             await inventoryBackendManager.EquipItemAsync(id);
