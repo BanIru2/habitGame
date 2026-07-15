@@ -1,14 +1,14 @@
+using ExitGames.Client.Photon;
+using Photon;
+using Photon.Pun;
 using System.Collections;
 using System.Collections.Generic;
+using System.Security.Cryptography;    // 모호성 방지
 using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
-using Photon;
-using Photon.Pun;
-using ExitGames.Client.Photon;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
-using System.Security.Cryptography;    // 모호성 방지
 
 public class BattleUIManager : Singleton<BattleUIManager>
 {
@@ -98,7 +98,26 @@ public class BattleUIManager : Singleton<BattleUIManager>
     [SerializeField]
     private ItemSlotUI itemSlotPrefab;
 
-    private List<ItemSlotUI> itemSlotPool = new List<ItemSlotUI>();
+    private List<ItemSlotUI> itemSlotPool = new List<ItemSlotUI>();    // 아이템 슬롯 재사용을 위한 저장 풀
+
+    [Header("Ready/EquipeSelect/ItemDetailPopup")]
+    [SerializeField]
+    private GameObject equipDetailPopup;
+    [SerializeField]
+    private Image equipIcon;
+    [SerializeField] 
+    private TextMeshProUGUI equipNameText;
+    [SerializeField] 
+    private TextMeshProUGUI equipDescText;
+    [SerializeField] 
+    private Button equipActionButton;
+    [SerializeField]
+    private TextMeshProUGUI equipActionButtonText;
+    [SerializeField] 
+    private Button equipDetailCloseButton;
+
+    private InventoryItemViewData selectedEquipItem;    // 현재 선택된 장비 아이템 저장
+
 
     // Battle Panel
     [Header("Battle Panel")]
@@ -174,6 +193,9 @@ public class BattleUIManager : Singleton<BattleUIManager>
         checkButton.onClick.AddListener(OnClickCheckButton);
 
         equipSelectCloseButton.onClick.AddListener(CloseEquipSelectPanel);
+
+        equipActionButton.onClick.AddListener(OnEquipButtonClicked);
+        equipDetailCloseButton.onClick.AddListener(CloseEquipDetailPopup);
     }
 
     private void Update()
@@ -404,28 +426,9 @@ public class BattleUIManager : Singleton<BattleUIManager>
         }
     }
 
-    private async void OnEquipSlotClicked(InventoryItemViewData item)
+    private void OnEquipSlotClicked(InventoryItemViewData item)
     {
-        try
-        {
-            long inventoryId = item.Response.InventoryId;
-
-            if (item.Response.IsEquipped)
-            {
-                await InventoryManager.Instance.UnequipInventoryItemAsync(inventoryId);
-            }
-            else
-            {
-                await InventoryManager.Instance.EquipInventoryItemAsync(inventoryId);
-            }
-
-            List<InventoryItemViewData> items = InventoryManager.Instance.GetEquipmentItems(equipType);
-            RenderItems(items);
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"PvP 장비 변경 실패: {e.Message}");
-        }
+        OpenEquipDetailPopup(item);
     }
 
     private async void OpenEquipSelectPanel(EquipmentType equipType)
@@ -441,9 +444,81 @@ public class BattleUIManager : Singleton<BattleUIManager>
         RenderItems(items);
     }
 
+    private void OpenEquipDetailPopup(InventoryItemViewData item)
+    {
+        if (item == null) return;
+
+        if (item.ItemSO is not EquipmentDataSO equipmentSO)
+        {
+            Debug.LogWarning("선택한 아이템이 장비 아이템이 아닙니다.");
+            return;
+        }
+
+        selectedEquipItem = item;
+
+        equipDetailPopup.SetActive(true);
+
+        equipIcon.sprite = equipmentSO.icon;
+        equipIcon.enabled = equipmentSO.icon != null;
+
+        equipNameText.text = equipmentSO.displayName;
+        equipDescText.text = equipmentSO.description;
+
+        bool isEquipped = item.Response.IsEquipped;
+
+        equipActionButtonText.text = isEquipped ? "해제하기" : "장착하기";
+        equipActionButton.image.color = isEquipped ? Color.red : new Color32(50, 184, 255, 255);
+    }
+
     private void CloseEquipSelectPanel()
     {
+        CloseEquipDetailPopup();
         equipSelectPanel.SetActive(false);
+    }
+
+    // 상세 팝업에서 장착 버튼 클릭 시
+    // 선택된 장비 장착/해제 -> 해당 부위 장비 목록 다시 가져와 UI 갱신
+    private async void OnEquipButtonClicked()
+    {
+        if (selectedEquipItem == null) return;
+
+        try
+        {
+            long inventoryId = selectedEquipItem.Response.InventoryId;
+
+            if (selectedEquipItem.Response.IsEquipped)
+            {
+                await InventoryManager.Instance.UnequipInventoryItemAsync(inventoryId);
+            }
+            else
+            {
+                await InventoryManager.Instance.EquipInventoryItemAsync(inventoryId);
+            }
+
+            List<InventoryItemViewData> items = InventoryManager.Instance.GetEquipmentItems(equipType);
+            RenderItems(items);
+
+            InventoryItemViewData updatedItem = items.Find(item => item.Response.InventoryId == inventoryId);
+            
+            if (updatedItem != null)
+            {
+                OpenEquipDetailPopup(updatedItem);
+            }
+            else
+            {
+                CloseEquipDetailPopup();
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"PvP 장비 변경 실패: {e.Message}");
+        }
+    }
+
+    private void CloseEquipDetailPopup()
+    {
+        selectedEquipItem = null;
+        equipDetailPopup.SetActive(false);
     }
     // -------------------------------------------------------------
     private BattleSetupData CreateBattleSetupData()
