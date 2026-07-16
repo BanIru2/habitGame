@@ -33,6 +33,9 @@ public class PhotonManager : MonoBehaviourPunCallbacks
     private const string PropBattleAttr = "BattleAttr";
     private const string PropBattleAttrLevel = "BattleAttrLevel";
 
+    private bool isPreparingBattleUnit;
+    private bool isBattleStartRequested;
+
     private void Start()
     {
         PhotonNetwork.GameVersion = GameVersion;
@@ -72,6 +75,7 @@ public class PhotonManager : MonoBehaviourPunCallbacks
     {
         Debug.Log($"Joined room. Name: {PhotonNetwork.CurrentRoom.Name}, Players: {PhotonNetwork.CurrentRoom.PlayerCount}/{PhotonNetwork.CurrentRoom.MaxPlayers}, Region: {PhotonNetwork.CloudRegion}");
         UpdateUI();
+        ResetBattlePreparationState();
 
         try
         {
@@ -163,27 +167,104 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         RefreshOpponentInfoUI();
         ScheduleReadyPanelCheck();
 
-        if (PhotonNetwork.IsMasterClient && (changedProps.ContainsKey(PropIsReady) || ContainsBattleUnitProperty(changedProps)))
+        if (changedProps.ContainsKey(PropIsReady) || ContainsBattleUnitProperty(changedProps))
         {
             CheckAllPlayersReady();
         }
     }
 
-    private void CheckAllPlayersReady()
+    private async void CheckAllPlayersReady()
+    {
+        if (!AreAllPlayersReady()) return;
+
+        if (!HasRequiredBattleUnitData(PhotonNetwork.LocalPlayer) && !isPreparingBattleUnit)
+        {
+            isPreparingBattleUnit = true;
+
+            try
+            {
+                bool prepared = await BattleUIManager.Instance.PrepareLocalBattleUnitAfterReadyConfirmedAsync();
+
+                if (!prepared)
+                {
+                    Debug.LogWarning("전투 유닛 준비 실패");
+                    ResetBattlePreparationState();
+
+                    BattleManager.Instance.SendReadyState(false);
+
+                    PhotonNetwork.LocalPlayer.SetCustomProperties(
+                        new Hashtable { { PropIsReady, false } }
+                    );
+
+                    BattleUIManager.Instance.ResetReadyUIAfterPreparationFailure();
+                    return;
+                }
+            }
+            finally
+            {
+                isPreparingBattleUnit = false;
+            }
+        }
+
+        if (PhotonNetwork.IsMasterClient && AreAllPlayersReady() && HasAllPlayersBattleUnitData() && !isBattleStartRequested)
+        {
+            isBattleStartRequested = true;
+            BattleManager.Instance.BroadcastStartBattle();
+        }
+    }
+
+    private bool AreAllPlayersReady()
     {
         foreach (Player p in PhotonNetwork.PlayerList)
         {
             if (p.CustomProperties.TryGetValue(PropIsReady, out object isReady))
             {
-                if (!(bool)isReady) return;
+                if (!(bool)isReady) return false;
             }
-            else return;
-
-            if (!HasRequiredBattleUnitData(p)) return;
+            else
+            {
+                return false;
+            }
         }
 
-        Debug.Log("All players are ready. Starting battle.");
-        BattleManager.Instance.BroadcastStartBattle();
+        return true;
+    }
+
+    private bool HasAllPlayersBattleUnitData()
+    {
+        foreach (Player p in PhotonNetwork.PlayerList)
+        {
+            if (!HasRequiredBattleUnitData(p)) return false;
+        }
+
+        return true;
+    }
+
+    private void ClearLocalBattleUnitProperties()
+    {
+        if (!PhotonNetwork.InRoom || PhotonNetwork.LocalPlayer == null) return;
+
+        Hashtable props = new Hashtable
+    {
+        { PropBattleMaxHp, null },
+        { PropBattleHp, null },
+        { PropBattleAtk, null },
+        { PropBattleDef, null },
+        { PropBattleSpd, null },
+        { PropBattleCrit, null },
+        { PropBattleAttr, null },
+        { PropBattleAttrLevel, null }
+    };
+
+        PhotonNetwork.LocalPlayer.SetCustomProperties(props);
+    }
+
+    private void ResetBattlePreparationState()
+    {
+        isPreparingBattleUnit = false;
+        isBattleStartRequested = false;
+
+        ClearLocalBattleUnitProperties();
     }
 
     private void ScheduleReadyPanelCheck()
@@ -283,6 +364,7 @@ public class PhotonManager : MonoBehaviourPunCallbacks
     public override void OnLeftRoom()
     {
         base.OnLeftRoom();
+        ResetBattlePreparationState();
         CancelInvoke(nameof(TryGoToReadyPanel));
         BattleUIManager.Instance.ReturnToLobby();
     }
@@ -292,6 +374,7 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         base.OnPlayerLeftRoom(otherPlayer);
 
         CancelInvoke(nameof(TryGoToReadyPanel));
+        ResetBattlePreparationState();
 
         if (BattleManager.Instance.IsBattleFinished)
         {
@@ -407,6 +490,7 @@ public class PhotonManager : MonoBehaviourPunCallbacks
     public void ReturnToLobby()
     {
         CancelInvoke(nameof(TryGoToReadyPanel));
+        ResetBattlePreparationState();
 
         if (PhotonNetwork.InRoom)
         {

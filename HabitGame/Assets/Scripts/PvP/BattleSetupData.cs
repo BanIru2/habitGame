@@ -5,5 +5,5 @@ using UnityEngine;
 public class BattleSetupData
 {
     public AttributeType selectedAttr;
-    public ConsumableDataSO selectedItem;
+    public InventoryItemViewData selectedConsumableItem;
 }

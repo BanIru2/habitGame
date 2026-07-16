@@ -522,26 +522,7 @@ public class InventoryManager : Singleton<InventoryManager>
     }
 
 
-    //---------------------------- 장착 아이템 반영 --------------------------------
-
-    // 장착 중인 아이템의 리스트를 전달하는 함수
-    private List<EquipmentDataSO> GetEquippedEquipmentSOs()
-    {
-        List<EquipmentDataSO> equippedItems = new List<EquipmentDataSO>();
-
-        foreach (InventoryItemViewData item in equipmentItems)
-        {
-            if (!item.Response.IsEquipped) continue;
-
-            if (item.ItemSO is EquipmentDataSO equipmentSO)
-            {
-                equippedItems.Add(equipmentSO);
-            }
-        }
-
-        return equippedItems;
-    }
-
+    // ---------------------------- PVP 준비 단계와 교환 -------------------------------------
     // PvP 준비단계에서 각 부위에 해당하는 보유 장비 리스트를 보내주기 위한 함수
     public List<InventoryItemViewData> GetEquipmentItems(EquipmentType equipmentType)
     {
@@ -556,5 +537,29 @@ public class InventoryManager : Singleton<InventoryManager>
         }
 
         return result;
+    }
+
+    public List<InventoryItemViewData> GetBattlePreparationConsumableItems()
+    {
+        List<InventoryItemViewData> result = new List<InventoryItemViewData>();
+
+        foreach (InventoryItemViewData item in consumableItems)
+        {
+            if (item.Response.Quantity <= 0) continue;
+
+            if (item.ItemSO is ConsumableDataSO consumableSO && consumableSO.useTiming == ItemUseTiming.BattlePreparation)
+            {
+                result.Add(item);
+            }
+        }
+
+        return result;
+    }
+
+    public async Task<UseItemResponse> UseInventoryItemAsync(long inventoryId)
+    {
+        UseItemResponse response = await inventoryBackendManager.UseItemAsync(inventoryId);
+        await RefreshInventoryAsync();
+        return response;
     }
 }

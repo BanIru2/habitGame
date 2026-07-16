@@ -4,6 +4,7 @@ using Photon.Pun;
 using System.Collections;
 using System.Collections.Generic;
 using System.Security.Cryptography;    // 모호성 방지
+using System.Threading.Tasks;
 using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -74,8 +75,8 @@ public class BattleUIManager : Singleton<BattleUIManager>
 
     // 선택된 특성 (외부참조 가능 -> 전투 로직에 사용)
     public AttributeType selectedAttrType { get; private set; }
-    // 선택된 아이템 (외부참조 가능 -> 전투 로직에 사용)
-    public ConsumableDataSO selectedItem { get; private set; }
+    // 선택된 아이템
+    private InventoryItemViewData selectedConsumableItem;
 
     private EquipmentType equipType;
     private bool isReady = false;
@@ -295,6 +296,9 @@ public class BattleUIManager : Singleton<BattleUIManager>
         isMeReadyText.color = Color.black;
         isOppReadyText.text = "WAITING";
         isOppReadyText.color = Color.black;
+        readyButton.interactable = true;
+
+        ClearSelectedConsumableItem();
 
         readyButton.image.color = readyButtonDefaultColor;
         var buttonText = readyButton.GetComponentInChildren<TextMeshProUGUI>();
@@ -357,8 +361,14 @@ public class BattleUIManager : Singleton<BattleUIManager>
     // 사용할 특성 선택 버튼 클릭 시 동작
     private void OnClickAttributeButton(Button clickedButton)
     {
+        if (isReady)
+        {
+            Debug.LogWarning("준비를 취소한 뒤 세팅을 변경할 수 있습니다.");
+            return;
+        }
+
         // 선택된 버튼은 색깔강조, 그 외 버튼은 흰색으로 초기화
-        foreach(var btn in attrButtons)
+        foreach (var btn in attrButtons)
         {
             btn.image.color = (btn == clickedButton) ? new Color(1f, 0.56f, 0f, 0.2f) : Color.white;
         }
@@ -367,20 +377,90 @@ public class BattleUIManager : Singleton<BattleUIManager>
     }
 
     // 사용할 소비 아이템 선택 버튼 클릭 시 동작
-
     private void OnClickConsumableItemButton(Button clickedButton)
     {
-        // 선택된 버튼은 색깔강조, 그 외 버튼은 흰색으로 초기화
+        if (isReady)
+        {
+            Debug.LogWarning("준비를 취소한 뒤 세팅을 변경할 수 있습니다.");
+            return;
+        }
+
+        ConsumableButtonInfo buttonInfo = clickedButton.GetComponent<ConsumableButtonInfo>();
+
+        if (buttonInfo == null || buttonInfo.itemData == null)
+        {
+            Debug.LogWarning("소비 아이템 버튼 정보가 없습니다.");
+            return;
+        }
+
+        List<InventoryItemViewData> consumableItems = InventoryManager.Instance.GetBattlePreparationConsumableItems();
+
+        InventoryItemViewData matchedItem = consumableItems.Find(item => item.ItemSO == buttonInfo.itemData);
+
+        if (matchedItem == null)
+        {
+            Debug.LogWarning("보유 중인 전투 준비 소비 아이템이 아니거나 수량이 없습니다.");
+            return;
+        }
+
         foreach (var btn in consumableItemButtons)
         {
             btn.image.color = (btn == clickedButton) ? new Color(1f, 0.56f, 0f, 0.2f) : Color.white;
         }
-        selectedItem = clickedButton.GetComponent<ConsumableButtonInfo>().itemData;
+
+        selectedConsumableItem = matchedItem;
+    }
+
+    private void ClearSelectedConsumableItem()
+    {
+        selectedConsumableItem = null;
+
+        foreach (var btn in consumableItemButtons)
+        {
+            btn.image.color = Color.white;
+        }
+    }
+
+    private bool TryRefreshSelectedConsumableItem()
+    {
+        if (selectedConsumableItem == null)
+        {
+            return true;
+        }
+
+        if (InventoryManager.Instance == null)
+        {
+            Debug.LogWarning("InventoryManager가 없어 선택한 소비 아이템을 확인할 수 없습니다.");
+            ClearSelectedConsumableItem();
+            return false;
+        }
+
+        long inventoryId = selectedConsumableItem.Response.InventoryId;
+
+        List<InventoryItemViewData> consumableItems = InventoryManager.Instance.GetBattlePreparationConsumableItems();
+
+        InventoryItemViewData latestItem = consumableItems.Find(item => item.Response.InventoryId == inventoryId);
+
+        if (latestItem == null)
+        {
+            Debug.LogWarning("선택한 소비 아이템을 더 이상 사용할 수 없습니다.");
+            ClearSelectedConsumableItem();
+            return false;
+        }
+
+        selectedConsumableItem = latestItem;
+        return true;
     }
 
     // 장비 아이템 장착--------------------------------------------
     private void OnClickEquipItemButton(Button clickedButton)
     {
+        if (isReady)
+        {
+            Debug.LogWarning("준비를 취소한 뒤 세팅을 변경할 수 있습니다.");
+            return;
+        }
+
         // 클릭한 버튼의 장비 부위 정보 저장
         equipType = clickedButton.GetComponent<EquipButtonInfo>().type;
         // 보유중인 아이템을 부위에 따라 버튼으로 만들어 보여주고 선택 시 교체할 수 있도록 하는 기능 필요
@@ -431,13 +511,10 @@ public class BattleUIManager : Singleton<BattleUIManager>
         OpenEquipDetailPopup(item);
     }
 
-    private async void OpenEquipSelectPanel(EquipmentType equipType)
+    private void OpenEquipSelectPanel(EquipmentType equipType)
     {
         equipSelectPanel.SetActive(true);
         equipTypeText.text = equipType.ToString();
-
-        // test
-        await InventoryManager.Instance.RefreshInventoryAsync();
 
         List<InventoryItemViewData> items = InventoryManager.Instance.GetEquipmentItems(equipType);
 
@@ -480,6 +557,12 @@ public class BattleUIManager : Singleton<BattleUIManager>
     // 선택된 장비 장착/해제 -> 해당 부위 장비 목록 다시 가져와 UI 갱신
     private async void OnEquipButtonClicked()
     {
+        if (isReady)
+        {
+            Debug.LogWarning("준비를 취소한 뒤 세팅을 변경할 수 있습니다.");
+            return;
+        }
+
         if (selectedEquipItem == null) return;
 
         if (InventoryManager.Instance.IsEquipmentChangeInProgress)
@@ -535,13 +618,48 @@ public class BattleUIManager : Singleton<BattleUIManager>
         equipDetailPopup.SetActive(false);
     }
     // -------------------------------------------------------------
-    private BattleSetupData CreateBattleSetupData()
+    public async Task<bool> PrepareLocalBattleUnitAfterReadyConfirmedAsync()
     {
-        return new BattleSetupData
+        readyButton.interactable = false;
+
+        if (!TryRefreshSelectedConsumableItem())
+        {
+            return false;
+        }
+
+        InventoryItemViewData consumableForBattle = selectedConsumableItem;
+
+        if (consumableForBattle != null)
+        {
+            try
+            {
+                long inventoryId = consumableForBattle.Response.InventoryId;
+                await InventoryManager.Instance.UseInventoryItemAsync(inventoryId);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"전투 준비 소비 아이템 사용 실패: {e.Message}");
+                return false;
+            }
+        }
+
+        BattleSetupData setup = new BattleSetupData
         {
             selectedAttr = selectedAttrType,
-            selectedItem = selectedItem,
+            selectedConsumableItem = consumableForBattle,
         };
+
+        BattleUnit myUnit = CharacterManager.Instance.CreateBattleUnit(setup);
+        photonManager.RegisterBattleUnitProperties(myUnit);
+
+        ClearSelectedConsumableItem();
+
+        return true;
+    }
+
+    public void ResetReadyUIAfterPreparationFailure()
+    {
+        ResetReadyUI();
     }
 
     // 준비완료 버튼 클릭 시
@@ -554,14 +672,15 @@ public class BattleUIManager : Singleton<BattleUIManager>
             return;
         }
 
+        if (!TryRefreshSelectedConsumableItem())
+        {
+            return;
+        }
+
         var buttonText = readyButton.GetComponentInChildren<TextMeshProUGUI>();
         if (!isReady)
         {
             isReady = true;
-
-            BattleSetupData setup = CreateBattleSetupData();
-            BattleUnit myUnit = CharacterManager.Instance.CreateBattleUnit(setup);
-            photonManager.RegisterBattleUnitProperties(myUnit);
 
             readyButton.image.color = Color.red;
             buttonText.text = "Ready";

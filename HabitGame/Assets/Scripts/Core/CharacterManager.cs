@@ -82,15 +82,18 @@ public class CharacterManager : Singleton<CharacterManager>
             _ => 0
         };
 
-        if(setup.selectedItem != null)
+        ConsumableDataSO selectedConsumable =
+            setup.selectedConsumableItem?.ItemSO as ConsumableDataSO;
+
+        if (selectedConsumable != null)
         {
-            switch (setup.selectedItem.targetStat)
+            switch (selectedConsumable.targetStat)
             {
-                case StatType.HP: hp += setup.selectedItem.value; break;
-                case StatType.ATK: atk += setup.selectedItem.value; break;
-                case StatType.DEF: def += setup.selectedItem.value; break;
-                case StatType.SPD: spd += setup.selectedItem.value; break;
-                case StatType.CRIT: crtk += setup.selectedItem.value; break;
+                case StatType.HP: hp += selectedConsumable.value; break;
+                case StatType.ATK: atk += selectedConsumable.value; break;
+                case StatType.DEF: def += selectedConsumable.value; break;
+                case StatType.SPD: spd += selectedConsumable.value; break;
+                case StatType.CRIT: crtk += selectedConsumable.value; break;
             }
         }
 
