@@ -80,8 +80,12 @@ public class InventoryManager : Singleton<InventoryManager>
 
     private readonly List<ItemSlotUI> slotPool = new List<ItemSlotUI>();    // 아이템 정보를 출력할 슬롯 pool
 
+    // 아이템 교체가 진행중인지 체크 
+    public bool IsEquipmentChangeInProgress { get; private set; }
+
     [SerializeField] 
     private bool useLocalTestInventory = false;
+
 
     protected override void Awake()
     {
@@ -380,25 +384,39 @@ public class InventoryManager : Singleton<InventoryManager>
 
     private async Task SetEquipmentEquippedStateAsync(long id, bool shouldEquip)
     {
-        // 서버 안 타고 로컬 테스트 데이터의 IsEquipped만 바꾸기
-        if (useLocalTestInventory)
+        if (IsEquipmentChangeInProgress)
         {
-            SetLocalTestEquippedState(id, shouldEquip);
+            Debug.LogWarning("장비 변경 요청이 이미 진행 중입니다.");
             return;
         }
+        IsEquipmentChangeInProgress = true;
 
-
-        if (shouldEquip)
+        try
         {
-            await inventoryBackendManager.EquipItemAsync(id);
+            // 서버 안 타고 로컬 테스트 데이터의 IsEquipped만 바꾸기
+            if (useLocalTestInventory)
+            {
+                SetLocalTestEquippedState(id, shouldEquip);
+                return;
+            }
+
+            if (shouldEquip)
+            {
+                await inventoryBackendManager.EquipItemAsync(id);
+            }
+            else
+            {
+                await inventoryBackendManager.UnequipItemAsync(id);
+            }
+
+            await RefreshInventoryAsync();
+            await CharacterManager.Instance.RefreshCharacterAsync();
         }
-        else
+        finally
         {
-            await inventoryBackendManager.UnequipItemAsync(id);
+            IsEquipmentChangeInProgress = false;
         }
 
-        await RefreshInventoryAsync();
-        await CharacterManager.Instance.RefreshCharacterAsync();
     }
 
     // 장비 아이템 장착/해제 요청
@@ -417,9 +435,12 @@ public class InventoryManager : Singleton<InventoryManager>
     private async void DoEquipItem()
     {
         if (selectedItem == null) return;
+        if (IsEquipmentChangeInProgress) return;
 
         EquipmentDataSO selectedEquipment = selectedItem.ItemSO as EquipmentDataSO;
         if (selectedEquipment == null) return;
+
+        doEquipButton.interactable = false;
 
         try
         {
@@ -436,15 +457,22 @@ public class InventoryManager : Singleton<InventoryManager>
         {
             Debug.LogError($"장착 실패: {e.Message}");
         }
+        finally
+        {
+            doEquipButton.interactable = true;
+        }
     }
 
     // 장착 해제 처리
     private async void DoUnequipItem()
     {
         if (selectedItem == null) return;
+        if (IsEquipmentChangeInProgress) return;
 
         EquipmentDataSO selectedEquipment = selectedItem.ItemSO as EquipmentDataSO;
         if (selectedEquipment == null) return;
+
+        doEquipButton.interactable = false;
 
         try
         {
@@ -459,6 +487,10 @@ public class InventoryManager : Singleton<InventoryManager>
         catch (System.Exception e)
         {
             Debug.LogError($"장착 해제 실패: {e.Message}");
+        }
+        finally
+        {
+            doEquipButton.interactable = true;
         }
     }
 

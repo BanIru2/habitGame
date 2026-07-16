@@ -482,6 +482,15 @@ public class BattleUIManager : Singleton<BattleUIManager>
     {
         if (selectedEquipItem == null) return;
 
+        if (InventoryManager.Instance.IsEquipmentChangeInProgress)
+        {
+            Debug.LogWarning("이미 장비 변경 요청이 진행 중입니다.");
+            return;
+        }
+
+        equipActionButton.interactable = false;
+        readyButton.interactable = false;
+
         try
         {
             long inventoryId = selectedEquipItem.Response.InventoryId;
@@ -513,6 +522,11 @@ public class BattleUIManager : Singleton<BattleUIManager>
         {
             Debug.LogError($"PvP 장비 변경 실패: {e.Message}");
         }
+        finally
+        {
+            equipActionButton.interactable = true;
+            readyButton.interactable = true;
+        }
     }
 
     private void CloseEquipDetailPopup()
@@ -534,6 +548,11 @@ public class BattleUIManager : Singleton<BattleUIManager>
     private void OnClickReadyButton()
     {
         if (!TryResolvePhotonManager()) return;
+        if (InventoryManager.Instance != null && InventoryManager.Instance.IsEquipmentChangeInProgress)
+        {
+            Debug.LogWarning("장비 변경 처리 중에는 Ready 할 수 없습니다.");
+            return;
+        }
 
         var buttonText = readyButton.GetComponentInChildren<TextMeshProUGUI>();
         if (!isReady)
