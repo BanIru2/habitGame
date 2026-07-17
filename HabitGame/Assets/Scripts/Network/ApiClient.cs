@@ -9,7 +9,7 @@ using UnityEngine.Networking;
 
 public class ApiClient : Singleton<ApiClient>
 {
-    private static string BASE_URL;    // server api 입력 필요
+    private const string BASE_URL = "http://localhost:8080";
     private string _jwt;               // accessToken
     private long _currentUserId;       // 현재 로그인 유저 ID
     

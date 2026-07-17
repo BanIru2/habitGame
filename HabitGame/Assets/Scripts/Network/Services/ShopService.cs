@@ -26,14 +26,14 @@ public class ShopService
     public Task<List<InventoryItemResponse>> GetInventoryAsync(long userId)
     {
         return apiClient.GetAsync<List<InventoryItemResponse>>(
-            $"/shop/inventory/me?userId={userId}"
+            $"/inventory/me?userId={userId}"
         );
     }
 
     public Task<EquipItemResponse> EquipItemAsync(EquipItemRequest request)
     {
         return apiClient.PostAsync<EquipItemRequest, EquipItemResponse>(
-            "/shop/equip",
+            "/inventory/equip",
             request
         );
     }
@@ -41,7 +41,7 @@ public class ShopService
     public Task<EquipItemResponse> UnequipItemAsync(EquipItemRequest request)
     {
         return apiClient.PostAsync<EquipItemRequest, EquipItemResponse>(
-            "/shop/unequip",
+            "/inventory/unequip",
             request
         );
     }
