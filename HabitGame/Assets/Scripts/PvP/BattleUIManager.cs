@@ -618,7 +618,7 @@ public class BattleUIManager : Singleton<BattleUIManager>
         equipDetailPopup.SetActive(false);
     }
     // -------------------------------------------------------------
-    public async Task<bool> PrepareLocalBattleUnitAfterReadyConfirmedAsync()
+    public async Task<bool> PrepareLocalBattleUnitAfterReadyConfirmedAsync(int roomFlowVersion)
     {
         readyButton.interactable = false;
 
@@ -635,6 +635,8 @@ public class BattleUIManager : Singleton<BattleUIManager>
             {
                 long inventoryId = consumableForBattle.Response.InventoryId;
                 await InventoryManager.Instance.UseInventoryItemAsync(inventoryId);
+                if (!photonManager.IsCurrentRoomFlow(roomFlowVersion))
+                    return false;
             }
             catch (System.Exception e)
             {
@@ -643,6 +645,9 @@ public class BattleUIManager : Singleton<BattleUIManager>
             }
         }
 
+        if (!photonManager.IsCurrentRoomFlow(roomFlowVersion))
+            return false;
+
         BattleSetupData setup = new BattleSetupData
         {
             selectedAttr = selectedAttrType,
@@ -650,6 +655,9 @@ public class BattleUIManager : Singleton<BattleUIManager>
         };
 
         BattleUnit myUnit = CharacterManager.Instance.CreateBattleUnit(setup);
+        if (!photonManager.IsCurrentRoomFlow(roomFlowVersion))
+            return false;
+
         photonManager.RegisterBattleUnitProperties(myUnit);
 
         ClearSelectedConsumableItem();
@@ -666,7 +674,9 @@ public class BattleUIManager : Singleton<BattleUIManager>
     private void OnClickReadyButton()
     {
         if (!TryResolvePhotonManager()) return;
-        if (InventoryManager.Instance != null && InventoryManager.Instance.IsEquipmentChangeInProgress)
+        if (InventoryManager.Instance != null &&
+            (InventoryManager.Instance.IsEquipmentChangeInProgress ||
+             InventoryManager.Instance.IsItemUseInProgress))
         {
             Debug.LogWarning("장비 변경 처리 중에는 Ready 할 수 없습니다.");
             return;

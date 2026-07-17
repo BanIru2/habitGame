@@ -35,6 +35,7 @@ public class PhotonManager : MonoBehaviourPunCallbacks
 
     private bool isPreparingBattleUnit;
     private bool isBattleStartRequested;
+    private int roomFlowVersion;
 
     private void Start()
     {
@@ -73,29 +74,36 @@ public class PhotonManager : MonoBehaviourPunCallbacks
 
     public override async void OnJoinedRoom()
     {
+        int flowVersion = ++roomFlowVersion;
         Debug.Log($"Joined room. Name: {PhotonNetwork.CurrentRoom.Name}, Players: {PhotonNetwork.CurrentRoom.PlayerCount}/{PhotonNetwork.CurrentRoom.MaxPlayers}, Region: {PhotonNetwork.CloudRegion}");
         UpdateUI();
         ResetBattlePreparationState();
 
         try
         {
-            await RegisterLocalPlayerPropertiesAsync();
+            await RegisterLocalPlayerPropertiesAsync(flowVersion);
         }
         catch (System.Exception e)
         {
             Debug.LogError($"Local player properties registration failed: {e.Message}");
+            if (IsCurrentRoomFlow(flowVersion))
+            {
+                ReturnToLobby();
+            }
             return;
         }
+
+        if (!IsCurrentRoomFlow(flowVersion)) return;
 
         RefreshMyInfoUI();
         ScheduleReadyPanelCheck();
     }
 
-    private async Task RegisterLocalPlayerPropertiesAsync()
+    private async Task RegisterLocalPlayerPropertiesAsync(int flowVersion)
     {
         CharacterResponse data = await CharacterManager.Instance.RefreshCharacterAsync();
 
-        if (!PhotonNetwork.InRoom || PhotonNetwork.LocalPlayer == null)
+        if (!IsCurrentRoomFlow(flowVersion))
         {
             return;
         }
@@ -148,6 +156,13 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         }
     }
 
+    public bool IsCurrentRoomFlow(int flowVersion)
+    {
+        return flowVersion == roomFlowVersion
+            && PhotonNetwork.InRoom
+            && PhotonNetwork.LocalPlayer != null;
+    }
+
     private bool ContainsBattleUnitProperty(Hashtable props)
     {
         return props.ContainsKey(PropBattleMaxHp)
@@ -176,6 +191,9 @@ public class PhotonManager : MonoBehaviourPunCallbacks
     private async void CheckAllPlayersReady()
     {
         if (!AreAllPlayersReady()) return;
+        if (!PhotonNetwork.InRoom || PhotonNetwork.LocalPlayer == null) return;
+
+        int flowVersion = roomFlowVersion;
 
         if (!HasRequiredBattleUnitData(PhotonNetwork.LocalPlayer) && !isPreparingBattleUnit)
         {
@@ -183,12 +201,15 @@ public class PhotonManager : MonoBehaviourPunCallbacks
 
             try
             {
-                bool prepared = await BattleUIManager.Instance.PrepareLocalBattleUnitAfterReadyConfirmedAsync();
+                bool prepared = await BattleUIManager.Instance.PrepareLocalBattleUnitAfterReadyConfirmedAsync(flowVersion);
+
+                if (!IsCurrentRoomFlow(flowVersion)) return;
 
                 if (!prepared)
                 {
                     Debug.LogWarning("전투 유닛 준비 실패");
                     ResetBattlePreparationState();
+                    if (!IsCurrentRoomFlow(flowVersion)) return;
 
                     BattleManager.Instance.SendReadyState(false);
 
@@ -205,6 +226,8 @@ public class PhotonManager : MonoBehaviourPunCallbacks
                 isPreparingBattleUnit = false;
             }
         }
+
+        if (!IsCurrentRoomFlow(flowVersion)) return;
 
         if (PhotonNetwork.IsMasterClient && AreAllPlayersReady() && HasAllPlayersBattleUnitData() && !isBattleStartRequested)
         {
@@ -333,6 +356,8 @@ public class PhotonManager : MonoBehaviourPunCallbacks
 
     private void RefreshMyInfoUI()
     {
+        if (!PhotonNetwork.InRoom || PhotonNetwork.LocalPlayer == null) return;
+
         Hashtable props = PhotonNetwork.LocalPlayer.CustomProperties;
 
         string name = props.TryGetValue(PropPlayerName, out object value) ? value.ToString() : GetLocalPlayerName(PhotonNetwork.LocalPlayer.ActorNumber);
@@ -364,6 +389,7 @@ public class PhotonManager : MonoBehaviourPunCallbacks
     public override void OnLeftRoom()
     {
         base.OnLeftRoom();
+        roomFlowVersion++;
         ResetBattlePreparationState();
         CancelInvoke(nameof(TryGoToReadyPanel));
         BattleUIManager.Instance.ReturnToLobby();
@@ -372,6 +398,7 @@ public class PhotonManager : MonoBehaviourPunCallbacks
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
         base.OnPlayerLeftRoom(otherPlayer);
+        roomFlowVersion++;
 
         CancelInvoke(nameof(TryGoToReadyPanel));
         ResetBattlePreparationState();
@@ -399,6 +426,8 @@ public class PhotonManager : MonoBehaviourPunCallbacks
 
     public void RegisterBattleUnitProperties(BattleUnit unit)
     {
+        if (unit == null || !PhotonNetwork.InRoom || PhotonNetwork.LocalPlayer == null) return;
+
         Hashtable props = new Hashtable();
 
         props.Add(PropBattleMaxHp, unit.maxHp);
@@ -489,6 +518,7 @@ public class PhotonManager : MonoBehaviourPunCallbacks
 
     public void ReturnToLobby()
     {
+        roomFlowVersion++;
         CancelInvoke(nameof(TryGoToReadyPanel));
         ResetBattlePreparationState();
 

@@ -23,7 +23,7 @@ public class BattleManager : Singleton<BattleManager>
     private string battleId;
     private long opponentUserId;
 
-    private void Awake()
+    protected override void Awake()
     {
         base.Awake();
         photonView = GetComponent<PhotonView>();
@@ -130,16 +130,16 @@ public class BattleManager : Singleton<BattleManager>
 
         Debug.Log($"전투 종료: {myResult}");
 
-    BattleBackendManager.Instance.SubmitBattleResult(
-        battleId,
-        myResult,
-        opponentUserId,
-        myUnit,
-        oppUnit
-    );
+        BattleBackendManager.Instance.SubmitBattleResult(
+            battleId,
+            myResult,
+            opponentUserId,
+            myUnit,
+            oppUnit
+        );
 
-    myUnit = null;
-    oppUnit = null;
+        myUnit = null;
+        oppUnit = null;
     }
 
     // 마스터 클라이언트의 결과를 토대로 나의 결과를 산출
