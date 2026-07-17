@@ -505,6 +505,12 @@ public class InventoryManager : Singleton<InventoryManager>
         if (selectedItem.ItemSO is not ConsumableDataSO so) return;
         if (so.useTiming != ItemUseTiming.OutOfBattle) return;
 
+        if (selectedItem.Response == null || selectedItem.Response.Quantity <= 0)
+        {
+            Debug.LogWarning("아이템 수량 부족");
+            return;
+        }
+
         funcUseButton.interactable = false;
 
         try
