@@ -65,13 +65,13 @@ public class HabitUIManager : MonoBehaviour
         spendAddPanel.SetActive(true);
     }
 
-    // 생활습관으로 돌아가기
+    // 생활습관으로 back
     public void BackToLife()
     {
         OpenLife();
     }
 
-    // 소비습관으로 돌아가기
+    // 소비습관으로 back
     public void BackToSpend()
     {
         OpenSpend();
