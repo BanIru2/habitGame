@@ -37,14 +37,13 @@ public class ApiIntegrationTest : MonoBehaviour
 
             Debug.Log(
                 $"[API TEST][{apiName}] SUCCESS\n" +
-                $"characterId={response.CharacterId}\n" +
                 $"userId={response.UserId}\n" +
-                $"level={response.Level}\n" +
                 $"gold={response.Gold}\n" +
                 $"hp={response.Hp}\n" +
                 $"atk={response.Atk}\n" +
                 $"def={response.Def}\n" +
-                $"spd={response.Spd}",
+                $"spd={response.Spd}\n" +
+                $"critRate={response.Crit}",
                 this
             );
         }
