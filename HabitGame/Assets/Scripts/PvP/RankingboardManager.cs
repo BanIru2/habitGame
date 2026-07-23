@@ -46,9 +46,6 @@ public class RankingboardManager : MonoBehaviour
 
         StartCoroutine(CheckDailyResetRoutine());
 
-        // DB 연결 오류로 임시 주석처리. 연결 후 주석해제 요망
-        //LoadRankingBoard();
-
 /*        // 테스트 호출
         LoadMockRankingBoard();*/
     }
@@ -127,6 +124,7 @@ public class RankingboardManager : MonoBehaviour
     }
 
     // 랭킹 보드 정보를 가져오기 위한 외부 호출용 함수
+    // PvP 탭을 열 때 호출 필요
     public async void LoadRankingBoard()
     {
         try
