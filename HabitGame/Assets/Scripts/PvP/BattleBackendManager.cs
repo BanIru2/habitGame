@@ -25,23 +25,10 @@ public class BattleBackendManager : Singleton<BattleBackendManager>
             GainedGold = result == "WIN" ? 100 : 0
         };
 
-        BattleResultReportResponse reportResponse =
+        BattleResultResponse response =
             await serviceRegistry.Battle.SubmitResultAsync(request);
 
-        BattleResultResponse uiResponse = new BattleResultResponse
-        {
-            Result = reportResponse.Result,
-            IsWin = reportResponse.Result == "WIN",
-
-            ScoreBefore = 0,
-            ScoreAfter = 0,
-            ScoreDelta = 0,
-
-            RankBefore = 0,
-            RankAfter = 0
-        };
-
-        BattleUIManager.Instance.FinishBattle(uiResponse);
+        BattleUIManager.Instance.FinishBattle(response);
     }
 
     private double CalculatePower(BattleUnit unit)
