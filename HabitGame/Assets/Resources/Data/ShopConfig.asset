@@ -12,5 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 181356cc1bd674845a17bd202fb025c6, type: 3}
   m_Name: ShopConfig
   m_EditorClassIdentifier: 
-  equipmentItems: []
-  consumableItems: []
+  equipmentItems:
+  - {fileID: 11400000, guid: 7942240c9678ded4f857f696c2c7af27, type: 2}
+  - {fileID: 11400000, guid: 5e4a1b16deeb44f44bd2f6c3e6fd1461, type: 2}
+  - {fileID: 11400000, guid: 19767d16c09203349933c4e2b62a76f1, type: 2}
+  consumableItems:
+  - {fileID: 11400000, guid: 8dc51d489539438408205c21163e2ad9, type: 2}
+  - {fileID: 11400000, guid: 64cde6ff8c26ed5449f97d89bab361a5, type: 2}
+  - {fileID: 11400000, guid: 31f146bce61b23a42b362a3d0f2cb69f, type: 2}

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,9 +10,9 @@ public class ShopUIManager : Singleton<ShopUIManager>
     [SerializeField]
     private TextMeshProUGUI goldText;
     [SerializeField]
-    private Button equipmentButton;
+    private Button equipmentPanelButton;
     [SerializeField]
-    private Button consumableButton;
+    private Button consumablePanelButton;
 
     [SerializeField]
     private ShopItemSlotUI itemSlotPrefab;
@@ -26,6 +27,15 @@ public class ShopUIManager : Singleton<ShopUIManager>
     private readonly List<ShopItemViewData> allItems = new List<ShopItemViewData>();
     private readonly List<ShopItemViewData> equipmentItems = new List<ShopItemViewData>();
     private readonly List<ShopItemViewData> consumableItems = new List<ShopItemViewData>();
+
+    protected override void Awake()
+    {
+        base.Awake();
+
+        equipmentPanelButton.onClick.AddListener(ShowEquipmentItems);
+        consumablePanelButton.onClick.AddListener(ShowConsumableItems);
+
+    }
 
     // 아이템 데이터 ItemSlot으로 화면에 생성
     private void RenderItems(List<ShopItemViewData> items)
@@ -71,15 +81,42 @@ public class ShopUIManager : Singleton<ShopUIManager>
 
     }
 
+    // ItemDataSO -> ShopItemViewData로 변환해주기 위한 공통 함수
+    private List<ShopItemViewData> CreateViewDataList<T>(List<T> items)
+    where T : ItemDataSO
+    {
+        List<ShopItemViewData> viewDataList = new List<ShopItemViewData>();
+
+        if (items == null)
+            return viewDataList;
+
+        foreach (T item in items)
+        {
+            if (item == null)
+                continue;
+
+            viewDataList.Add(new ShopItemViewData
+            {
+                ItemSO = item,
+                IsAvailable = true  // DB 연동 후 값 불러오기 필요
+            });
+        }
+
+        return viewDataList;
+    }
+
     // 장비 아이템 출력 (장비 버튼 onClick)
     public void ShowEquipmentItems()
     {
-        RenderItems(equipmentItems);
+        List<ShopItemViewData> viewList = CreateViewDataList(shopConfigSO.equipmentItems);
+        RenderItems(viewList);
     }
 
     // 소비 아이템 출력 (소비 버튼 onClick)
     public void ShowConsumableItems()
     {
-        RenderItems(consumableItems);
+        List<ShopItemViewData> viewList = CreateViewDataList(shopConfigSO.consumableItems);
+        RenderItems(viewList);
     }
+
 }
