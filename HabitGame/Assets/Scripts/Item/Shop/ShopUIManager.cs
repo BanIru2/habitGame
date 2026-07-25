@@ -28,6 +28,26 @@ public class ShopUIManager : Singleton<ShopUIManager>
     private readonly List<ShopItemViewData> equipmentItems = new List<ShopItemViewData>();
     private readonly List<ShopItemViewData> consumableItems = new List<ShopItemViewData>();
 
+    [Header("상세 팝업")]
+    [SerializeField]
+    private GameObject itemDetailPopup;
+    [SerializeField]
+    private Image itemDetailIcon;
+    [SerializeField]
+    private TextMeshProUGUI itemDetailNameText;
+    [SerializeField]
+    private TextMeshProUGUI itemDetailDescText;
+    [SerializeField]
+    private TextMeshProUGUI itemDetailPriceText;
+    [SerializeField]
+    private Button buyButton;
+    [SerializeField]
+    private TextMeshProUGUI buyButtonText;
+    [SerializeField]
+    private Button closeButton;
+
+    private ShopItemViewData selectedItem;
+
     protected override void Awake()
     {
         base.Awake();
@@ -35,6 +55,8 @@ public class ShopUIManager : Singleton<ShopUIManager>
         equipmentPanelButton.onClick.AddListener(ShowEquipmentItems);
         consumablePanelButton.onClick.AddListener(ShowConsumableItems);
 
+        buyButton.onClick.AddListener(BuyItem);
+        closeButton.onClick.AddListener(ClosePopup);
     }
 
     // 아이템 데이터 ItemSlot으로 화면에 생성
@@ -76,11 +98,6 @@ public class ShopUIManager : Singleton<ShopUIManager>
         }
     }
 
-    private void OnItemSlotClicked(ShopItemViewData item)
-    {
-
-    }
-
     // ItemDataSO -> ShopItemViewData로 변환해주기 위한 공통 함수
     private List<ShopItemViewData> CreateViewDataList<T>(List<T> items)
     where T : ItemDataSO
@@ -119,4 +136,49 @@ public class ShopUIManager : Singleton<ShopUIManager>
         RenderItems(viewList);
     }
 
+    // 슬롯 온클릭 함수 - 상세 팝업 출력
+    private void OnItemSlotClicked(ShopItemViewData viewData)
+    {
+        ClosePopup();
+
+        var itemSO = viewData.ItemSO;
+        var isAvailable = viewData.IsAvailable;
+
+        if (itemSO != null)
+        {
+            OpenItemDetail(itemSO, isAvailable);
+        }
+
+        selectedItem = viewData;
+    }
+    // ------------------------------- 상세 팝업 -----------------------------------------
+    private void ClosePopup()
+    {
+        itemDetailPopup.SetActive(false);
+        buyButton.interactable = true;
+        selectedItem = null;
+    }
+
+    private void OpenItemDetail(ItemDataSO itemSO, bool isAvailable)
+    {
+        itemDetailPopup.SetActive(true);
+        itemDetailIcon.sprite = itemSO.icon;
+        itemDetailNameText.text = itemSO.displayName;
+        itemDetailDescText.text = itemSO.description;
+        itemDetailPriceText.text = itemSO.cost.ToString() + " G";
+
+        buyButtonText.text = isAvailable ? "구매하기" : "구매불가";
+
+        if (!isAvailable)
+        {
+            buyButton.interactable = false;
+            buyButton.image.color = new Color32 (242, 242, 242, 255);
+        }
+    }
+
+    private void BuyItem()
+    {
+        Debug.Log($"구매 : {selectedItem.ItemSO.displayName}");
+    }
+    // -----------------------------------------------------------------------------------
 }

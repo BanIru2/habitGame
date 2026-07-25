@@ -16,7 +16,7 @@ MonoBehaviour:
   itemId: 6
   displayName: "\uC784\uC2DC3"
   description: "\uBB34\uAE30\uC784\uC2DC2"
-  cost: 0
+  cost: 50000
   icon: {fileID: 0}
   unlockCondition:
     requiredAttributeLevel: 0

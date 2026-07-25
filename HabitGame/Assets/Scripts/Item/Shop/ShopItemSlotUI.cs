@@ -46,7 +46,7 @@ public class ShopItemSlotUI : MonoBehaviour
     {
         itemNameText.text = viewData.ItemSO.displayName;
         itemDescribeText.text = viewData.ItemSO.description;
-        priceText.text = viewData.ItemSO.cost.ToString();
+        priceText.text = viewData.ItemSO.cost.ToString() + " G";
 
         iconImage.enabled = viewData.ItemSO.icon != null;
         iconImage.sprite = viewData.ItemSO.icon;
