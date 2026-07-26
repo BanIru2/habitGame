@@ -10,7 +10,7 @@ public class HabitListManager : MonoBehaviour
     [SerializeField] private Transform content;
     [SerializeField] private GameObject habitItemPrefab;
 
-    public void AddHabit()
+    public void AddHabit() //리스트 추가
     {
         if (string.IsNullOrWhiteSpace(habitNameInput.text))
             return;
