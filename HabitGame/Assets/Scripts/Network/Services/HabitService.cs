@@ -30,6 +30,8 @@ public class HabitService
     // 생활 습관 보상 수령
     public Task<HabitRewardClaimResponse> ClaimRewardAsync(ClaimHabitRewardRequest request)
     {
+        request.UserId = apiClient.CurrentUserId;
+
         return apiClient.PostAsync<ClaimHabitRewardRequest, HabitRewardClaimResponse>(
             "/rewards/claim",
             request

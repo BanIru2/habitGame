@@ -5,6 +5,9 @@ using Newtonsoft.Json;
 /// </summary>
 public class ClaimHabitRewardRequest
 {
+    [JsonProperty("userId")]
+    public long UserId { get; set; }
+
     // 보상을 수령할 습관 기록의 고유 ID
     [JsonProperty("recordId")]
     public long RecordId { get; set; }

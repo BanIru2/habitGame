@@ -23,9 +23,11 @@ public class SubmitBattleResultRequest
     [JsonProperty("enemyPower")]
     public double EnemyPower { get; set; }
 
-    [JsonProperty("gainedExp")]
+    // BattleBackendManager 호환용. Backend 요청에는 전송하지 않는다.
+    [JsonIgnore]
     public int GainedExp { get; set; }
 
-    [JsonProperty("gainedGold")]
+    // BattleBackendManager 호환용. Backend 요청에는 전송하지 않는다.
+    [JsonIgnore]
     public int GainedGold { get; set; }
 }

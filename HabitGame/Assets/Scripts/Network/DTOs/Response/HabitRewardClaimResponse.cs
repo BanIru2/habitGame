@@ -1,14 +1,13 @@
 using Newtonsoft.Json;
 
 /// <summary>
-/// »ıÈ° ½À°ü ¸ñÇ¥ ´Ş¼º ½Ã º¸»ó Áö±Ş µ¿ÀÛÀ» À§ÇÑ ÀÀ´ä DTO
+/// ìŠµê´€ ë‹¬ì„± ë³´ìƒ ìˆ˜ë ¹ ê²°ê³¼ DTO
 /// </summary>
 public class HabitRewardClaimResponse
 {
     [JsonProperty("userId")]
     public long UserId { get; set; }
 
-    // ´ë»ó ½À°ü ¸ñÇ¥ Id (HabitRecordResponse.Id¿Í ºñ±³ÇÏ¿© ¾î¶² ¸ñÇ¥¿¡ ´ëÇÑ º¸»óÀÎÁö È®ÀÎ)
     [JsonProperty("recordId")]
     public long RecordId { get; set; }
 
@@ -18,11 +17,9 @@ public class HabitRewardClaimResponse
     [JsonProperty("categoryId")]
     public string CategoryId { get; set; }
 
-    // Æ¯¼º °æÇèÄ¡ Áõ°¡·®
     [JsonProperty("attributeExpReward")]
     public int EarnedAttributeExp { get; set; }
 
-    // Áõ°¡ Æ¯¼º Á¾·ù
     [JsonProperty("attributeType")]
     public string AttributeType { get; set; }
 
@@ -41,27 +38,6 @@ public class HabitRewardClaimResponse
     [JsonProperty("totalAttributeExp")]
     public int TotalAttributeExp { get; set; }
 
-    // ½ºÅÈ Áõ°¡·®1
-    [JsonProperty("earnedPrimaryStatExp")]
-    public int EarnedPrimaryStatExp { get; set; }
-
-    // Áõ°¡ ½ºÅÈ Á¾·ù1
-    [JsonProperty("primaryStatType")]
-    public string PrimaryStatType { get; set; }
-
-    // ½ºÅÈ Áõ°¡·®2
-    [JsonProperty("earnedSecondaryStatExp")]
-    public int EarnedSecondaryStatExp { get; set; }
-
-    // Áõ°¡ ½ºÅÈ Á¾·ù2
-    [JsonProperty("secondaryStatType")]
-    public string SecondaryStatType { get; set; }
-
-    // º¸»ó Àû¿ë ÈÄ Ä³¸¯ÅÍ ÀüÃ¼ »óÅÂ
-    [JsonProperty("updatedCharacter")]
-    public CharacterResponse UpdatedCharacter { get; set; }
-
-    // Áßº¹ ¼ö·É ¹æÁö ÇÃ·¡±×
     [JsonProperty("isRewardClaimed")]
     public bool RewardClaimed { get; set; }
 

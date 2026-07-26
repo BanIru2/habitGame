@@ -5,15 +5,6 @@ using Newtonsoft.Json;
 /// </summary>
 public class CharacterResponse
 {
-    [JsonProperty("characterId")]
-    public long CharacterId { get; set; }
-
-    [JsonProperty("level")]
-    public int Level { get; set; }
-
-    [JsonProperty("exp")]
-    public int Exp { get; set; }
-
     // 유저 식별 ID
     [JsonProperty("userId")]
     public long UserId { get; set; }
