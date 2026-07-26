@@ -7,36 +7,33 @@ using Newtonsoft.Json;
 /// </summary>
 public class BattleResultReportResponse
 {
-    [JsonProperty("id")]
-    public long Id { get; set; }
-
     [JsonProperty("battleId")]
     public string BattleId { get; set; }
-
-    [JsonProperty("userId")]
-    public long UserId { get; set; }
-
-    [JsonProperty("enemyUserId")]
-    public long EnemyUserId { get; set; }
-
-    [JsonProperty("result")]
-    public string Result { get; set; }
 
     [JsonProperty("status")]
     public string Status { get; set; }
 
-    [JsonProperty("myPower")]
-    public double MyPower { get; set; }
+    [JsonProperty("isWin")]
+    public bool IsWin { get; set; }
 
-    [JsonProperty("enemyPower")]
-    public double EnemyPower { get; set; }
+    [JsonProperty("result")]
+    public string Result { get; set; }
 
-    [JsonProperty("gainedExp")]
-    public int GainedExp { get; set; }
+    [JsonProperty("scoreBefore")]
+    public int ScoreBefore { get; set; }
 
-    [JsonProperty("gainedGold")]
-    public int GainedGold { get; set; }
+    [JsonProperty("scoreAfter")]
+    public int ScoreAfter { get; set; }
 
-    [JsonProperty("createdAt")]
-    public string CreatedAt { get; set; }
+    [JsonProperty("scoreDelta")]
+    public int ScoreDelta { get; set; }
+
+    [JsonProperty("rankBefore")]
+    public int RankBefore { get; set; }
+
+    [JsonProperty("rankAfter")]
+    public int RankAfter { get; set; }
+
+    [JsonProperty("message")]
+    public string Message { get; set; }
 }

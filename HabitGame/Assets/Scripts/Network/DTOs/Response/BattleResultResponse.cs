@@ -1,12 +1,18 @@
 using Newtonsoft.Json;
 
 /// <summary>
-/// ÀüÅõ °á°ú¸¦ È­¸é¿¡ º¸¿©ÁÖ±â À§ÇÑ ÀÀ´ä DTO
+/// ì „íˆ¬ ê²°ê³¼ë¥¼ í™”ë©´ì— ë³´ì—¬ì£¼ê¸° ìœ„í•œ ì‘ë‹µ DTO
 /// </summary>
 public class BattleResultResponse
 {
+    [JsonProperty("battleId")]
+    public string BattleId { get; set; }
+
+    [JsonProperty("status")]
+    public string Status { get; set; }
+
     [JsonProperty("isWin")]
-    public bool IsWin { get; set; }    // request¿Í ¸¶Âù°¡Áö ¹«½ÂºÎ °á°ú¸¦ ÀúÀåÇÏÁö ¸øÇØ ¾Æ·¡·Î º¯°æÇØ¾ßÇÒ °Í
+    public bool IsWin { get; set; }
 
     [JsonProperty("result")]
     public string Result { get; set; }
@@ -25,4 +31,7 @@ public class BattleResultResponse
 
     [JsonProperty("rankAfter")]
     public int RankAfter { get; set; }
+
+    [JsonProperty("message")]
+    public string Message { get; set; }
 }
