@@ -50,6 +50,6 @@ public class SpendListManager : MonoBehaviour
 
         // 입력창 비우기
         goalNameInput.text = "";
-        goldInput.text = "";
+        goldInput.text = ""; 
     }
 }

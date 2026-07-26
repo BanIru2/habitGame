@@ -66,7 +66,7 @@ public class HabitUIManager : MonoBehaviour
     }
 
     // 생활습관으로 back
-    public void BackToLife()
+    public void BackToLife() 
     {
         OpenLife();
     }
