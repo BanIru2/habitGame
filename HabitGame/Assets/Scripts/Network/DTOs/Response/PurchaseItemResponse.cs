@@ -32,6 +32,9 @@ public class PurchaseItemResponse
     [JsonProperty("purchaseLogId")]
     public long PurchaseLogId { get; set; }
 
-    [JsonProperty("code")]
-    public string Code { get; set; }
+    [JsonProperty("purchaseStatus")]
+    public string PurchaseStatus { get; set; }
+
+    [JsonProperty("remainingStock")]
+    public int RemainingStock { get; set; }
 }

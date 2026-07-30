@@ -10,9 +10,9 @@ public class ShopService
         this.apiClient = apiClient;
     }
 
-    public Task<List<ItemResponse>> GetItemsAsync()
+    public Task<List<ItemResponse>> GetItemsAsync(long userId)
     {
-        return apiClient.GetAsync<List<ItemResponse>>("/shop/items");
+        return apiClient.GetAsync<List<ItemResponse>>($"/shop/items?userId={userId}");
     }
 
     public Task<PurchaseItemResponse> PurchaseItemAsync(PurchaseItemRequest request)

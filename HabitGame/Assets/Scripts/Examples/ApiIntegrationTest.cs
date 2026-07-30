@@ -64,7 +64,7 @@ public class ApiIntegrationTest : MonoBehaviour
 
         try
         {
-            response = await GetRegistry().Shop.GetItemsAsync();
+            response = await GetRegistry().Shop.GetItemsAsync(ApiClient.Instance.CurrentUserId);
 
             if (response == null)
             {

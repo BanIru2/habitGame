@@ -255,9 +255,9 @@ public class ShopUIManager : Singleton<ShopUIManager>
             }
 
             // 3. 백엔드가 구매 불가 판정을 내린 경우
-            if (response.Code != "SUCCESS")
+            if (response.PurchaseStatus != "SUCCESS")
             {
-                HandlePurchaseFailure(response.Code);
+                HandlePurchaseFailure(response.PurchaseStatus);
                 return;
             }
 

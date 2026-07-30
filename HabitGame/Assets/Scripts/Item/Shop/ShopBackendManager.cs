@@ -7,7 +7,7 @@ public class ShopBackendManager : MonoBehaviour
 {
     public async Task<List<ItemResponse>> FetchShopItemsAsync()
     {
-        return await ServiceRegistry.Instance.Shop.GetItemsAsync();
+        return await ServiceRegistry.Instance.Shop.GetItemsAsync(ApiClient.Instance.CurrentUserId);
     }
 
     public async Task<PurchaseItemResponse> PurchaseItemAsync(string itemId)
