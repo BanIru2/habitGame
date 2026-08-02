@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 /// <summary>
 /// 습관 목표 정보를 담은 응답 DTO
 /// </summary>
-public class HabitGoalResponse
+public class HabitGoalResponse 
 {
     // 목표의 고유 ID
     [JsonProperty("id")]
