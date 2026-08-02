@@ -36,12 +36,25 @@ public class HabitTest : MonoBehaviour
 
     private async void OnClickCreateGoal()
     {
+        ApiClient apiClient = ApiClient.Instance;
+        if (apiClient == null || apiClient.CurrentUserId <= 0)
+        {
+            Debug.LogError("[HabitTest] 로그인이 필요합니다.");
+            return;
+        }
+
         LifeStyleHabitCategorySO categorySO = SORegistry.Instance.GetLifeStyleHabitCategory(targetCategory);
         try
         {
             button.interactable = false;
-            request = new CreateHabitGoalRequest { Category = HabitCategoryMapper.ToCategoryId(targetCategory), 
-                TargetAmount = (int)targetAmount, Unit = unit, Period = period };
+            request = new CreateHabitGoalRequest
+            {
+                UserId = apiClient.CurrentUserId,
+                Category = HabitCategoryMapper.ToCategoryId(targetCategory),
+                TargetAmount = (int)targetAmount,
+                Unit = unit,
+                Period = period
+            };
             response = await habitService.CreateGoalAsync(request);
             
             if(response != null)

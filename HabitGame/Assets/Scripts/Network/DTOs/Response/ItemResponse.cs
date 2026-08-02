@@ -40,4 +40,10 @@ public class ItemResponse
 
     [JsonProperty("critBonus")]
     public double CritBonus { get; set; }
+
+    [JsonProperty("purchaseStatus")]
+    public string PurchaseStatus { get; set; }
+
+    [JsonProperty("message")]
+    public string Message { get; set; }
 }

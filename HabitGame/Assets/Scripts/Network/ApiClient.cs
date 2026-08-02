@@ -18,7 +18,7 @@ public class ApiClient : Singleton<ApiClient>
         base.Awake();
 
         // 로그인 UI가 붙기 전 임시 테스트용
-        SetCurrentUserId(1);
+        SetCurrentUserId(UserSession.TryRestore() ? UserSession.UserId : 0);
     }
     // LoginManager(����)���� ���
     public void SetAccessToken(string token)
@@ -92,7 +92,11 @@ public class ApiClient : Singleton<ApiClient>
         if (request.result != UnityWebRequest.Result.Success)
         {
             Debug.LogError($"[ApiClient] {method} {url} failed\nStatus: {request.responseCode}\nBody: {responseText}");
-            throw new Exception($"API request failed: {request.responseCode} {request.error}");
+            throw ApiException.FromResponse(
+                request.responseCode,
+                request.error,
+                responseText
+            );
         }
         // ���� ������ Null�̰ų� Empty�ų� WhiteSpace �� �� �⺻��(TResponse Ÿ�Կ� ���� null/0/false etc) ��ȯ
         if (string.IsNullOrWhiteSpace(responseText))

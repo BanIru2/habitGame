@@ -12,7 +12,9 @@ public class ShopService
 
     public Task<List<ItemResponse>> GetItemsAsync()
     {
-        return apiClient.GetAsync<List<ItemResponse>>("/shop/items");
+        return apiClient.GetAsync<List<ItemResponse>>(
+            $"/shop/items?userId={apiClient.CurrentUserId}"
+        );
     }
 
     public Task<PurchaseItemResponse> PurchaseItemAsync(PurchaseItemRequest request)

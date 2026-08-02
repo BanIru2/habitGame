@@ -15,8 +15,7 @@ public class CharacterManager : Singleton<CharacterManager>
     protected override void Awake()
     {
         base.Awake();
-        // 임시 데이터
-        ApplyCharacterResponse(new CharacterResponse { UserId = 123, Atk = 10, Def = 50, Hp = 1000, Spd = 10, FireLv = 5, WaterLv = 3, GrassLv = 1, AuroraLv = 0 });
+        // 로그인 후 RefreshCharacterAsync()가 실제 사용자 데이터를 채웁니다.
     }
 
     // CharacterREsponse를 요청하는 비동기함수

@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 
 public class HabitService
@@ -12,6 +13,11 @@ public class HabitService
     // 생활 습관 목표 생성
     public Task<HabitGoalResponse> CreateGoalAsync(CreateHabitGoalRequest request)
     {
+        if (request == null)
+            throw new ArgumentNullException(nameof(request));
+
+        request.UserId = GetCurrentUserId();
+
         return apiClient.PostAsync<CreateHabitGoalRequest, HabitGoalResponse>(
             "/habit-goals",
             request
@@ -21,6 +27,11 @@ public class HabitService
     // 생활 습관 기록 제출 (인증)
     public Task<HabitRecordResponse> CreateRecordAsync(CreateHabitRecordRequest request)
     {
+        if (request == null)
+            throw new ArgumentNullException(nameof(request));
+
+        request.UserId = GetCurrentUserId();
+
         return apiClient.PostAsync<CreateHabitRecordRequest, HabitRecordResponse>(
             "/habit-records",
             request
@@ -30,11 +41,23 @@ public class HabitService
     // 생활 습관 보상 수령
     public Task<HabitRewardClaimResponse> ClaimRewardAsync(ClaimHabitRewardRequest request)
     {
-        request.UserId = apiClient.CurrentUserId;
+        if (request == null)
+            throw new ArgumentNullException(nameof(request));
+
+        request.UserId = GetCurrentUserId();
 
         return apiClient.PostAsync<ClaimHabitRewardRequest, HabitRewardClaimResponse>(
             "/rewards/claim",
             request
         );
+    }
+
+    private long GetCurrentUserId()
+    {
+        long userId = apiClient.CurrentUserId;
+        if (userId <= 0)
+            throw new InvalidOperationException("로그인이 필요합니다.");
+
+        return userId;
     }
 }
