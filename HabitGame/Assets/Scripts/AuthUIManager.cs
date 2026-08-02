@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,6 +11,8 @@ using UnityEngine.UI;
 [DisallowMultipleComponent]
 public sealed class AuthUIManager : MonoBehaviour
 {
+    private const float TemporaryStatusDuration = 2.5f;
+
     [Header("Login")]
     [SerializeField] private GameObject loginPanel;
     [SerializeField] private TMP_InputField loginEmailInput;
@@ -31,6 +34,7 @@ public sealed class AuthUIManager : MonoBehaviour
     [SerializeField] private Button logoutButton;
 
     private bool requestInProgress;
+    private Coroutine statusClearCoroutine;
 
     private void Awake()
     {
@@ -49,18 +53,28 @@ public sealed class AuthUIManager : MonoBehaviour
         if (restored)
         {
             ShowAuthenticatedState();
-            SetStatus("저장된 로그인 정보를 복원했습니다.");
+            ShowStatus("Saved session restored.", autoClear: true);
         }
         else
         {
             ShowLoginPanel();
             UpdateCurrentUserText();
-            SetStatus(string.Empty);
+            ShowStatus(string.Empty);
         }
+    }
+
+    private void OnDisable()
+    {
+        bool hadTemporaryStatus = statusClearCoroutine != null;
+        CancelStatusClear();
+
+        if (hadTemporaryStatus && statusText != null)
+            statusText.text = string.Empty;
     }
 
     private void OnDestroy()
     {
+        CancelStatusClear();
         UnbindButtons();
     }
 
@@ -75,12 +89,12 @@ public sealed class AuthUIManager : MonoBehaviour
         string validationMessage = ValidateAccountInput(email, password);
         if (validationMessage != null)
         {
-            SetStatus(validationMessage);
+            ShowStatus(validationMessage);
             return;
         }
 
         SetBusy(true);
-        SetStatus("로그인 요청 중...");
+        ShowStatus("Signing in...");
 
         try
         {
@@ -99,19 +113,19 @@ public sealed class AuthUIManager : MonoBehaviour
             EnsureSessionMatches(response.UserId);
             ClearPasswordInputs();
             ShowAuthenticatedState();
-            SetStatus("로그인되었습니다.");
+            ShowStatus("Login successful.", autoClear: true);
         }
         catch (ApiException exception)
         {
             if (this != null)
-                SetStatus(GetApiErrorMessage(exception, isRegistration: false));
+                ShowStatus(GetApiErrorMessage(exception, isRegistration: false));
         }
         catch (Exception exception)
         {
             if (this != null)
             {
                 Debug.LogException(exception, this);
-                SetStatus("로그인 중 예상하지 못한 오류가 발생했습니다.");
+                ShowStatus("An unexpected error occurred while signing in.");
             }
         }
         finally
@@ -132,16 +146,16 @@ public sealed class AuthUIManager : MonoBehaviour
 
         string validationMessage = ValidateAccountInput(email, password);
         if (validationMessage == null && string.IsNullOrWhiteSpace(nickname))
-            validationMessage = "닉네임을 입력해주세요.";
+            validationMessage = "Enter a nickname.";
 
         if (validationMessage != null)
         {
-            SetStatus(validationMessage);
+            ShowStatus(validationMessage);
             return;
         }
 
         SetBusy(true);
-        SetStatus("회원가입 요청 중...");
+        ShowStatus("Creating account...");
         bool registrationCompleted = false;
 
         try
@@ -160,7 +174,8 @@ public sealed class AuthUIManager : MonoBehaviour
             if (this == null)
                 return;
 
-            SetStatus("회원가입 완료. 로그인 중...");
+            ClearPasswordInputs();
+            ShowStatus("Account created. Signing in...");
 
             LoginResponse loginResponse = await authService.LoginAsync(
                 new LoginRequest
@@ -177,19 +192,19 @@ public sealed class AuthUIManager : MonoBehaviour
             EnsureSessionMatches(loginResponse.UserId);
             ClearPasswordInputs();
             ShowAuthenticatedState();
-            SetStatus("회원가입 및 로그인에 성공했습니다.");
+            ShowStatus("Registration and login successful.", autoClear: true);
         }
         catch (ApiException exception)
         {
             if (this != null)
-                SetStatus(GetApiErrorMessage(exception, isRegistration: !registrationCompleted));
+                ShowStatus(GetApiErrorMessage(exception, isRegistration: !registrationCompleted));
         }
         catch (Exception exception)
         {
             if (this != null)
             {
                 Debug.LogException(exception, this);
-                SetStatus("회원가입 중 예상하지 못한 오류가 발생했습니다.");
+                ShowStatus("An unexpected error occurred while creating the account.");
             }
         }
         finally
@@ -205,7 +220,7 @@ public sealed class AuthUIManager : MonoBehaviour
             return;
 
         ShowLoginPanel();
-        SetStatus(string.Empty);
+        ShowStatus(string.Empty);
     }
 
     private void OnShowRegisterClicked()
@@ -215,7 +230,7 @@ public sealed class AuthUIManager : MonoBehaviour
 
         SetActive(loginPanel, false);
         SetActive(registerPanel, true);
-        SetStatus(string.Empty);
+        ShowStatus(string.Empty);
     }
 
     private void OnLogoutClicked()
@@ -227,14 +242,14 @@ public sealed class AuthUIManager : MonoBehaviour
         ClearPasswordInputs();
         UpdateCurrentUserText();
         ShowLoginPanel();
-        SetStatus("로그아웃되었습니다.");
+        ShowStatus("Logged out.", autoClear: true);
     }
 
     private static AuthService GetAuthService()
     {
         ServiceRegistry registry = ServiceRegistry.Instance;
         if (registry == null || registry.Auth == null)
-            throw new InvalidOperationException("인증 서비스를 사용할 수 없습니다.");
+            throw new InvalidOperationException("Authentication service is unavailable.");
 
         return registry.Auth;
     }
@@ -242,11 +257,11 @@ public sealed class AuthUIManager : MonoBehaviour
     private static void EnsureSessionMatches(long expectedUserId)
     {
         if (!UserSession.IsLoggedIn || UserSession.UserId != expectedUserId)
-            throw new InvalidOperationException("로그인 정보를 저장하지 못했습니다.");
+            throw new InvalidOperationException("The signed-in user could not be saved.");
 
         ApiClient client = ApiClient.Instance;
         if (client == null || client.CurrentUserId != expectedUserId)
-            throw new InvalidOperationException("현재 사용자 ID를 적용하지 못했습니다.");
+            throw new InvalidOperationException("The current user ID could not be applied.");
     }
 
     private void ShowAuthenticatedState()
@@ -274,7 +289,7 @@ public sealed class AuthUIManager : MonoBehaviour
             return;
 
         currentUserText.text = UserSession.IsLoggedIn
-            ? $"사용자 ID: {UserSession.UserId}\n이메일: {UserSession.Email}\n닉네임: {UserSession.Nickname}"
+            ? $"User ID: {UserSession.UserId}\nEmail: {UserSession.Email}\nNickname: {UserSession.Nickname}"
             : string.Empty;
     }
 
@@ -297,22 +312,56 @@ public sealed class AuthUIManager : MonoBehaviour
             registerPasswordInput.text = string.Empty;
     }
 
-    private void SetStatus(string message)
+    private void ShowStatus(string message, bool autoClear = false)
     {
+        CancelStatusClear();
+
         if (statusText != null)
             statusText.text = message ?? string.Empty;
+
+        if (!autoClear || string.IsNullOrEmpty(message))
+            return;
+
+        if (!isActiveAndEnabled)
+        {
+            if (statusText != null)
+                statusText.text = string.Empty;
+
+            return;
+        }
+
+        statusClearCoroutine = StartCoroutine(ClearStatusAfterDelay());
+    }
+
+    private IEnumerator ClearStatusAfterDelay()
+    {
+        yield return new WaitForSecondsRealtime(TemporaryStatusDuration);
+
+        statusClearCoroutine = null;
+
+        if (statusText != null)
+            statusText.text = string.Empty;
+    }
+
+    private void CancelStatusClear()
+    {
+        if (statusClearCoroutine == null)
+            return;
+
+        StopCoroutine(statusClearCoroutine);
+        statusClearCoroutine = null;
     }
 
     private static string ValidateAccountInput(string email, string password)
     {
         if (string.IsNullOrWhiteSpace(email))
-            return "이메일을 입력해주세요.";
+            return "Enter an email address.";
 
         if (!email.Contains("@"))
-            return "올바른 이메일 형식을 입력해주세요.";
+            return "Enter a valid email address containing @.";
 
         if (string.IsNullOrWhiteSpace(password))
-            return "비밀번호를 입력해주세요.";
+            return "Enter a password.";
 
         return null;
     }
@@ -320,40 +369,43 @@ public sealed class AuthUIManager : MonoBehaviour
     private static string GetApiErrorMessage(ApiException exception, bool isRegistration)
     {
         if (exception.StatusCode <= 0)
-            return "서버에 연결할 수 없습니다. 네트워크와 서버 실행 상태를 확인해주세요.";
+            return "Could not connect to the server. Check your network connection and try again.";
 
         string detail = RemoveHttpPrefix(exception.Message, exception.StatusCode);
 
-        if (ContainsKnownAuthMessage(detail))
-            return detail;
+        if (detail.Contains("존재하지 않는 이메일"))
+            return "No account exists for this email address.";
+
+        if (detail.Contains("비밀번호가 일치하지 않습니다"))
+            return "The password is incorrect.";
+
+        if (isRegistration && ContainsDuplicateAccountMessage(detail))
+            return "An account with this email address already exists.";
 
         if (isRegistration && exception.StatusCode >= 500)
-            return "이미 사용 중인 이메일이거나 서버 오류가 발생했습니다.";
+            return "This email may already be registered, or the server could not create the account.";
 
         if (exception.StatusCode == 401 || exception.StatusCode == 403)
-            return "이메일 또는 비밀번호가 올바르지 않습니다.";
+            return "The email address or password is incorrect.";
 
         if (exception.StatusCode == 404)
-            return "존재하지 않는 계정입니다.";
+            return "No account exists for this email address.";
 
         if (exception.StatusCode >= 500)
-            return "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+            return "The server encountered an unexpected error. Try again later.";
 
-        if (!string.IsNullOrWhiteSpace(detail))
-            return detail;
-
-        return "요청을 처리하지 못했습니다. 입력값을 확인해주세요.";
+        return "The request could not be completed. Check your input and try again.";
     }
 
-    private static bool ContainsKnownAuthMessage(string message)
+    private static bool ContainsDuplicateAccountMessage(string message)
     {
         if (string.IsNullOrWhiteSpace(message))
             return false;
 
-        return message.Contains("존재하지 않는 이메일")
-               || message.Contains("비밀번호가 일치하지 않습니다")
-               || message.Contains("이미 사용 중")
-               || message.Contains("중복");
+        return message.Contains("이미 사용 중")
+               || message.Contains("중복")
+               || message.IndexOf("duplicate", StringComparison.OrdinalIgnoreCase) >= 0
+               || message.IndexOf("already exists", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
     private static string RemoveHttpPrefix(string message, long statusCode)
@@ -401,16 +453,30 @@ public sealed class AuthUIManager : MonoBehaviour
 
     private void WarnAboutMissingReferences()
     {
-        if (loginPanel == null || registerPanel == null
-            || loginEmailInput == null || loginPasswordInput == null
-            || registerEmailInput == null || registerPasswordInput == null
-            || registerNicknameInput == null || loginButton == null
-            || registerButton == null || statusText == null
-            || currentUserText == null || showLoginButton == null
-            || showRegisterButton == null || logoutButton == null)
-        {
-            Debug.LogWarning("[AuthUIManager] Inspector의 UI 참조가 일부 연결되지 않았습니다.", this);
-        }
+        string missing = string.Empty;
+        AppendMissingReference(ref missing, loginPanel, nameof(loginPanel));
+        AppendMissingReference(ref missing, loginEmailInput, nameof(loginEmailInput));
+        AppendMissingReference(ref missing, loginPasswordInput, nameof(loginPasswordInput));
+        AppendMissingReference(ref missing, loginButton, nameof(loginButton));
+        AppendMissingReference(ref missing, registerPanel, nameof(registerPanel));
+        AppendMissingReference(ref missing, registerEmailInput, nameof(registerEmailInput));
+        AppendMissingReference(ref missing, registerPasswordInput, nameof(registerPasswordInput));
+        AppendMissingReference(ref missing, registerNicknameInput, nameof(registerNicknameInput));
+        AppendMissingReference(ref missing, registerButton, nameof(registerButton));
+        AppendMissingReference(ref missing, statusText, nameof(statusText));
+        AppendMissingReference(ref missing, currentUserText, nameof(currentUserText));
+        AppendMissingReference(ref missing, showLoginButton, nameof(showLoginButton));
+        AppendMissingReference(ref missing, showRegisterButton, nameof(showRegisterButton));
+        AppendMissingReference(ref missing, logoutButton, nameof(logoutButton));
+
+        if (!string.IsNullOrEmpty(missing))
+            Debug.LogError($"[AuthUIManager] Missing Inspector reference(s): {missing}.", this);
+    }
+
+    private static void AppendMissingReference(ref string missing, UnityEngine.Object value, string fieldName)
+    {
+        if (value == null)
+            missing += string.IsNullOrEmpty(missing) ? fieldName : $", {fieldName}";
     }
 
     private static void AddListener(Button button, UnityEngine.Events.UnityAction action)
