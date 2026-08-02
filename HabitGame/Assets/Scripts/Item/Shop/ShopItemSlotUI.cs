@@ -51,8 +51,7 @@ public class ShopItemSlotUI : MonoBehaviour
         iconImage.enabled = viewData.ItemSO.icon != null;
         iconImage.sprite = viewData.ItemSO.icon;
 
-
-        button.interactable = viewData.IsAvailable;
+        button.interactable = true;
     }
 
 /*    public void ClearData()
@@ -107,7 +106,7 @@ public class ShopItemSlotUI : MonoBehaviour
 
     private void ApplySlotColor()
     {
-        if (!viewData.IsAvailable)
+        if (viewData.ItemResponse.PurchaseStatus != "AVAILABLE")
         {
             backgroundImage.color = unableColor;
         }
