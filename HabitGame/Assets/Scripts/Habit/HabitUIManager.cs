@@ -54,7 +54,7 @@ public class HabitUIManager : MonoBehaviour
     }
 
     // 소비습관 추가 화면
-    public void OpenSpendAddPanel()
+    public void OpenSpendAddPanel() 
     {
         topTab.SetActive(false);
 

@@ -135,7 +135,7 @@ public class HabitGoalUI : MonoBehaviour
         {
             HabitGoalResponse response = await habitService.CreateGoalAsync(request);
 
-            Debug.Log("===== API Success =====");
+            Debug.Log("===== API Success ====="); 
             Debug.Log("Goal ID : " + response.Id);
             Debug.Log("Message : " + response.Message);
 

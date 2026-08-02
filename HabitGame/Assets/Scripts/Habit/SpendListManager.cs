@@ -12,44 +12,38 @@ public class SpendListManager : MonoBehaviour
 
     [Header("UI")]
     [SerializeField] private Transform content;
-    [SerializeField] private GameObject spendItemPrefab;
+    [SerializeField] private GameObject spendItemPrefab; 
 
     [Header("Reward")]
     [SerializeField] private int reward = 300;
 
     public void AddSpendGoal()
     {
-        // 입력값 확인
         if (string.IsNullOrWhiteSpace(goalNameInput.text))
             return;
 
         if (string.IsNullOrWhiteSpace(goldInput.text))
             return;
 
-        // Prefab 생성
         GameObject newItem = Instantiate(spendItemPrefab, content);
 
-        // 제목
-        newItem.transform.Find("Title")
+        newItem.transform.Find("GoalName")
             .GetComponent<TextMeshProUGUI>().text = goalNameInput.text;
 
-        // 설명
-        newItem.transform.Find("Description")
+        newItem.transform.Find("GoalDescription")
             .GetComponent<TextMeshProUGUI>().text =
             goldInput.text + "원 이하 사용";
 
-        // 보상
-        newItem.transform.Find("Reward")
+        newItem.transform.Find("RewardText")
             .GetComponent<TextMeshProUGUI>().text =
             "+" + reward;
 
-        // Toggle 초기화
-        Toggle toggle = newItem.GetComponent<Toggle>();
-        if (toggle != null)
-            toggle.isOn = false;
+        Toggle toggle = newItem.transform.Find("CompleteToggle")
+            .GetComponent<Toggle>();
 
-        // 입력창 비우기
+        toggle.isOn = false;
+
         goalNameInput.text = "";
-        goldInput.text = ""; 
+        goldInput.text = "";
     }
 }
