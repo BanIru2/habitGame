@@ -31,11 +31,20 @@ public class CharacterUIManager : Singleton<CharacterUIManager>
     [SerializeField]
     private TextMeshProUGUI fireLevelText;
     [SerializeField]
+    private TextMeshProUGUI fireEXPText;
+    [SerializeField]
     private TextMeshProUGUI waterLevelText;
+    [SerializeField]
+    private TextMeshProUGUI waterEXPText;
     [SerializeField]
     private TextMeshProUGUI grassLevelText;
     [SerializeField]
+    private TextMeshProUGUI grassEXPText;
+    [SerializeField]
     private TextMeshProUGUI auroraLevelText;
+    [SerializeField]
+    private TextMeshProUGUI auroraEXPText;
+
 
     protected override void Awake()
     {
@@ -60,12 +69,20 @@ public class CharacterUIManager : Singleton<CharacterUIManager>
             WaterLv = 8,
             GrassLv = 5,
             AuroraLv = 9,
-            FireExp = 70,
+            FireExp = 700,
             WaterExp = 80,
             GrassExp = 50,
-            AuroraExp = 90
+            AuroraExp = 1,
+            FireExpPercentage = 70,
+            WaterExpPercentage = 60,
+            GrassExpPercentage = 9,
+            AuroraExpPercentage = 26,
+            MaxFireExp = 1000,
+            MaxWaterExp = 2000,
+            MaxGrassExp = 500,
+            MaxAuroraExp = 30
         };
-        ApplyName($"tmpName + {characterResponse.UserId}");    // 이름 정보 필요
+        ApplyName($"tmpName {characterResponse.UserId}");    // 이름 정보 필요
         ApplyStatus(characterResponse);
         ApplyAttrLevel(characterResponse);
         ApplyAttrExp(characterResponse);
@@ -96,6 +113,21 @@ public class CharacterUIManager : Singleton<CharacterUIManager>
     
     private void ApplyAttrExp(CharacterResponse Response)
     {
+        fireEXPText.text = $"{Response.FireExp} / {Response.MaxFireExp}";
+        waterEXPText.text = $"{Response.WaterExp} / {Response.MaxWaterExp}";
+        grassEXPText.text = $"{Response.GrassExp} / {Response.MaxGrassExp}";
+        auroraEXPText.text = $"{Response.AuroraExp} / {Response.MaxAuroraExp}";
 
+        ApplyExpFill(fireExpFill, Response.FireExpPercentage);
+        ApplyExpFill(waterExpFill, Response.WaterExpPercentage);
+        ApplyExpFill(grassExpFill, Response.GrassExpPercentage);
+        ApplyExpFill(auroraExpFill, Response.AuroraExpPercentage);
+    }
+
+    private void ApplyExpFill(Image fillImage, int percentage)
+    {
+        Vector3 scale = fillImage.rectTransform.localScale;
+        scale.x = Mathf.Clamp01(percentage / 100f);
+        fillImage.rectTransform.localScale = scale;
     }
 }
