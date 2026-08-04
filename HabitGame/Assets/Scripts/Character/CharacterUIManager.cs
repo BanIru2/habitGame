@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -45,6 +47,7 @@ public class CharacterUIManager : Singleton<CharacterUIManager>
     [SerializeField]
     private TextMeshProUGUI auroraEXPText;
 
+    private bool isLoadingCharacter;
 
     protected override void Awake()
     {
@@ -52,11 +55,10 @@ public class CharacterUIManager : Singleton<CharacterUIManager>
         OpenCharacterTap();
     }
 
-    public void OpenCharacterTap()
+    // 테스트용 임시 데이터 생성 함수
+    private CharacterResponse CreateTMPCharacterData()
     {
-        // CharacterResponse characterResponse = await CharacterManager.Instance.RefreshCharacterAsync();
-
-        CharacterResponse characterResponse = new CharacterResponse    // 테스트용 임시 데이터
+        return new CharacterResponse    
         {
             UserId = 1,
             Gold = 1000,
@@ -82,10 +84,52 @@ public class CharacterUIManager : Singleton<CharacterUIManager>
             MaxGrassExp = 500,
             MaxAuroraExp = 30
         };
-        ApplyName($"tmpName {characterResponse.UserId}");    // 이름 정보 필요
-        ApplyStatus(characterResponse);
-        ApplyAttrLevel(characterResponse);
-        ApplyAttrExp(characterResponse);
+    }
+
+    public void OpenCharacterTap()
+    {
+        _ = OpenCharacterTapAsync();
+    }
+
+    private async Task OpenCharacterTapAsync()
+    {
+        if (isLoadingCharacter)
+            return;
+
+        isLoadingCharacter = true;
+
+        try
+        {
+            CharacterResponse characterResponse = await CharacterManager.Instance.RefreshCharacterAsync();
+
+            // 요청 도중 오브젝트가 제거된 경우 UI 접근 방지
+            if (this == null)
+                return;
+
+            ApplyName($"tmpName {characterResponse.UserId}");     // 이름 정보 필요
+            ApplyStatus(characterResponse);
+            ApplyAttrLevel(characterResponse);
+            ApplyAttrExp(characterResponse);
+        }
+        catch (ApiException exception)
+        {
+            // 서버 오류, 연결 실패, 4xx/5xx 응답
+            Debug.LogError($"캐릭터 정보 요청 실패 ({exception.StatusCode}): {exception.Message}", this);
+        }
+        catch (InvalidOperationException exception)
+        {
+            // 로그인 사용자 ID 없음 또는 CharacterResponse가 null인 경우
+            Debug.LogWarning($"캐릭터 정보를 불러올 수 없습니다: {exception.Message}", this);
+        }
+        catch (Exception exception)
+        {
+            // 예상하지 못한 역직렬화 오류 등을 마지막으로 처리
+            Debug.LogException(exception, this);
+        }
+        finally
+        {
+            isLoadingCharacter = false;
+        }
     }
 
     private void ApplyName(string name)
