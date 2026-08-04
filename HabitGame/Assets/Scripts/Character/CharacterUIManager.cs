@@ -106,7 +106,7 @@ public class CharacterUIManager : Singleton<CharacterUIManager>
             if (this == null)
                 return;
 
-            ApplyName($"tmpName {characterResponse.UserId}");     // 이름 정보 필요
+            ApplyName(UserSession.Nickname);
             ApplyStatus(characterResponse);
             ApplyAttrLevel(characterResponse);
             ApplyAttrExp(characterResponse);

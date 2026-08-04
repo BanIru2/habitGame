@@ -9,9 +9,6 @@ public class CharacterManager : Singleton<CharacterManager>
     // 외부에서 직접적으로 참조할 일이 없다면 private으로 잠구는게 낫긴 함
     public CharacterResponse characterStatusData { get; private set; }
 
-    // 캐릭터 닉네임
-    private string nickname = "Unknown";
-
     protected override void Awake()
     {
         base.Awake();
@@ -44,11 +41,6 @@ public class CharacterManager : Singleton<CharacterManager>
         }
 
         characterStatusData = data;
-    }
-
-    public void SetNickname(string nickname)
-    {
-        this.nickname = string.IsNullOrEmpty(nickname) ? "Unknown" : nickname;
     }
 
     // 전투 시 필요한  my BattleUnit 생성
@@ -98,7 +90,7 @@ public class CharacterManager : Singleton<CharacterManager>
 
         return new BattleUnit
         {
-            name = nickname,    // 이름 어디서 끌어오지 << 어디 저장하지? 이름????? (로그인 관리 스크립트에서 LoginResponse를 받아 저장한 후 받아오도록 해야할 것)
+            name = UserSession.Nickname,
             maxHp = (int)hp,
             hp = (int)hp,
             atk = atk,

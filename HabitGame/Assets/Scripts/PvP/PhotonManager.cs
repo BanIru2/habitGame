@@ -60,6 +60,8 @@ public class PhotonManager : MonoBehaviourPunCallbacks
             return false;
         }
 
+        PhotonNetwork.NickName = string.IsNullOrWhiteSpace(UserSession.Nickname) ? "Unknown" : UserSession.Nickname;
+
         RoomOptions options = new RoomOptions { MaxPlayers = 2 };
         return PhotonNetwork.JoinRandomOrCreateRoom(null, 2, MatchmakingMode.FillRoom, TypedLobby.Default, null, null, options);
     }
