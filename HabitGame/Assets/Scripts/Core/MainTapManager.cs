@@ -35,14 +35,55 @@ public class MainTapManager : Singleton<MainTapManager>
     [SerializeField]
     private RankingboardManager rankingboardManager;
 
-    private void OnClickBattleTap()
+    protected override void Awake()
     {
-        habitTap.SetActive(false);
+        base.Awake();
+        habitTapButton.onClick.AddListener(OnClickHabitTap);
+        characterTapButton.onClick.AddListener(OnClickCharacterTap);
+        inventoryTapButton.onClick.AddListener(OnClickInventoryTap);
+        shopTapButton.onClick.AddListener(OnClickShopTap);
+        battleTapButton.onClick.AddListener(OnClickBattleTap);
+    }
+
+    private void CloseAllTaps()
+    {
+        //habitTap.SetActive(false);
         characterTap.SetActive(false);
         inventoryTap.SetActive(false);
         shopTap.SetActive(false);
+        battleTap.SetActive(false);
+    }
 
-        rankingboardManager.LoadRankingBoard();
+    private void OnClickHabitTap()
+    {
+
+    }
+
+    private void OnClickCharacterTap()
+    {
+        CloseAllTaps();
+        characterTap.SetActive(true);
+        CharacterUIManager.Instance.OpenCharacterTap();
+    }
+
+    private void OnClickInventoryTap()
+    {
+        CloseAllTaps();
+        inventoryTap.SetActive(true);
+        InventoryManager.Instance.OpenInventory();
+    }
+
+    private void OnClickShopTap()
+    {
+        CloseAllTaps();
+        shopTap.SetActive(true);
+        ShopUIManager.Instance.OpenShop();
+    }
+
+    private void OnClickBattleTap()
+    {
+        CloseAllTaps();
         battleTap.SetActive(true);
+        rankingboardManager.LoadRankingBoard();
     }
 }

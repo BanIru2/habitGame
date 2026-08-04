@@ -167,6 +167,9 @@ public class BattleUIManager : Singleton<BattleUIManager>
     [SerializeField]
     private RankingboardManager rankingboardManager;
 
+    [SerializeField]
+    private GameObject tapBar;
+
 
     protected override void Awake()
     {
@@ -234,6 +237,7 @@ public class BattleUIManager : Singleton<BattleUIManager>
 
         ClearOpponentInfoUI();
         lobbyPanel.SetActive(false);
+        tapBar.SetActive(false);
         loadingPanel.SetActive(true);
         readyPanel.SetActive(false);
         battlePanel.SetActive(false);
@@ -889,6 +893,7 @@ public class BattleUIManager : Singleton<BattleUIManager>
         readyPanel.SetActive(false);
         loadingPanel.SetActive(false);
         lobbyPanel.SetActive(true);
+        tapBar.SetActive(true);
 
         isMatching = false;
         isBattle = false;

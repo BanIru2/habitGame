@@ -43,7 +43,7 @@ public class CharacterUIManager : Singleton<CharacterUIManager>
         OpenCharacterTap();
     }
 
-    private void OpenCharacterTap()
+    public void OpenCharacterTap()
     {
         // CharacterResponse characterResponse = await CharacterManager.Instance.RefreshCharacterAsync();
 
