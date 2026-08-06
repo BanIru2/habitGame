@@ -5,9 +5,6 @@ using UnityEngine;
 /// </summary>
 public class BattleBackendManager : Singleton<BattleBackendManager>
 {
-    [SerializeField]
-    private ServiceRegistry serviceRegistry;
-
     public async void SubmitBattleResult(string battleId, string result, long enemyUserId, BattleUnit myUnit, BattleUnit oppUnit)
     {
         double myPower = CalculatePower(myUnit);
@@ -26,7 +23,7 @@ public class BattleBackendManager : Singleton<BattleBackendManager>
         };
 
         BattleResultResponse response =
-            await serviceRegistry.Battle.SubmitResultAsync(request);
+            await ServiceRegistry.Instance.Battle.SubmitResultAsync(request);
 
         BattleUIManager.Instance.FinishBattle(response);
     }

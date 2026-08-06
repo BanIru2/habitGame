@@ -22,9 +22,6 @@ public class RankingboardManager : MonoBehaviour
     [SerializeField]
     private TextMeshProUGUI remainCountText;
 
-    [SerializeField]
-    private ServiceRegistry serviceRegistry;
-
     private const int MaxRemainCount = 5;
     // 마지막으로 전투 횟수 초기화 한 날짜 저장 키
     private const string LastResetDateKey = "Ranking_LastResetDate";
@@ -129,7 +126,7 @@ public class RankingboardManager : MonoBehaviour
     {
         try
         {
-            List<RankingEntryResponse> rankings = await serviceRegistry.Ranking.GetRankingsAsync();
+            List<RankingEntryResponse> rankings = await ServiceRegistry.Instance.Ranking.GetRankingsAsync();
             ShowRankingBoard(rankings);
         }
         catch (Exception e)
