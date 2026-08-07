@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -88,7 +89,6 @@ public class InventoryManager : Singleton<InventoryManager>
     [SerializeField] 
     private bool useLocalTestInventory = false;
 
-
     protected override void Awake()
     {
         base.Awake();
@@ -108,19 +108,13 @@ public class InventoryManager : Singleton<InventoryManager>
 
     // InventoryTap이 켜질때 마다 아이템 목록 다시 그리기
     // 인벤토리 탭 여는 버튼 클릭 시 호출하도록
-    public async void OpenInventory()
+    public async Task OpenInventory()
     {
         /*        // 로컬 테스트용 응답 객체 생성
                 List<InventoryItemResponse> responses = CreateTestInventoryResponses();*/
-        try
-        {
-            await RefreshInventoryAsync();
-            ShowEquipmentItems();
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"인벤토리 조회 실패: {e.Message}");
-        }
+
+        await RefreshInventoryAsync();
+        ShowEquipmentItems();
     }
 
     // DB기준 인벤토리 상태를 클라이언트 런타임에 동기화하는 함수

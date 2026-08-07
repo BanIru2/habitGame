@@ -47,12 +47,9 @@ public class CharacterUIManager : Singleton<CharacterUIManager>
     [SerializeField]
     private TextMeshProUGUI auroraEXPText;
 
-    private bool isLoadingCharacter;
-
     protected override void Awake()
     {
         base.Awake();
-        OpenCharacterTap();
     }
 
     // 테스트용 임시 데이터 생성 함수
@@ -86,52 +83,15 @@ public class CharacterUIManager : Singleton<CharacterUIManager>
         };
     }
 
-    public void OpenCharacterTap()
+    public async Task OpenCharacterTap()
     {
-        _ = OpenCharacterTapAsync();
+        CharacterResponse response = await CharacterManager.Instance.RefreshCharacterAsync();
+
+        ApplyName(UserSession.Nickname);
+        ApplyStatus(response);
+        ApplyAttrLevel(response);
+        ApplyAttrExp(response);
     }
-
-    private async Task OpenCharacterTapAsync()
-    {
-        if (isLoadingCharacter)
-            return;
-
-        isLoadingCharacter = true;
-
-        try
-        {
-            CharacterResponse characterResponse = await CharacterManager.Instance.RefreshCharacterAsync();
-
-            // 요청 도중 오브젝트가 제거된 경우 UI 접근 방지
-            if (this == null)
-                return;
-
-            ApplyName(UserSession.Nickname);
-            ApplyStatus(characterResponse);
-            ApplyAttrLevel(characterResponse);
-            ApplyAttrExp(characterResponse);
-        }
-        catch (ApiException exception)
-        {
-            // 서버 오류, 연결 실패, 4xx/5xx 응답
-            Debug.LogError($"캐릭터 정보 요청 실패 ({exception.StatusCode}): {exception.Message}", this);
-        }
-        catch (InvalidOperationException exception)
-        {
-            // 로그인 사용자 ID 없음 또는 CharacterResponse가 null인 경우
-            Debug.LogWarning($"캐릭터 정보를 불러올 수 없습니다: {exception.Message}", this);
-        }
-        catch (Exception exception)
-        {
-            // 예상하지 못한 역직렬화 오류 등을 마지막으로 처리
-            Debug.LogException(exception, this);
-        }
-        finally
-        {
-            isLoadingCharacter = false;
-        }
-    }
-
     private void ApplyName(string name)
     {
         nameText.text = name;

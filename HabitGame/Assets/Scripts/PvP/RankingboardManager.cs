@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using System.Threading.Tasks;
 
 public class RankingboardManager : MonoBehaviour
 {
@@ -122,17 +123,10 @@ public class RankingboardManager : MonoBehaviour
 
     // 랭킹 보드 정보를 가져오기 위한 외부 호출용 함수
     // PvP 탭을 열 때 호출 필요
-    public async void LoadRankingBoard()
+    public async Task LoadRankingBoard()
     {
-        try
-        {
-            List<RankingEntryResponse> rankings = await ServiceRegistry.Instance.Ranking.GetRankingsAsync();
-            ShowRankingBoard(rankings);
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"[RankingboardManager] Failed to load ranking board: {e.Message}");
-        }
+        List<RankingEntryResponse> rankings = await ServiceRegistry.Instance.Ranking.GetRankingsAsync();
+        ShowRankingBoard(rankings);
     }
 
     // -------------------------- 내 랭킹 박스 ---------------------------

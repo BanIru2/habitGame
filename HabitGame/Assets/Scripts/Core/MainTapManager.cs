@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -35,6 +36,9 @@ public class MainTapManager : Singleton<MainTapManager>
     [SerializeField]
     private RankingboardManager rankingboardManager;
 
+    // 탭 전환 동작 요청중인지 체크
+    private bool isChangingTap;
+
     protected override void Awake()
     {
         base.Awake();
@@ -59,31 +63,115 @@ public class MainTapManager : Singleton<MainTapManager>
 
     }
 
-    private void OnClickCharacterTap()
+    private async void OnClickCharacterTap()
     {
-        CloseAllTaps();
-        characterTap.SetActive(true);
-        CharacterUIManager.Instance.OpenCharacterTap();
+        if (isChangingTap) return;
+
+        isChangingTap = true;
+
+        try
+        {
+            await CharacterUIManager.Instance.OpenCharacterTap();
+            CloseAllTaps();
+            characterTap.SetActive(true);
+        }
+        catch (ApiException exception)
+        {
+            Debug.LogError(
+                $"캐릭터 정보 요청 실패 ({exception.StatusCode}): " + exception.Message
+            );
+        }
+        catch (Exception exception)
+        {
+            Debug.LogError($"캐릭터 조회 실패: {exception.Message}");
+        }
+        finally
+        {
+            isChangingTap = false;
+        }
     }
 
-    private void OnClickInventoryTap()
+    private async void OnClickInventoryTap()
     {
-        CloseAllTaps();
-        inventoryTap.SetActive(true);
-        InventoryManager.Instance.OpenInventory();
+        if (isChangingTap) return;
+
+        isChangingTap = true;
+
+        try
+        {
+            await InventoryManager.Instance.OpenInventory();
+            CloseAllTaps();
+            inventoryTap.SetActive(true);
+        }
+        catch (ApiException exception)
+        {
+            Debug.LogError(
+                $"인벤토리 정보 요청 실패 ({exception.StatusCode}): " + exception.Message
+            );
+        }
+        catch (Exception exception)
+        {
+            Debug.LogError($"인벤토리 조회 실패: {exception.Message}");
+        }
+        finally
+        {
+            isChangingTap = false;
+        }
     }
 
-    private void OnClickShopTap()
+    private async void OnClickShopTap()
     {
-        CloseAllTaps();
-        shopTap.SetActive(true);
-        ShopUIManager.Instance.OpenShop();
+        if (isChangingTap) return;
+
+        isChangingTap = true;
+
+        try
+        {
+            await ShopUIManager.Instance.OpenShop();
+            CloseAllTaps();
+            shopTap.SetActive(true);
+        }
+        catch (ApiException exception)
+        {
+            Debug.LogError(
+                $"상점 정보 요청 실패 ({exception.StatusCode}): " + exception.Message
+            );
+        }
+        catch (Exception exception)
+        {
+            Debug.LogError($"상점 조회 실패: {exception.Message}");
+        }
+        finally
+        {
+            isChangingTap = false;
+        }
     }
 
-    private void OnClickBattleTap()
+    private async void OnClickBattleTap()
     {
-        CloseAllTaps();
-        battleTap.SetActive(true);
-        rankingboardManager.LoadRankingBoard();
+        if (isChangingTap) return;
+
+        isChangingTap = true;
+
+        try
+        {
+            await rankingboardManager.LoadRankingBoard();
+            CloseAllTaps();
+            battleTap.SetActive(true);
+        }
+        catch (ApiException exception)
+        {
+            Debug.LogError(
+                $"랭킹 정보 요청 실패 ({exception.StatusCode}): " + exception.Message
+            );
+        }
+        catch (Exception exception)
+        {
+            Debug.LogError($"랭킹 보드 조회 실패: {exception.Message}");
+        }
+        finally
+        {
+            isChangingTap = false;
+        }
     }
 }
