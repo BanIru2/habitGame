@@ -5,6 +5,8 @@ using TMPro;
 using UnityEngine.UI;
 public class SpendBudgetManager : MonoBehaviour
 {
+    public static SpendBudgetManager Instance;
+
     [Header("UI")]
     [SerializeField] private TextMeshProUGUI budgetText;
     [SerializeField] private TextMeshProUGUI usedText;
@@ -12,7 +14,10 @@ public class SpendBudgetManager : MonoBehaviour
 
     private int weeklyBudget = 500000;
     private int usedMoney = 320000;
-
+    private void Awake()
+    {
+        Instance = this;
+    }
     void Start()
     {
         RefreshUI();
@@ -29,7 +34,11 @@ public class SpendBudgetManager : MonoBehaviour
         usedMoney = money;
         RefreshUI();
     }
-
+    public void AddSpending(int amount)
+    {
+        usedMoney += amount;
+        RefreshUI();
+    }
     private void RefreshUI()
     {
         budgetText.text = weeklyBudget.ToString("N0") + "₩";
