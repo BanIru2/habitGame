@@ -1,17 +1,9 @@
-using System.Globalization;
-using UnityEngine;
-
 /// <summary>
-/// 현재 자체 로그인 사용자의 비민감 식별 정보만 관리합니다.
-/// 비밀번호와 요청 JSON은 저장하지 않습니다.
+/// 현재 실행 중인 게임 세션의 로그인 사용자 식별 정보만 관리합니다.
+/// Backend가 인증 토큰을 제공하지 않으므로 앱 종료 후 자동 로그인 정보는 저장하지 않습니다.
 /// </summary>
 public static class UserSession
 {
-    private const string UserIdKey = "HabitPVP.Auth.UserId";
-    private const string NicknameKey = "HabitPVP.Auth.Nickname";
-    private const string EmailKey = "HabitPVP.Auth.Email";
-    private const string IsLoggedInKey = "HabitPVP.Auth.IsLoggedIn";
-
     public static bool IsLoggedIn { get; private set; }
     public static long UserId { get; private set; }
     public static string Nickname { get; private set; } = string.Empty;
@@ -33,56 +25,19 @@ public static class UserSession
         SetUser(response.Id, response.Email, response.Nickname);
     }
 
+    /// <summary>
+    /// 기존 ApiClient 호출과의 호환성을 유지합니다. 영구 인증 수단이 없어 복원하지 않습니다.
+    /// </summary>
     public static bool TryRestore()
     {
-        if (PlayerPrefs.GetInt(IsLoggedInKey, 0) != 1)
-        {
-            ClearMemory();
-            DeleteStoredSession();
-            return false;
-        }
-
-        string storedUserId = PlayerPrefs.GetString(UserIdKey, string.Empty);
-        string storedNickname = PlayerPrefs.GetString(NicknameKey, string.Empty);
-        string storedEmail = PlayerPrefs.GetString(EmailKey, string.Empty);
-
-        bool valid = long.TryParse(
-            storedUserId,
-            NumberStyles.None,
-            CultureInfo.InvariantCulture,
-            out long userId
-        ) && userId > 0
-          && !string.IsNullOrWhiteSpace(storedNickname)
-          && !string.IsNullOrWhiteSpace(storedEmail);
-
-        if (!valid)
-        {
-            Logout();
-            return false;
-        }
-
-        UserId = userId;
-        Nickname = storedNickname;
-        Email = storedEmail;
-        IsLoggedIn = true;
         ApplyCurrentUserId();
-        return true;
+        return IsLoggedIn;
     }
 
     public static void Logout()
     {
         ClearMemory();
-        DeleteStoredSession();
         ApplyCurrentUserId();
-    }
-
-    private static void DeleteStoredSession()
-    {
-        PlayerPrefs.DeleteKey(UserIdKey);
-        PlayerPrefs.DeleteKey(NicknameKey);
-        PlayerPrefs.DeleteKey(EmailKey);
-        PlayerPrefs.DeleteKey(IsLoggedInKey);
-        PlayerPrefs.Save();
     }
 
     private static void SetUser(long userId, string email, string nickname)
@@ -94,12 +49,6 @@ public static class UserSession
         Email = email;
         Nickname = nickname;
         IsLoggedIn = true;
-
-        PlayerPrefs.SetString(UserIdKey, userId.ToString(CultureInfo.InvariantCulture));
-        PlayerPrefs.SetString(EmailKey, email);
-        PlayerPrefs.SetString(NicknameKey, nickname);
-        PlayerPrefs.SetInt(IsLoggedInKey, 1);
-        PlayerPrefs.Save();
         ApplyCurrentUserId();
     }
 
