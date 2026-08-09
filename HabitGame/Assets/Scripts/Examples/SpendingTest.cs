@@ -40,6 +40,7 @@ public class SpendingTest : MonoBehaviour
             button.interactable = false;
             // Service -> ApiClient를 거쳐 was로 Request DTO 전달 후 Response 받아오기
             response = await spendingService.GetOverviewAsync(userId);
+            
             if (response != null)
             {
                 UpdateDisplay();

@@ -1,6 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class HabitUIManager : MonoBehaviour
 {
@@ -12,12 +10,13 @@ public class HabitUIManager : MonoBehaviour
     [SerializeField] private GameObject lifeAddPanel;
     [SerializeField] private GameObject spendAddPanel;
 
+    [SerializeField] private GameObject budgetSettingPanel;
+
     private void Start()
     {
         OpenLife();
     }
 
-    // »ıÈ°½À°ü È­¸é
     public void OpenLife()
     {
         topTab.SetActive(true);
@@ -27,9 +26,9 @@ public class HabitUIManager : MonoBehaviour
 
         lifeAddPanel.SetActive(false);
         spendAddPanel.SetActive(false);
+        budgetSettingPanel.SetActive(false);
     }
 
-    // ¼Òºñ½À°ü È­¸é
     public void OpenSpend()
     {
         topTab.SetActive(true);
@@ -39,9 +38,9 @@ public class HabitUIManager : MonoBehaviour
 
         lifeAddPanel.SetActive(false);
         spendAddPanel.SetActive(false);
+        budgetSettingPanel.SetActive(false);
     }
 
-    // »ıÈ°½À°ü Ãß°¡ È­¸é
     public void OpenLifeAddPanel()
     {
         topTab.SetActive(false);
@@ -51,10 +50,10 @@ public class HabitUIManager : MonoBehaviour
 
         lifeAddPanel.SetActive(true);
         spendAddPanel.SetActive(false);
+        budgetSettingPanel.SetActive(false);
     }
 
-    // ¼Òºñ½À°ü Ãß°¡ È­¸é
-    public void OpenSpendAddPanel() 
+    public void OpenSpendAddPanel()
     {
         topTab.SetActive(false);
 
@@ -63,15 +62,34 @@ public class HabitUIManager : MonoBehaviour
 
         lifeAddPanel.SetActive(false);
         spendAddPanel.SetActive(true);
+        budgetSettingPanel.SetActive(false);
     }
 
-    // »ıÈ°½À°üÀ¸·Î back
-    public void BackToLife() 
+    // â­ ì˜ˆì‚° ì„¤ì •ì°½
+    public void OpenBudgetSetting()
+    {
+        topTab.SetActive(false);
+
+        lifePanel.SetActive(false);
+        spendPanel.SetActive(false);
+
+        lifeAddPanel.SetActive(false);
+        spendAddPanel.SetActive(false);
+
+        budgetSettingPanel.SetActive(true);
+    }
+
+    // â­ ì˜ˆì‚°ì°½ ë‹«ê³  Spendìœ¼ë¡œ
+    public void CloseBudgetSetting()
+    {
+        OpenSpend();
+    }
+
+    public void BackToLife()
     {
         OpenLife();
     }
 
-    // ¼Òºñ½À°üÀ¸·Î back
     public void BackToSpend()
     {
         OpenSpend();

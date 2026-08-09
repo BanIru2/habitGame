@@ -23,7 +23,11 @@ public class SpendRewardManager : MonoBehaviour
         gold += value;
         UpdateUI();
     }
-
+    public void SetGold(int value)
+    {
+        gold = value;
+        UpdateUI();
+    }
     void UpdateUI()
     {
         goldText.text = gold + " Gold";

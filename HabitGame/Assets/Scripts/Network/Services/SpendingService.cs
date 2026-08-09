@@ -12,12 +12,18 @@ public class SpendingService
     // 거래 내역 조회
     public Task<SpendingOverviewResponse> GetOverviewAsync(long userId)
     {
-        return apiClient.GetAsync<SpendingOverviewResponse>($"/spending/overview?userId={userId}");
+        return apiClient.GetAsync<SpendingOverviewResponse>(
+            $"/spending/overview?userId={userId}");
     }
 
     // 주간 예산 설정
     public Task<SpendingBudgetResponse> CreateBudgetAsync(CreateSpendingBudgetRequest request)
     {
+        if (request == null)
+            throw new System.ArgumentNullException(nameof(request));
+
+        request.UserId = apiClient.CurrentUserId;
+
         return apiClient.PostAsync<CreateSpendingBudgetRequest, SpendingBudgetResponse>(
             "/spending/budgets",
             request
