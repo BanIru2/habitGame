@@ -16,4 +16,10 @@ public class LoginResponse
 
     [JsonProperty("message")]
     public string Message { get; set; }
+
+    [JsonProperty("accessToken")]
+    public string AccessToken { get; set; }
+
+    [JsonProperty("refreshToken")]
+    public string RefreshToken { get; set; }
 }
