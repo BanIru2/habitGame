@@ -48,9 +48,76 @@ public class AuthService
         if (string.IsNullOrWhiteSpace(response.AccessToken))
             throw new InvalidOperationException("로그인 응답에 Access Token이 없습니다.");
 
+        if (string.IsNullOrWhiteSpace(response.RefreshToken))
+            throw new InvalidOperationException("Login response does not contain a refresh token.");
+
         apiClient.SetAccessToken(response.AccessToken);
+        AuthSession.SetRefreshToken(response.RefreshToken);
 
         return response;
+    }
+
+    public async Task<RefreshResponse> RefreshAsync()
+    {
+        string currentRefreshToken = AuthSession.RefreshToken;
+        if (string.IsNullOrWhiteSpace(currentRefreshToken))
+            throw new InvalidOperationException("A refresh token is required to refresh authentication.");
+
+        try
+        {
+            RefreshResponse response = await apiClient.PostAsync<RefreshTokenRequest, RefreshResponse>(
+                "/auth/refresh",
+                new RefreshTokenRequest { RefreshToken = currentRefreshToken }
+            );
+
+            if (response == null)
+            {
+                ClearLocalSession();
+                throw new InvalidOperationException("Refresh response is empty.");
+            }
+
+            if (string.IsNullOrWhiteSpace(response.AccessToken))
+            {
+                ClearLocalSession();
+                throw new InvalidOperationException("Refresh response does not contain an access token.");
+            }
+
+            if (string.IsNullOrWhiteSpace(response.RefreshToken))
+            {
+                ClearLocalSession();
+                throw new InvalidOperationException("Refresh response does not contain a refresh token.");
+            }
+
+            apiClient.SetAccessToken(response.AccessToken);
+            AuthSession.SetRefreshToken(response.RefreshToken);
+
+            return response;
+        }
+        catch (ApiException exception) when (exception.StatusCode == 401)
+        {
+            ClearLocalSession();
+            throw;
+        }
+    }
+
+    public async Task LogoutAsync()
+    {
+        string currentRefreshToken = AuthSession.RefreshToken;
+
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(currentRefreshToken))
+            {
+                await apiClient.PostAsync<RefreshTokenRequest, object>(
+                    "/auth/logout",
+                    new RefreshTokenRequest { RefreshToken = currentRefreshToken }
+                );
+            }
+        }
+        finally
+        {
+            ClearLocalSession();
+        }
     }
 
     public async Task<MeResponse> GetMeAsync()
@@ -72,5 +139,12 @@ public class AuthService
             apiClient.SetAccessToken(null);
             throw;
         }
+    }
+
+    private void ClearLocalSession()
+    {
+        apiClient.SetAccessToken(null);
+        AuthSession.ClearRefreshToken();
+        UserSession.Logout();
     }
 }
