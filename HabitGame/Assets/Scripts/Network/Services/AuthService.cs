@@ -45,6 +45,32 @@ public class AuthService
         if (response.UserId <= 0)
             throw new InvalidOperationException("로그인 응답에 유효한 사용자 ID가 없습니다.");
 
+        if (string.IsNullOrWhiteSpace(response.AccessToken))
+            throw new InvalidOperationException("로그인 응답에 Access Token이 없습니다.");
+
+        apiClient.SetAccessToken(response.AccessToken);
+
         return response;
+    }
+
+    public async Task<MeResponse> GetMeAsync()
+    {
+        try
+        {
+            MeResponse response = await apiClient.GetAsync<MeResponse>("/auth/me");
+
+            if (response == null)
+                throw new InvalidOperationException("현재 사용자 응답이 비어 있습니다.");
+
+            if (response.UserId <= 0)
+                throw new InvalidOperationException("현재 사용자 응답에 유효한 사용자 ID가 없습니다.");
+
+            return response;
+        }
+        catch (ApiException exception) when (exception.StatusCode == 401)
+        {
+            apiClient.SetAccessToken(null);
+            throw;
+        }
     }
 }

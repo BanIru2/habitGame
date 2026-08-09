@@ -1,9 +1,9 @@
 using Newtonsoft.Json;
 
 /// <summary>
-/// 로그인 성공 시 반환되는 응답 DTO
+/// JWT로 인증된 현재 사용자 응답 DTO
 /// </summary>
-public class LoginResponse
+public class MeResponse
 {
     [JsonProperty("userId")]
     public long UserId { get; set; }
@@ -13,10 +13,4 @@ public class LoginResponse
 
     [JsonProperty("nickname")]
     public string Nickname { get; set; }
-
-    [JsonProperty("message")]
-    public string Message { get; set; }
-
-    [JsonProperty("accessToken")]
-    public string AccessToken { get; set; }
 }

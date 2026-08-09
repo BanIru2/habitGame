@@ -37,6 +37,7 @@ public static class UserSession
     public static void Logout()
     {
         ClearMemory();
+        ClearAccessToken();
         ApplyCurrentUserId();
     }
 
@@ -65,5 +66,12 @@ public static class UserSession
         ApiClient client = ApiClient.Instance;
         if (client != null)
             client.SetCurrentUserId(IsLoggedIn ? UserId : 0);
+    }
+
+    private static void ClearAccessToken()
+    {
+        ApiClient client = ApiClient.Instance;
+        if (client != null)
+            client.SetAccessToken(null);
     }
 }
