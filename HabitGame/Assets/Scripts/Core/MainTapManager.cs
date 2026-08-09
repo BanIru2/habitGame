@@ -51,7 +51,7 @@ public class MainTapManager : Singleton<MainTapManager>
 
     private void CloseAllTaps()
     {
-        //habitTap.SetActive(false);
+        habitTap.SetActive(false);
         characterTap.SetActive(false);
         inventoryTap.SetActive(false);
         shopTap.SetActive(false);
@@ -60,7 +60,30 @@ public class MainTapManager : Singleton<MainTapManager>
 
     private void OnClickHabitTap()
     {
+        if (isChangingTap) return;
 
+        isChangingTap = true;
+
+        try
+        {
+            // OpenAsync 함수 추가 필요
+            CloseAllTaps();
+            characterTap.SetActive(true);
+        }
+        catch (ApiException exception)
+        {
+            Debug.LogError(
+                $"습관 정보 요청 실패 ({exception.StatusCode}): " + exception.Message
+            );
+        }
+        catch (Exception exception)
+        {
+            Debug.LogError($"습관 조회 실패: {exception.Message}");
+        }
+        finally
+        {
+            isChangingTap = false;
+        }
     }
 
     private async void OnClickCharacterTap()
