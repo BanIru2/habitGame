@@ -88,7 +88,21 @@ public class ItemSlotUI : MonoBehaviour
         if (isEquip)
         {
             EquipmentDataSO equipmentSO = viewData.ItemSO as EquipmentDataSO;
-            equipTypeText.text = equipmentSO.equipmentType.ToString(); // 영어 출력
+            switch (equipmentSO.equipmentType)
+            {
+                case EquipmentType.Clothes:
+                    equipTypeText.text = "옷";
+                    break;
+                case EquipmentType.Shoes:
+                    equipTypeText.text = "신발";
+                    break;
+                case EquipmentType.Hat:
+                    equipTypeText.text = "모자";
+                    break;
+                case EquipmentType.Weapon:
+                    equipTypeText.text = "무기";
+                    break;
+            }
         }
     }
 

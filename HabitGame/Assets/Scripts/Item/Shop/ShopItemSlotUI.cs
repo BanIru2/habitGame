@@ -85,7 +85,21 @@ public class ShopItemSlotUI : MonoBehaviour
         if (isEquip)
         {
             EquipmentDataSO equipmentSO = viewData.ItemSO as EquipmentDataSO;
-            equipTypeText.text = equipmentSO.equipmentType.ToString(); // 영어 출력
+            switch (equipmentSO.equipmentType)
+            {
+                case EquipmentType.Clothes:
+                    equipTypeText.text = "옷";
+                    break;
+                case EquipmentType.Shoes:
+                    equipTypeText.text = "신발";
+                    break;
+                case EquipmentType.Hat:
+                    equipTypeText.text = "모자";
+                    break;
+                case EquipmentType.Weapon:
+                    equipTypeText.text = "무기";
+                    break;
+            }
         }
     }
 
@@ -100,7 +114,21 @@ public class ShopItemSlotUI : MonoBehaviour
         if (isConsume)
         {
             ConsumableDataSO consumableSO = viewData.ItemSO as ConsumableDataSO;
-            consumeTypeText.text = consumableSO.effectType.ToString(); // 영어 출력
+            switch (consumableSO.effectType)
+            {
+                case ItemEffectType.AttributeLevelUp:
+                    consumeTypeText.text = "영구적 특성 레벨 상승";
+                    break;
+                case ItemEffectType.BattleStatUp:
+                    consumeTypeText.text = "일회용 전투 스탯 상승";
+                    break;
+                case ItemEffectType.PermanentStatUp:
+                    consumeTypeText.text = "영구적 스탯 상승";
+                    break;
+                case ItemEffectType.ProtectStreak:
+                    consumeTypeText.text = "연속 달성 방어권";
+                    break;
+            }
         }
     }
 

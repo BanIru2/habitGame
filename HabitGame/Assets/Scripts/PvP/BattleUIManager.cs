@@ -518,7 +518,21 @@ public class BattleUIManager : Singleton<BattleUIManager>
     private void OpenEquipSelectPanel(EquipmentType equipType)
     {
         equipSelectPanel.SetActive(true);
-        equipTypeText.text = equipType.ToString();
+        switch (equipType)
+        {
+            case EquipmentType.Clothes:
+                equipTypeText.text = "옷";
+                break;
+            case EquipmentType.Shoes:
+                equipTypeText.text = "신발";
+                break;
+            case EquipmentType.Hat:
+                equipTypeText.text = "모자";
+                break;
+            case EquipmentType.Weapon:
+                equipTypeText.text = "무기";
+                break;
+        }
 
         List<InventoryItemViewData> items = InventoryManager.Instance.GetEquipmentItems(equipType);
 
@@ -697,7 +711,7 @@ public class BattleUIManager : Singleton<BattleUIManager>
             isReady = true;
 
             readyButton.image.color = Color.red;
-            buttonText.text = "Ready";
+            buttonText.text = "준비 취소";
             isMeReadyText.text = "READY";
             isMeReadyText.color = Color.green;
         }
@@ -705,7 +719,7 @@ public class BattleUIManager : Singleton<BattleUIManager>
         {
             isReady = false;
             readyButton.image.color = Color.blue;
-            buttonText.text = "Cancel";
+            buttonText.text = "준비 완료";
             isMeReadyText.text = "WAITING";
             isMeReadyText.color = Color.black;
         }
