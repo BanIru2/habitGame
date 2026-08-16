@@ -26,7 +26,7 @@ public class SpendRewardManager : MonoBehaviour
     public void SetGold(int value)
     {
         gold = value;
-        UpdateUI();
+        UpdateUI(); 
     }
     void UpdateUI()
     {

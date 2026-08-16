@@ -84,7 +84,7 @@ public class HabitUIManager : MonoBehaviour
     {
         OpenSpend();
     }
-
+     
     public void BackToLife()
     {
         OpenLife();

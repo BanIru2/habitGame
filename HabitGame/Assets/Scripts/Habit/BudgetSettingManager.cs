@@ -19,7 +19,7 @@ public class BudgetSettingManager : MonoBehaviour
         uiManager = FindObjectOfType<HabitUIManager>();
 
         saveButton.onClick.AddListener(OnClickSave);
-        backButton.onClick.AddListener(OnClickBack);
+        backButton.onClick.AddListener(OnClickBack); 
     }
 
     private async void OnClickSave()
