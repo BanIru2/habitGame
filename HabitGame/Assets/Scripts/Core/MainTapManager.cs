@@ -68,7 +68,7 @@ public class MainTapManager : Singleton<MainTapManager>
         {
             // OpenAsync 함수 추가 필요
             CloseAllTaps();
-            characterTap.SetActive(true);
+            habitTap.SetActive(true);
         }
         catch (ApiException exception)
         {

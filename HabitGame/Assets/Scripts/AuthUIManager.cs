@@ -36,7 +36,7 @@ public sealed class AuthUIManager : MonoBehaviour
     [SerializeField] private TMP_Text statusText;
     [SerializeField] private Button showLoginButton;
     [SerializeField] private Button showRegisterButton;
-    [SerializeField] private string gameplaySceneName = "JS";
+    [SerializeField] private string gameplaySceneName = "MainScene";
 
     private bool requestInProgress;
 
