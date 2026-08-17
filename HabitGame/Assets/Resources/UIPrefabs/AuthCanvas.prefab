@@ -3299,7 +3299,7 @@ MonoBehaviour:
   statusText: {fileID: 3075344873828867721}
   showLoginButton: {fileID: 7135516662145720913}
   showRegisterButton: {fileID: 216196972911427169}
-  gameplaySceneName: JS
+  gameplaySceneName: MainScene
 --- !u!1 &4921778613631487310
 GameObject:
   m_ObjectHideFlags: 0

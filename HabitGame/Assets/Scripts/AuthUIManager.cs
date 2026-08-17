@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -36,7 +37,7 @@ public sealed class AuthUIManager : MonoBehaviour
     [SerializeField] private TMP_Text statusText;
     [SerializeField] private Button showLoginButton;
     [SerializeField] private Button showRegisterButton;
-    [SerializeField] private string gameplaySceneName = "JS";
+    [SerializeField] private string gameplaySceneName = "MainScene";
 
     private bool requestInProgress;
 
@@ -51,15 +52,84 @@ public sealed class AuthUIManager : MonoBehaviour
         WarnAboutMissingReferences();
     }
 
-    private void Start()
+    private async void Start()
     {
         ShowLoginPanel(clearStatus: true);
         RestoreRememberedLoginId();
+
+        bool autoLoginSucceeded = await TryAutoLoginAsync();
+        if (this == null || autoLoginSucceeded)
+            return;
 
         if (rememberLoginIdToggle != null && rememberLoginIdToggle.isOn)
             loginPasswordInput?.Select();
         else
             loginEmailInput?.Select();
+    }
+
+    private async Task<bool> TryAutoLoginAsync()
+    {
+        if (requestInProgress || !TokenStorage.HasRefreshToken())
+            return false;
+
+        AuthService authService = null;
+        SetBusy(AuthRequest.AutoLogin);
+        ShowStatus("저장된 로그인 정보를 확인 중입니다.", isError: false);
+
+        try
+        {
+            string storedRefreshToken = TokenStorage.LoadRefreshToken();
+            if (string.IsNullOrWhiteSpace(storedRefreshToken))
+                return false;
+
+            authService = GetAuthService();
+            AuthSession.SetRefreshToken(storedRefreshToken);
+
+            await authService.RefreshAsync();
+            MeResponse response = await authService.GetMeAsync();
+
+            if (this == null)
+                return false;
+
+            UserSession.SetUser(response);
+            EnsureSessionMatches(response.UserId);
+            ClearPasswordInputs();
+            ShowStatus(string.Empty);
+
+            return LoadGameplayScene();
+        }
+        catch (ApiException exception)
+        {
+            if (IsTransientAuthenticationFailure(exception) && authService != null)
+                authService.ClearRuntimeSession();
+            else
+                ClearFailedAutoLogin(authService);
+
+            if (this != null)
+            {
+                Debug.LogWarning($"[Auth] Automatic login failed ({exception.StatusCode}): {exception.Message}", this);
+                ShowStatus(GetAutoLoginErrorMessage(exception));
+            }
+
+            return false;
+        }
+        catch (Exception exception)
+        {
+            ClearFailedAutoLogin(authService);
+
+            if (this != null)
+            {
+                Debug.LogError($"[Auth] Automatic login failed: {exception}", this);
+                ShowStatus("자동 로그인에 실패했습니다. 다시 로그인해주세요.");
+            }
+
+            return false;
+        }
+        finally
+        {
+            if (this != null)
+                SetBusy(AuthRequest.None);
+        }
     }
 
     private void OnDestroy()
@@ -250,17 +320,31 @@ public sealed class AuthUIManager : MonoBehaviour
             throw new InvalidOperationException("사용자 ID를 API 클라이언트에 적용하지 못했습니다.");
     }
 
-    private void LoadGameplayScene()
+    private bool LoadGameplayScene()
     {
         if (string.IsNullOrWhiteSpace(gameplaySceneName)
             || !Application.CanStreamedLevelBeLoaded(gameplaySceneName))
         {
             Debug.LogError($"[Auth] Scene '{gameplaySceneName}' is not available in Build Settings.", this);
             ShowStatus("게임 화면을 불러올 수 없습니다. 빌드 설정을 확인해주세요.");
-            return;
+            return false;
         }
 
         SceneManager.LoadScene(gameplaySceneName);
+        return true;
+    }
+
+    private static void ClearFailedAutoLogin(AuthService authService)
+    {
+        if (authService != null)
+        {
+            authService.ClearLocalSession();
+            return;
+        }
+
+        TokenStorage.ClearRefreshToken();
+        AuthSession.ClearRefreshToken();
+        UserSession.Logout();
     }
 
     private void SetBusy(AuthRequest request)
@@ -274,7 +358,11 @@ public sealed class AuthUIManager : MonoBehaviour
         SetInteractable(rememberLoginIdToggle, !busy);
 
         if (loginButtonText != null)
-            loginButtonText.text = request == AuthRequest.Login ? "로그인 중..." : "로그인";
+        {
+            loginButtonText.text = request == AuthRequest.AutoLogin
+                ? "로그인 확인 중..."
+                : request == AuthRequest.Login ? "로그인 중..." : "로그인";
+        }
 
         if (registerButtonText != null)
             registerButtonText.text = request == AuthRequest.Register ? "가입 중..." : "회원가입";
@@ -439,6 +527,19 @@ public sealed class AuthUIManager : MonoBehaviour
             : "아이디 또는 비밀번호를 확인해주세요.";
     }
 
+    private static string GetAutoLoginErrorMessage(ApiException exception)
+    {
+        if (exception.StatusCode <= 0)
+            return "서버에 연결할 수 없어 자동 로그인에 실패했습니다. 직접 로그인해주세요.";
+
+        return "로그인 정보가 만료되었습니다. 다시 로그인해주세요.";
+    }
+
+    private static bool IsTransientAuthenticationFailure(ApiException exception)
+    {
+        return exception.StatusCode <= 0 || exception.StatusCode >= 500;
+    }
+
     private static bool ContainsDuplicateAccountMessage(string message)
     {
         if (string.IsNullOrWhiteSpace(message))
@@ -567,6 +668,7 @@ public sealed class AuthUIManager : MonoBehaviour
     private enum AuthRequest
     {
         None,
+        AutoLogin,
         Login,
         Register
     }

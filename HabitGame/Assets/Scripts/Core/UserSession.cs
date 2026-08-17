@@ -1,6 +1,6 @@
 /// <summary>
 /// 현재 실행 중인 게임 세션의 로그인 사용자 식별 정보만 관리합니다.
-/// Backend가 인증 토큰을 제공하지 않으므로 앱 종료 후 자동 로그인 정보는 저장하지 않습니다.
+/// 인증 토큰의 메모리 및 영구 저장은 인증 전용 클래스에서 관리합니다.
 /// </summary>
 public static class UserSession
 {
@@ -25,8 +25,17 @@ public static class UserSession
         SetUser(response.Id, response.Email, response.Nickname);
     }
 
+    public static void SetUser(MeResponse response)
+    {
+        if (response == null || response.UserId <= 0)
+            throw new System.ArgumentException("유효한 현재 사용자 응답이 필요합니다.", nameof(response));
+
+        SetUser(response.UserId, response.Email, response.Nickname);
+    }
+
     /// <summary>
-    /// 기존 ApiClient 호출과의 호환성을 유지합니다. 영구 인증 수단이 없어 복원하지 않습니다.
+    /// 기존 ApiClient 호출과의 호환성을 유지하며 현재 메모리 세션만 다시 적용합니다.
+    /// 저장 토큰을 사용한 비동기 복원은 로그인 화면의 인증 흐름에서 처리합니다.
     /// </summary>
     public static bool TryRestore()
     {
