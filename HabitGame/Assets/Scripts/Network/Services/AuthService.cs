@@ -1,5 +1,7 @@
 using System;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using UnityEngine;
 
 public class AuthService
 {
@@ -7,7 +9,8 @@ public class AuthService
 
     public AuthService(ApiClient apiClient)
     {
-        this.apiClient = apiClient;
+        this.apiClient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
+        this.apiClient.ConfigureAuthentication(RefreshAccessTokenAsync, ClearLocalSession);
     }
 
     public async Task<RegisterResponse> RegisterAsync(RegisterRequest request)
@@ -53,6 +56,7 @@ public class AuthService
 
         apiClient.SetAccessToken(response.AccessToken);
         AuthSession.SetRefreshToken(response.RefreshToken);
+        TokenStorage.SaveRefreshToken(response.RefreshToken);
 
         return response;
     }
@@ -61,7 +65,10 @@ public class AuthService
     {
         string currentRefreshToken = AuthSession.RefreshToken;
         if (string.IsNullOrWhiteSpace(currentRefreshToken))
+        {
+            ClearLocalSession();
             throw new InvalidOperationException("A refresh token is required to refresh authentication.");
+        }
 
         try
         {
@@ -82,21 +89,28 @@ public class AuthService
                 throw new InvalidOperationException("Refresh response does not contain an access token.");
             }
 
-            if (string.IsNullOrWhiteSpace(response.RefreshToken))
-            {
-                ClearLocalSession();
-                throw new InvalidOperationException("Refresh response does not contain a refresh token.");
-            }
-
             apiClient.SetAccessToken(response.AccessToken);
-            AuthSession.SetRefreshToken(response.RefreshToken);
+
+            if (!string.IsNullOrWhiteSpace(response.RefreshToken))
+            {
+                AuthSession.SetRefreshToken(response.RefreshToken);
+                TokenStorage.SaveRefreshToken(response.RefreshToken);
+            }
 
             return response;
         }
-        catch (ApiException exception) when (exception.StatusCode == 401)
+        catch (ApiException exception) when (
+            exception.StatusCode == 400
+            || exception.StatusCode == 401
+            || exception.StatusCode == 403)
         {
             ClearLocalSession();
             throw;
+        }
+        catch (JsonException exception)
+        {
+            ClearLocalSession();
+            throw new InvalidOperationException("Refresh response is invalid.", exception);
         }
     }
 
@@ -112,11 +126,28 @@ public class AuthService
                     "/auth/logout",
                     new RefreshTokenRequest { RefreshToken = currentRefreshToken }
                 );
+
+                Debug.Log("[Auth] Server logout succeeded.");
             }
+            else
+            {
+                Debug.LogWarning("[Auth] Server logout skipped because no refresh token is available.");
+            }
+        }
+        catch (ApiException exception)
+        {
+            Debug.LogWarning(
+                $"[Auth] Server logout failed ({exception.StatusCode}): {exception.Message}"
+            );
+        }
+        catch (Exception exception)
+        {
+            Debug.LogWarning($"[Auth] Server logout failed: {exception.Message}");
         }
         finally
         {
             ClearLocalSession();
+            apiClient.ReturnToLoginScene();
         }
     }
 
@@ -141,10 +172,21 @@ public class AuthService
         }
     }
 
-    private void ClearLocalSession()
+    public void ClearLocalSession()
+    {
+        ClearRuntimeSession();
+        TokenStorage.ClearRefreshToken();
+    }
+
+    public void ClearRuntimeSession()
     {
         apiClient.SetAccessToken(null);
         AuthSession.ClearRefreshToken();
         UserSession.Logout();
+    }
+
+    private async Task RefreshAccessTokenAsync()
+    {
+        await RefreshAsync();
     }
 }
