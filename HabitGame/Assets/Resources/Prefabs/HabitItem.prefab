@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4275370848088071020}
   - component: {fileID: 4673121620442350471}
+  - component: {fileID: -7942220916089782629}
   m_Layer: 5
   m_Name: HabitItem
   m_TagString: Untagged
@@ -85,7 +86,20 @@ MonoBehaviour:
   onValueChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_IsOn: 1
+  m_IsOn: 0
+--- !u!114 &-7942220916089782629
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 343959810873838316}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d9bf5a20f121f144ab8eb7cf4abbbfc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  completeToggle: {fileID: 4673121620442350471}
 --- !u!1 &5815322271238147914
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 public class HabitService
@@ -23,7 +24,15 @@ public class HabitService
             request
         );
     }
+    // ⭐ 생활 습관 목표 조회
+    public Task<List<HabitGoalResponse>> GetGoalsAsync()
+    {
+        long userId = GetCurrentUserId();
 
+        return apiClient.GetAsync<List<HabitGoalResponse>>(
+            $"/habit-goals?userId={userId}"
+        );
+    }
     // 생활 습관 기록 제출 (인증)
     public Task<HabitRecordResponse> CreateRecordAsync(CreateHabitRecordRequest request)
     {

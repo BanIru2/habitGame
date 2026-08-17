@@ -58,7 +58,7 @@ public class MainTapManager : Singleton<MainTapManager>
         battleTap.SetActive(false);
     }
 
-    private void OnClickHabitTap()
+    private async void OnClickHabitTap()
     {
         if (isChangingTap) return;
 
@@ -66,7 +66,9 @@ public class MainTapManager : Singleton<MainTapManager>
 
         try
         {
-            // OpenAsync 함수 추가 필요
+           
+            await HabitUIManager.Instance.OpenHabitTap();
+
             CloseAllTaps();
             habitTap.SetActive(true);
         }

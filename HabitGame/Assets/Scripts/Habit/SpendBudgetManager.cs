@@ -100,6 +100,6 @@ public class SpendBudgetManager : MonoBehaviour
 
         usedText.text = $"{usedMoney:N0}₩ ({percent * 100f:0}%)";
 
-        budgetSlider.value = percent;
+        budgetSlider.value = percent; 
     }
 }
