@@ -889,8 +889,6 @@ public class BattleUIManager : Singleton<BattleUIManager>
     {
         isBattle = false;
 
-        rankingboardManager.UseRemainCount();
-
         InitResultImage();
         PrintResultImage(response.Result);
         SetRankingPointText(response);
@@ -930,6 +928,7 @@ public class BattleUIManager : Singleton<BattleUIManager>
         ResetReadyUI();
         ClearOpponentInfoUI();
 
+        matchStartButton.interactable = false;
         try
         {
             await rankingboardManager.LoadRankingBoard();
@@ -938,8 +937,6 @@ public class BattleUIManager : Singleton<BattleUIManager>
         {
             Debug.LogError($"랭킹 갱신 실패: {exception.Message}");
         }
-
-        matchStartButton.interactable = false;
 
         try
         {
@@ -1006,5 +1003,10 @@ public class BattleUIManager : Singleton<BattleUIManager>
         }
         resultRankingPointText.text = Mathf.Abs(delta).ToString();
 
+    }
+
+    public void SetMatchStartButtonInteractable(bool interactable)
+    {
+        matchStartButton.interactable = interactable;
     }
 }

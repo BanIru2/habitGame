@@ -1,5 +1,3 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -24,10 +22,6 @@ public class RankingboardManager : Singleton<RankingboardManager>
     private TextMeshProUGUI remainCountText;
 
     private const int MaxRemainCount = 5;
-    // 마지막으로 전투 횟수 초기화 한 날짜 저장 키
-    private const string LastResetDateKey = "Ranking_LastResetDate";
-    // 남은 전투 횟수 저장 키
-    private const string RemainCountKey = "Ranking_RemainCount";
 
     private int remainCount;
     private RankingEntryResponse myRanking;
@@ -38,18 +32,7 @@ public class RankingboardManager : Singleton<RankingboardManager>
         InitializeRows();
     }
 
-    private void Start()
-    {
-        LoadRemainCount();
-        CheckDailyReset();
-
-        StartCoroutine(CheckDailyResetRoutine());
-
-/*        // 테스트 호출
-        LoadMockRankingBoard();*/
-    }
-
-    // mock 데이터를 통한 테스트용 함수
+    // mock 데이터를 통한 테스트용 함수 - 필요 시 Start함수로 호출
 /*    private void LoadMockRankingBoard()
     {
         List<RankingEntryResponse> list = new List<RankingEntryResponse>();
@@ -162,80 +145,8 @@ public class RankingboardManager : Singleton<RankingboardManager>
         remainCountText.text = $"{remainCount.ToString()}   /   {MaxRemainCount}";
     }
 
-
     public void ShowRemainCountLoadError()
     {
         remainCountText.text = "불러오기 실패";
     }
-
-    // 실제 남은 횟수 초기화
-    private void ResetCount()
-    {
-        remainCount = MaxRemainCount;
-        SaveRemainCount();
-        RefreshRemainCountText();
-    }
-
-    // 전투 종료 시 호출
-    // 전투 횟수 사용하여 차감
-    public void UseRemainCount()
-    {
-        if (remainCount <= 0)
-        {
-            remainCount = 0;
-            SaveRemainCount();
-            RefreshRemainCountText();
-            return;
-        }
-
-        remainCount--;
-        SaveRemainCount();
-        RefreshRemainCountText();
-    }
-
-
-    // 남은 횟수 UI 갱신
-    private void RefreshRemainCountText()
-    {
-        remainCountText.text = $"{remainCount.ToString()}   /   {MaxRemainCount}";
-    }
-
-    // 현재 남은 횟수 저장하여 앱을 껐다 켜도 유지되도록
-    private void SaveRemainCount()
-    {
-        PlayerPrefs.SetInt(RemainCountKey, remainCount);
-        PlayerPrefs.Save();
-    }
-
-    // 앱을 켰을 때 저장된 남은 횟수 불러오기
-    private void LoadRemainCount()
-    {
-        remainCount = PlayerPrefs.GetInt(RemainCountKey, MaxRemainCount);
-        RefreshRemainCountText();
-    }
-
-    // 마지막 초기화 날짜와 현재 날짜를 비교하여 달라졌으면 초기화 후 초기화 여부 저장
-    private void CheckDailyReset()
-    {
-        string today = DateTime.Now.ToString("yyyy-MM-dd");
-        string lastResetDate = PlayerPrefs.GetString(LastResetDateKey, "");
-
-        if (lastResetDate != today)
-        {
-            ResetCount();
-            PlayerPrefs.SetString(LastResetDateKey, today);
-            PlayerPrefs.Save();
-        }
-    }
-
-    // 앱을 킨 상태로 자정을 넘긴 경우 날짜 바뀜을 감지하기 위한 코루틴
-    private IEnumerator CheckDailyResetRoutine()
-    {
-        while (true)
-        {
-            CheckDailyReset();
-            yield return new WaitForSeconds(60f);
-        }
-    }
-
 }

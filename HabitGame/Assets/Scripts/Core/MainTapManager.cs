@@ -182,6 +182,7 @@ public class MainTapManager : Singleton<MainTapManager>
         {
             await rankingboardManager.LoadRankingBoard();
             await rankingboardManager.LoadRemainingCount();
+            BattleUIManager.Instance.SetMatchStartButtonInteractable(true);
             CloseAllTaps();
             battleTap.SetActive(true);
         }
