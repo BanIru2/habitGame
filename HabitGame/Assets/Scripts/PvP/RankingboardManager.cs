@@ -143,6 +143,12 @@ public class RankingboardManager : MonoBehaviour
         myScoreText.text = myRanking.Score.ToString();
     }
 
+    // 남은 횟수 0보다 큰지 알려주기
+    public bool IsCanMatchPvP()
+    {
+        return remainCount > 0;
+    }
+
     // 실제 남은 횟수 초기화
     private void ResetCount()
     {

@@ -31,6 +31,10 @@ public class BattleUIManager : Singleton<BattleUIManager>
     [Header("Lobby Panel")]
     [SerializeField]
     private Button matchStartButton;
+    [SerializeField]
+    private GameObject dailyPvpLimitReachedPopup;
+    [SerializeField]
+    private Button dailyPvpLimitReachedPopupCloseButton;
 
     // Loadinig Panel
     [Header("Loading Panel")]
@@ -175,6 +179,8 @@ public class BattleUIManager : Singleton<BattleUIManager>
     {
         base.Awake();
 
+        dailyPvpLimitReachedPopupCloseButton.onClick.AddListener(CloseDailyPvpLimitReachedPopup);
+
         CacheReadyButtonDefaultState();
         CacheOpponentInfoDefaultState();
 
@@ -228,12 +234,15 @@ public class BattleUIManager : Singleton<BattleUIManager>
     // 매칭 시작 버튼 클릭 시 화면 전환
     private void OnClickStartMatchmaking()
     {
-        if (!TryResolvePhotonManager()) return;
-
-        if (!photonManager.StartMatchmaking())
+        if (!rankingboardManager.IsCanMatchPvP())
         {
+            dailyPvpLimitReachedPopup.SetActive(true);
             return;
         }
+
+        if (!TryResolvePhotonManager()) return;
+
+        if (!photonManager.StartMatchmaking()) return;
 
         ClearOpponentInfoUI();
         lobbyPanel.SetActive(false);
@@ -242,6 +251,11 @@ public class BattleUIManager : Singleton<BattleUIManager>
         readyPanel.SetActive(false);
         battlePanel.SetActive(false);
         isMatching = true;
+    }
+    
+    private void CloseDailyPvpLimitReachedPopup()
+    {
+        dailyPvpLimitReachedPopup.SetActive(false);
     }
     // ------------------------------Loading Pannel---------------------------------
     // 매칭 취소 버튼 클릭 시 로비로 이동
