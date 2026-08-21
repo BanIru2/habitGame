@@ -1,10 +1,17 @@
 using UnityEngine;
+using System.Threading.Tasks;
 
 /// <summary>
 /// 배틀 결과 백엔드 호출 관리
 /// </summary>
 public class BattleBackendManager : Singleton<BattleBackendManager>
 {
+    public async Task GetRemainCount()
+    {
+        DailyPvpLimitResponse response = await ServiceRegistry.Instance.Battle.GetPvPLimitAsync(ApiClient.Instance.CurrentUserId);
+        RankingboardManager.Instance.ApplyRemainCount(response);
+    }
+
     public async void SubmitBattleResult(string battleId, string result, long enemyUserId, BattleUnit myUnit, BattleUnit oppUnit)
     {
         double myPower = CalculatePower(myUnit);

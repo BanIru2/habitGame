@@ -10,6 +10,13 @@ public class BattleService
         this.apiClient = apiClient;
     }
 
+    public Task<DailyPvpLimitResponse> GetPvPLimitAsync(long userId)
+    {
+        return apiClient.GetAsync<DailyPvpLimitResponse>(
+            $"/battle/limits?userId={userId}"
+        );
+    }
+
     // PvP 배틀 결과 제출
     public Task<BattleResultResponse> SubmitResultAsync(SubmitBattleResultRequest request)
     {

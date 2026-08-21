@@ -757,8 +757,8 @@ MonoBehaviour:
   battlePanel: {fileID: 1397973032}
   resultPanel: {fileID: 1699113650}
   matchStartButton: {fileID: 870925643}
-  DailyPvpLimitReachedPopup: {fileID: 1751497808}
-  DailyPvpLimitReachedPopupCloseButton: {fileID: 1050519927}
+  dailyPvpLimitReachedPopup: {fileID: 1751497808}
+  dailyPvpLimitReachedPopupCloseButton: {fileID: 1050519927}
   loadingSpinner: {fileID: 1160959233}
   spinSpeed: 250
   matchCancelButton: {fileID: 183457302}
@@ -3073,6 +3073,10 @@ PrefabInstance:
       propertyPath: serviceRegistry
       value: 
       objectReference: {fileID: 9111801387107057512}
+    - target: {fileID: 2659063325503624553, guid: 0f92e685a040bba40ad486d5a7c4cc18, type: 3}
+      propertyPath: rankingboardManager
+      value: 
+      objectReference: {fileID: 1486303163}
     - target: {fileID: 5508454003206594877, guid: 0f92e685a040bba40ad486d5a7c4cc18, type: 3}
       propertyPath: m_Name
       value: BattleBackendManager
@@ -3486,6 +3490,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7689182822610315565, guid: 545caedeb10c82c40bb4f0cfefc436ff, type: 3}
+      propertyPath: m_text
+      value: 4   /   5
+      objectReference: {fileID: 0}
     - target: {fileID: 7715614670214491176, guid: 545caedeb10c82c40bb4f0cfefc436ff, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -3619,7 +3627,9 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 7647871574216636585, guid: 545caedeb10c82c40bb4f0cfefc436ff, type: 3}
+    - {fileID: 1704139931428708773, guid: 545caedeb10c82c40bb4f0cfefc436ff, type: 3}
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 683807507974057212, guid: 545caedeb10c82c40bb4f0cfefc436ff, type: 3}
       insertIndex: -1

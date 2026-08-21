@@ -181,6 +181,7 @@ public class MainTapManager : Singleton<MainTapManager>
         try
         {
             await rankingboardManager.LoadRankingBoard();
+            await rankingboardManager.LoadRemainingCount();
             CloseAllTaps();
             battleTap.SetActive(true);
         }

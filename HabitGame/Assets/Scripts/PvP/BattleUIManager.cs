@@ -915,7 +915,7 @@ public class BattleUIManager : Singleton<BattleUIManager>
 
     // 로비로 돌아갈 때 1차적 데이터 초기화
     // 전투 종료 후 / 매칭 캔슬
-    public void ReturnToLobby()
+    public async void ReturnToLobby()
     {
         battlePanel.SetActive(false);
         readyPanel.SetActive(false);
@@ -929,6 +929,34 @@ public class BattleUIManager : Singleton<BattleUIManager>
         UpdatePlayerCount(0);
         ResetReadyUI();
         ClearOpponentInfoUI();
+
+        try
+        {
+            await rankingboardManager.LoadRankingBoard();
+        }
+        catch (System.Exception exception)
+        {
+            Debug.LogError($"랭킹 갱신 실패: {exception.Message}");
+        }
+
+        matchStartButton.interactable = false;
+
+        try
+        {
+            await rankingboardManager.LoadRemainingCount();
+            matchStartButton.interactable = true;
+        }
+        catch (System.Exception exception)
+        {
+            Debug.LogError($"잔여 횟수 갱신 실패: {exception.Message}");
+
+            // 잔여 횟수 확인하지 못한 경우 매칭 막기
+            matchStartButton.interactable = false;
+
+            // 정보를 불러오지 못했다는 UI 안내 출력
+            rankingboardManager.ShowRemainCountLoadError();
+        }
+
 
         InitResultImage();
         InitRankingPointText();

@@ -5,7 +5,7 @@ using TMPro;
 using UnityEngine;
 using System.Threading.Tasks;
 
-public class RankingboardManager : MonoBehaviour
+public class RankingboardManager : Singleton<RankingboardManager>
 {
     [SerializeField]
     private RankingRowUI rowPrefab;
@@ -32,8 +32,9 @@ public class RankingboardManager : MonoBehaviour
     private int remainCount;
     private RankingEntryResponse myRanking;
 
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         InitializeRows();
     }
 
@@ -129,6 +130,11 @@ public class RankingboardManager : MonoBehaviour
         ShowRankingBoard(rankings);
     }
 
+    public async Task LoadRemainingCount()
+    {
+        await BattleBackendManager.Instance.GetRemainCount();
+    }
+
     // -------------------------- 내 랭킹 박스 ---------------------------
     private void RefreshMyRankingData()
     {
@@ -147,6 +153,19 @@ public class RankingboardManager : MonoBehaviour
     public bool IsCanMatchPvP()
     {
         return remainCount > 0;
+    }
+
+    // 남은 횟수 응답 결과 적용
+    public void ApplyRemainCount(DailyPvpLimitResponse response)
+    {
+        remainCount = response.RemainingCount;
+        remainCountText.text = $"{remainCount.ToString()}   /   {MaxRemainCount}";
+    }
+
+
+    public void ShowRemainCountLoadError()
+    {
+        remainCountText.text = "불러오기 실패";
     }
 
     // 실제 남은 횟수 초기화
@@ -178,7 +197,7 @@ public class RankingboardManager : MonoBehaviour
     // 남은 횟수 UI 갱신
     private void RefreshRemainCountText()
     {
-        remainCountText.text = remainCount.ToString();
+        remainCountText.text = $"{remainCount.ToString()}   /   {MaxRemainCount}";
     }
 
     // 현재 남은 횟수 저장하여 앱을 껐다 켜도 유지되도록
