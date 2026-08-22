@@ -44,9 +44,4 @@ public class ItemResponse
     [JsonProperty("purchaseStatus")]
     public string PurchaseStatus { get; set; }
 
-    [JsonProperty("stockQuantity")]
-    public int StockQuantity { get; set; }
-
-    [JsonProperty("message")]
-    public string Message { get; set; }
 }
