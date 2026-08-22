@@ -160,12 +160,8 @@ public class InventoryManager : Singleton<InventoryManager>
         {
             InventoryId = index + 1,
             ItemId = string.IsNullOrEmpty(itemSO.itemId) ? itemSO.name : itemSO.itemId,
-            ItemType = itemSO.itemType.ToString(),
             Quantity = itemSO is ConsumableDataSO ? index + 1 : 1,
-            IsEquipped = false,
-            SlotType = itemSO is EquipmentDataSO equipmentSO
-                ? equipmentSO.equipmentType.ToString()
-                : null
+            IsEquipped = false
         };
     }
     // ------------------------------------------------------------------------------------------------
