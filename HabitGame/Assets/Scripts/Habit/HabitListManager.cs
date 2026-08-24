@@ -10,7 +10,7 @@ public class HabitListManager : MonoBehaviour
     [SerializeField] private GameObject habitItemPrefab;
 
     [Header("Summary")]
-    [SerializeField] private HabitSummaryManager summaryManager;
+    [SerializeField] private HabitSummaryManager summaryManager; 
 
     // 습관 데이터 전체를 받아서 Item 생성
     public void AddHabit(HabitGoalResponse habit)

@@ -28,7 +28,7 @@ public class HabitSummaryManager : MonoBehaviour
 
             if (toggle != null && toggle.isOn)
             {
-                completed++;
+                completed++; 
             }
         }
 

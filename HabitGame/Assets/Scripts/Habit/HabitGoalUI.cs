@@ -87,10 +87,7 @@ public class HabitGoalUI : MonoBehaviour
         amountText.text = amount.ToString();
     }
 
-
-    // =========================================
     // 카테고리
-    // =========================================
 
     public void SelectCategory(string category)
     {
@@ -126,9 +123,7 @@ public class HabitGoalUI : MonoBehaviour
     }
 
 
-    // =========================================
     // 반복 주기
-    // =========================================
 
     public void SelectPeriod(string period)
     {
@@ -301,10 +296,7 @@ public class HabitGoalUI : MonoBehaviour
             habitToAdd = localHabit;
         }
 
-
-        // -----------------------------------------
         // Habit 리스트에 추가
-        // -----------------------------------------
 
         HabitListManager listManager =
             FindObjectOfType<HabitListManager>();
@@ -323,9 +315,7 @@ public class HabitGoalUI : MonoBehaviour
         }
 
 
-        // -----------------------------------------
         // Life 화면으로 복귀
-        // -----------------------------------------
 
         HabitUIManager uiManager =
             FindObjectOfType<HabitUIManager>();
