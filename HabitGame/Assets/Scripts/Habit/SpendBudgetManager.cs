@@ -20,6 +20,10 @@ public class SpendBudgetManager : MonoBehaviour
     // 현재 주간 예산 ID
     public long BudgetId { get; private set; }
 
+    // ⭐ 다른 Manager에서 현재 예산/사용금액을 읽을 수 있도록
+    public int WeeklyBudget => weeklyBudget;
+    public int UsedMoney => usedMoney;
+
     private void Awake()
     {
         Instance = this;
@@ -41,7 +45,9 @@ public class SpendBudgetManager : MonoBehaviour
         try
         {
             SpendingOverviewResponse response =
-                await spendingService.GetOverviewAsync(ApiClient.Instance.CurrentUserId);
+                await spendingService.GetOverviewAsync(
+                    ApiClient.Instance.CurrentUserId
+                );
 
             if (response != null)
             {
@@ -70,6 +76,8 @@ public class SpendBudgetManager : MonoBehaviour
     public void SetWeeklyBudget(int budget)
     {
         weeklyBudget = budget;
+
+        // 새로운 주간 예산 설정 시 사용 금액 초기화
         usedMoney = 0;
 
         RefreshUI();
@@ -78,28 +86,52 @@ public class SpendBudgetManager : MonoBehaviour
     public void SetUsedMoney(int money)
     {
         usedMoney = money;
+
         RefreshUI();
     }
 
     public void AddSpending(int amount)
     {
         usedMoney += amount;
+
         RefreshUI();
     }
 
     private void RefreshUI()
     {
-        budgetText.text = $"{weeklyBudget:N0}₩";
+        // 예산 표시
+        if (budgetText != null)
+        {
+            budgetText.text = $"{weeklyBudget:N0}₩";
+        }
 
+        // 사용률 계산
         float percent = weeklyBudget <= 0
             ? 0f
             : (float)usedMoney / weeklyBudget;
 
-        // 혹시 100%를 넘어가면 Slider 오류 방지
-        percent = Mathf.Clamp01(percent);
+        // 텍스트에는 실제 사용률 표시
+        float displayPercent = percent * 100f;
 
-        usedText.text = $"{usedMoney:N0}₩ ({percent * 100f:0}%)";
+        if (usedText != null)
+        {
+            usedText.text =
+                $"{usedMoney:N0}₩ ({displayPercent:0}%)";
+        }
 
-        budgetSlider.value = percent; 
+        // Slider는 0 ~ 1 범위로 제한
+        if (budgetSlider != null)
+        {
+            budgetSlider.value = Mathf.Clamp01(percent);
+        }
+
+        // ⭐ 사용금액이 변할 때마다 예상 보상도 다시 계산
+        if (SpendRewardManager.Instance != null)
+        {
+            SpendRewardManager.Instance.CalculateReward(
+                weeklyBudget,
+                usedMoney
+            );
+        }
     }
 }
