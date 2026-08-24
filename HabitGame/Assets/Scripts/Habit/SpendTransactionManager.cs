@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using TMPro;
 using UnityEngine;
 
@@ -8,11 +8,18 @@ public class SpendTransactionManager : MonoBehaviour
     [SerializeField] private Transform content;
     [SerializeField] private GameObject transactionItemPrefab;
 
+    [Header("Test Data")]
+    [SerializeField] private bool useTestData = true;
+
     private void Start()
     {
-        CreateTestTransactions();
+        if (useTestData)
+        {
+            CreateTestTransactions();
+        }
     }
 
+    // 테스트용 거래내역
     private void CreateTestTransactions()
     {
         AddTransaction("Cafe", 5000, "2026.08.17");
@@ -22,24 +29,67 @@ public class SpendTransactionManager : MonoBehaviour
         AddTransaction("Convenience Store", 8500, "2026.08.14");
     }
 
+    // 실제 소비 기록 추가용
+    public void AddTransaction(string category, int amount)
+    {
+        string date = DateTime.Now.ToString("yyyy.MM.dd");
+
+        AddTransaction(category, amount, date);
+    }
+
+    // 거래내역 Item 생성 공통 함수
     private void AddTransaction(
         string category,
         int amount,
         string date)
     {
+        if (content == null)
+        {
+            Debug.LogWarning("Transaction Content가 연결되지 않았습니다.");
+            return;
+        }
+
+        if (transactionItemPrefab == null)
+        {
+            Debug.LogWarning("TransactionItem Prefab이 연결되지 않았습니다.");
+            return;
+        }
+
         GameObject newItem =
             Instantiate(transactionItemPrefab, content);
 
-        newItem.transform.Find("CategoryText")
-            .GetComponent<TextMeshProUGUI>()
-            .text = category;
+        Transform categoryTransform =
+            newItem.transform.Find("CategoryText");
 
-        newItem.transform.Find("AmountText")
-            .GetComponent<TextMeshProUGUI>()
-            .text = "-" + amount.ToString("N0") + "₩";
+        Transform amountTransform =
+            newItem.transform.Find("AmountText");
 
-        newItem.transform.Find("DateText")
-            .GetComponent<TextMeshProUGUI>()
-            .text = date;
+        Transform dateTransform =
+            newItem.transform.Find("DateText");
+
+        if (categoryTransform != null)
+        {
+            categoryTransform
+                .GetComponent<TextMeshProUGUI>()
+                .text = category;
+        }
+
+        if (amountTransform != null)
+        {
+            amountTransform
+                .GetComponent<TextMeshProUGUI>()
+                .text = "-" + amount.ToString("N0") + "₩";
+        }
+
+        if (dateTransform != null)
+        {
+            dateTransform
+                .GetComponent<TextMeshProUGUI>()
+                .text = date;
+        }
+
+        Debug.Log(
+            $"거래내역 추가 : {category} / {amount:N0}₩ / {date}"
+        );
     }
 }

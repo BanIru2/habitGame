@@ -9,54 +9,76 @@ public class HabitListManager : MonoBehaviour
     [SerializeField] private Transform content;
     [SerializeField] private GameObject habitItemPrefab;
 
-    // 기존 습관 하나 추가
-    public void AddHabit()
+    [Header("Summary")]
+    [SerializeField] private HabitSummaryManager summaryManager;
+
+    // 습관 데이터 전체를 받아서 Item 생성
+    public void AddHabit(HabitGoalResponse habit)
     {
-        if (string.IsNullOrWhiteSpace(habitNameInput.text))
+        if (habit == null)
+        {
+            Debug.LogWarning("추가할 습관 데이터가 없습니다.");
             return;
+        }
 
-        GameObject newHabit =
-            Instantiate(habitItemPrefab, content);
+        CreateHabitItem(habit);
 
-        TextMeshProUGUI label =
-            newHabit.transform.Find("Label")
-            .GetComponent<TextMeshProUGUI>();
+        if (habitNameInput != null)
+            habitNameInput.text = "";
 
-        label.text = habitNameInput.text;
-
-        Toggle toggle =
-            newHabit.GetComponentInChildren<Toggle>();
-
-        toggle.isOn = false;
-
-        habitNameInput.text = "";
+        if (summaryManager != null)
+            summaryManager.RefreshSummary();
     }
 
-    // ⭐ DB에서 받아온 습관 목록으로 UI 갱신
+    // DB에서 받아온 습관 목록으로 UI 갱신
     public void RefreshHabitList(List<HabitGoalResponse> habits)
     {
-        // 기존 리스트 삭제
         for (int i = content.childCount - 1; i >= 0; i--)
         {
             Destroy(content.GetChild(i).gameObject);
         }
 
-        // DB에서 받아온 습관을 하나씩 생성
+        if (habits == null)
+            return;
+
         foreach (HabitGoalResponse habit in habits)
         {
-            GameObject newHabit =
-                Instantiate(habitItemPrefab, content);
+            CreateHabitItem(habit);
+        }
 
-            TextMeshProUGUI label =
-                newHabit.transform.Find("Label")
+        if (summaryManager != null)
+            summaryManager.RefreshSummary();
+    }
+
+    private void CreateHabitItem(HabitGoalResponse habit)
+    {
+        GameObject newHabit =
+            Instantiate(habitItemPrefab, content);
+
+        TextMeshProUGUI label =
+            newHabit.transform.Find("Label")
                 .GetComponent<TextMeshProUGUI>();
 
-            label.text = habit.GoalName;
+        label.text = habit.GoalName;
 
-            Toggle toggle =
-                newHabit.GetComponentInChildren<Toggle>();
+        Toggle toggle =
+            newHabit.GetComponentInChildren<Toggle>();
 
+        if (toggle != null)
             toggle.isOn = false;
+
+        HabitItem habitItem =
+            newHabit.GetComponent<HabitItem>();
+
+        if (habitItem != null)
+        {
+            habitItem.SetData(habit);
+        }
+        else
+        {
+            Debug.LogError(
+                "HabitItem Prefab 루트에 HabitItem 스크립트가 없습니다."
+            );
         }
     }
 }
