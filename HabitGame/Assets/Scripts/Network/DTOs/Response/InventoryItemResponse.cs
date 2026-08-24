@@ -13,10 +13,6 @@ public class InventoryItemResponse
     [JsonProperty("itemId")]
     public string ItemId { get; set; }
 
-    // 아이템 종류 (EQUIPMENT, CONSUMABLE 등)
-    [JsonProperty("itemType")]
-    public string ItemType { get; set; }
-
     // 보유 수량
     [JsonProperty("quantity")]
     public int Quantity { get; set; }
@@ -24,9 +20,5 @@ public class InventoryItemResponse
     // 장착 상태 (true: 장착 중)
     [JsonProperty("isEquipped")]
     public bool IsEquipped { get; set; }
-
-    // 장착되는 슬롯 종류 (HEAD, BODY, WEAPON 등)
-    [JsonProperty("slotType")]
-    public string SlotType { get; set; }
 
 }

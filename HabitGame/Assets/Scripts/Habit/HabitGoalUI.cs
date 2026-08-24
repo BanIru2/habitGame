@@ -27,11 +27,21 @@ public class HabitGoalUI : MonoBehaviour
 
     private string selectedPeriod = "daily";
     private string selectedRecordType = "value";
+    private string submittedHabitName = "";
 
+    private void Awake()
+    {
+        habitNameInput.onEndEdit.AddListener(OnHabitNameEndEdit);
+    }
 
     private void Start()
     {
         habitService = new HabitService(ApiClient.Instance);
+    }
+
+    private void OnHabitNameEndEdit(string value)
+    {
+        submittedHabitName = value;
     }
     public void CompleteMode()
     {
@@ -110,8 +120,12 @@ public class HabitGoalUI : MonoBehaviour
 
     public async void SaveGoal()
     {
+        string goalName = habitNameInput.text;
+        if (string.IsNullOrWhiteSpace(goalName))
+            goalName = submittedHabitName;
+
         Debug.Log("===== Habit Goal =====");
-        Debug.Log("Name : " + habitNameInput.text);
+        Debug.Log("Name : " + goalName);
         Debug.Log("Category : " + selectedCategory);
         Debug.Log("RecordType : " + selectedRecordType);
         Debug.Log("Amount : " + amount);
@@ -121,7 +135,7 @@ public class HabitGoalUI : MonoBehaviour
         CreateHabitGoalRequest request = new CreateHabitGoalRequest();
 
         request.UserId = ApiClient.Instance.CurrentUserId;
-        request.GoalName = habitNameInput.text;
+        request.GoalName = goalName;
         request.Category = selectedCategory;
         request.RecordType = selectedRecordType;
         request.TargetAmount = amount;
