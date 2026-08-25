@@ -22,42 +22,42 @@ public class InventoryService
     }
 
     // 아이템 장착
-    public Task<EquipItemResponse> EquipItemAsync(EquipItemRequest request)
+    public Task<List<InventoryItemResponse>> EquipItemAsync(EquipItemRequest request)
     {
         if (request == null)
             throw new ArgumentNullException(nameof(request));
 
         request.UserId = GetCurrentUserId();
 
-        return apiClient.PostAsync<EquipItemRequest, EquipItemResponse>(
+        return apiClient.PostAsync<EquipItemRequest, List<InventoryItemResponse>>(
             "/inventory/equip",
             request
         );
     }
 
     // 아이템 해제
-    public Task<EquipItemResponse> UnequipItemAsync(EquipItemRequest request)
+    public Task<List<InventoryItemResponse>> UnequipItemAsync(EquipItemRequest request)
     {
         if (request == null)
             throw new ArgumentNullException(nameof(request));
 
         request.UserId = GetCurrentUserId();
 
-        return apiClient.PostAsync<EquipItemRequest, EquipItemResponse>(
+        return apiClient.PostAsync<EquipItemRequest, List<InventoryItemResponse>> (
             "/inventory/unequip",
             request
         );
     }
 
     // 소비 아이템 사용
-    public Task<UseItemResponse> UseItemAsync(UseItemRequest request)
+    public Task<List<InventoryItemResponse>> UseItemAsync(UseItemRequest request)
     {
         if (request == null)
             throw new ArgumentNullException(nameof(request));
 
         request.UserId = GetCurrentUserId();
 
-        return apiClient.PostAsync<UseItemRequest, UseItemResponse>(
+        return apiClient.PostAsync<UseItemRequest, List<InventoryItemResponse>>(
             "/inventory/use",
             request
         );
