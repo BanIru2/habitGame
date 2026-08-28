@@ -49,6 +49,16 @@ public class MainTapManager : Singleton<MainTapManager>
         battleTapButton.onClick.AddListener(OnClickBattleTap);
     }
 
+    private IEnumerator Start()
+    {
+        CloseAllTaps();
+        habitTap.SetActive(true);
+
+        yield return null;
+
+        OnClickHabitTap();
+    }
+
     private void CloseAllTaps()
     {
         habitTap.SetActive(false);
