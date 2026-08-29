@@ -381,7 +381,10 @@ public class InventoryManager : Singleton<InventoryManager>
             Debug.LogWarning("장비 변경 요청이 이미 진행 중입니다.");
             return;
         }
+
         IsEquipmentChangeInProgress = true;
+
+        List<InventoryItemResponse> updatedInventory;
 
         try
         {
@@ -394,21 +397,20 @@ public class InventoryManager : Singleton<InventoryManager>
 
             if (shouldEquip)
             {
-                await inventoryBackendManager.EquipItemAsync(id);
+                updatedInventory = await inventoryBackendManager.EquipItemAsync(id);
             }
             else
             {
-                await inventoryBackendManager.UnequipItemAsync(id);
+                updatedInventory = await inventoryBackendManager.UnequipItemAsync(id);
             }
 
-            await RefreshInventoryAsync();
+            BuildViewData(updatedInventory);
             await CharacterManager.Instance.RefreshCharacterAsync();
         }
         finally
         {
             IsEquipmentChangeInProgress = false;
         }
-
     }
 
     // 장비 아이템 장착/해제 요청
@@ -445,9 +447,15 @@ public class InventoryManager : Singleton<InventoryManager>
             ClosePopup();
             ShowEquipmentItems();
         }
+        catch(ApiException e)
+        {
+            Debug.LogError($"장착 실패 : {e.Message}");
+            ErrorPopupManager.Instance.ShowApiError(e);
+        }
         catch (System.Exception e)
         {
-            Debug.LogError($"장착 실패: {e.Message}");
+            Debug.LogError($"장착 처리 중 시스템 오류: {e.Message}");
+            ErrorPopupManager.Instance.ShowSystemError();
         }
         finally
         {
@@ -476,9 +484,15 @@ public class InventoryManager : Singleton<InventoryManager>
             ClosePopup();
             ShowEquipmentItems();
         }
+        catch (ApiException e)
+        {
+            Debug.LogError($"장착 해제 실패 : {e.Message}");
+            ErrorPopupManager.Instance.ShowApiError(e);
+        }
         catch (System.Exception e)
         {
-            Debug.LogError($"장착 해제 실패: {e.Message}");
+            Debug.LogError($"장착 해제 처리 중 시스템 오류: {e.Message}");
+            ErrorPopupManager.Instance.ShowSystemError();
         }
         finally
         {
@@ -516,9 +530,15 @@ public class InventoryManager : Singleton<InventoryManager>
             ClosePopup();
             ShowConsumableItems();
         }
+        catch (ApiException e)
+        {
+            Debug.LogError($"아이템 사용 실패 : {e.Message}");
+            ErrorPopupManager.Instance.ShowApiError(e);
+        }
         catch (System.Exception e)
         {
-            Debug.LogError($"아이템 사용 실패: {e.Message}");
+            Debug.LogError($"아이템 사용 처리 중 시스템 오류: {e.Message}");
+            ErrorPopupManager.Instance.ShowSystemError();
         }
         finally
         {
@@ -561,7 +581,7 @@ public class InventoryManager : Singleton<InventoryManager>
         return result;
     }
 
-    public async Task<UseItemResponse> UseInventoryItemAsync(long inventoryId)
+    public async Task<List<InventoryItemResponse>> UseInventoryItemAsync(long inventoryId)
     {
         if (isItemUseInProgress)
             throw new System.InvalidOperationException("Item use already in progress.");
@@ -570,9 +590,9 @@ public class InventoryManager : Singleton<InventoryManager>
 
         try
         {
-            UseItemResponse response = await inventoryBackendManager.UseItemAsync(inventoryId);
-            await RefreshInventoryAsync();
-            return response;
+            List<InventoryItemResponse> updatedInventory = await inventoryBackendManager.UseItemAsync(inventoryId);
+            BuildViewData(updatedInventory);
+            return updatedInventory;
         }
         finally
         {
