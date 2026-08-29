@@ -633,9 +633,15 @@ public class BattleUIManager : Singleton<BattleUIManager>
                 CloseEquipDetailPopup();
             }
         }
-        catch (System.Exception e)
+        catch (ApiException e)
         {
             Debug.LogError($"PvP 장비 변경 실패: {e.Message}");
+            ErrorPopupManager.Instance.ShowApiError(e);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"PvP 장비 변경 처리 중 시스템 오류: {e.Message}");
+            ErrorPopupManager.Instance.ShowSystemError();
         }
         finally
         {
@@ -670,9 +676,16 @@ public class BattleUIManager : Singleton<BattleUIManager>
                 if (!photonManager.IsCurrentRoomFlow(roomFlowVersion))
                     return false;
             }
-            catch (System.Exception e)
+            catch (ApiException e)
             {
                 Debug.LogError($"전투 준비 소비 아이템 사용 실패: {e.Message}");
+                ErrorPopupManager.Instance.ShowApiError(e);
+                return false;
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"전투 준비 소비 아이템 사용 처리 중 시스템 오류: {e.Message}");
+                ErrorPopupManager.Instance.ShowSystemError();
                 return false;
             }
         }

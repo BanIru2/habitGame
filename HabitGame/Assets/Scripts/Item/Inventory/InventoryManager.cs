@@ -450,10 +450,12 @@ public class InventoryManager : Singleton<InventoryManager>
         catch(ApiException e)
         {
             Debug.LogError($"장착 실패 : {e.Message}");
+            ErrorPopupManager.Instance.ShowApiError(e);
         }
         catch (System.Exception e)
         {
             Debug.LogError($"장착 처리 중 시스템 오류: {e.Message}");
+            ErrorPopupManager.Instance.ShowSystemError();
         }
         finally
         {
@@ -485,10 +487,12 @@ public class InventoryManager : Singleton<InventoryManager>
         catch (ApiException e)
         {
             Debug.LogError($"장착 해제 실패 : {e.Message}");
+            ErrorPopupManager.Instance.ShowApiError(e);
         }
         catch (System.Exception e)
         {
             Debug.LogError($"장착 해제 처리 중 시스템 오류: {e.Message}");
+            ErrorPopupManager.Instance.ShowSystemError();
         }
         finally
         {
@@ -529,10 +533,12 @@ public class InventoryManager : Singleton<InventoryManager>
         catch (ApiException e)
         {
             Debug.LogError($"아이템 사용 실패 : {e.Message}");
+            ErrorPopupManager.Instance.ShowApiError(e);
         }
         catch (System.Exception e)
         {
             Debug.LogError($"아이템 사용 처리 중 시스템 오류: {e.Message}");
+            ErrorPopupManager.Instance.ShowSystemError();
         }
         finally
         {
