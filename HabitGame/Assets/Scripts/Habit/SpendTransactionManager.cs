@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -9,13 +10,57 @@ public class SpendTransactionManager : MonoBehaviour
     [SerializeField] private GameObject transactionItemPrefab;
 
     [Header("Test Data")]
-    [SerializeField] private bool useTestData = true;
+    [SerializeField] private bool useTestData = false;
 
-    private void Start()
+    private async void Start()
     {
         if (useTestData)
         {
             CreateTestTransactions();
+        }
+        else
+        {
+            await LoadTransactions();
+        }
+    }
+
+    // 실제 API 거래내역 조회
+    private async System.Threading.Tasks.Task LoadTransactions()
+    {
+        try
+        {
+            List<SpendingTransactionResponse> transactions =
+                await ServiceRegistry.Instance.Spending.GetTransactionsAsync();
+
+            if (transactions == null)
+            {
+                Debug.LogWarning("거래내역 응답이 비어있습니다.");
+                return;
+            }
+
+            Debug.Log($"거래내역 조회 성공 : {transactions.Count}건");
+
+            foreach (SpendingTransactionResponse transaction in transactions)
+            {
+                string date = transaction.RecordedAt;
+
+                if (DateTime.TryParse(transaction.RecordedAt, out DateTime parsedDate))
+                {
+                    date = parsedDate.ToString("yyyy.MM.dd");
+                }
+
+                AddTransaction(
+                    transaction.Category,
+                    transaction.Amount,
+                    date
+                );
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning(
+                "거래내역 API 조회 실패\n" + e.Message
+            );
         }
     }
 
@@ -29,7 +74,7 @@ public class SpendTransactionManager : MonoBehaviour
         AddTransaction("Convenience Store", 8500, "2026.08.14");
     }
 
-    // 실제 소비 기록 추가용
+    // 사용자가 직접 소비 기록 추가할 때
     public void AddTransaction(string category, int amount)
     {
         string date = DateTime.Now.ToString("yyyy.MM.dd");

@@ -5,7 +5,9 @@ using UnityEngine.UI;
 
 public class HabitGoalUI : MonoBehaviour
 {
-    private HabitService habitService;
+    [Header("Habit Name")]
+    public TMP_InputField habitNameInput;
+
 
     [Header("Amount")]
     public CanvasGroup amountPanel;
@@ -13,6 +15,7 @@ public class HabitGoalUI : MonoBehaviour
     public TMP_Dropdown unitDropdown;
 
     private int amount = 30;
+
 
     [Header("Category")]
     public Button physicalButton;
@@ -22,23 +25,108 @@ public class HabitGoalUI : MonoBehaviour
 
     private string selectedCategory = "";
 
+
+    [Header("Record Type")]
+    public Button completeButton;
+    public Button valueButton;
+
+    private string selectedRecordType = "value";
+
+
     [Header("Period")]
     public Button dailyButton;
     public Button weeklyButton;
 
     private string selectedPeriod = "daily";
 
-    [Header("Record Type")]
-    private string selectedRecordType = "value";
-    private string submittedHabitName = "";
 
-    [Header("Habit Name")]
-    public TMP_InputField habitNameInput;
+    // =========================================
+    // Add Habit 화면이 켜질 때마다 초기화
+    // =========================================
 
-
-    private void Start()
+    private void OnEnable()
     {
-        habitService = new HabitService(ApiClient.Instance);
+        ResetForm();
+    }
+
+
+    // =========================================
+    // 입력 폼 초기화
+    // =========================================
+
+    public void ResetForm()
+    {
+        // 습관 이름 초기화
+        if (habitNameInput != null)
+            habitNameInput.text = "";
+
+        // -------------------------
+        // Category 초기화
+        // -------------------------
+        selectedCategory = "";
+
+        if (physicalButton != null)
+            physicalButton.image.color = Color.white;
+
+        if (rhythmButton != null)
+            rhythmButton.image.color = Color.white;
+
+        if (ecoButton != null)
+            ecoButton.image.color = Color.white;
+
+        if (growthButton != null)
+            growthButton.image.color = Color.white;
+
+
+        // -------------------------
+        // Record Type 초기화
+        // 아무것도 선택하지 않음
+        // -------------------------
+        selectedRecordType = "";
+
+        if (completeButton != null)
+            completeButton.image.color = Color.white;
+
+        if (valueButton != null)
+            valueButton.image.color = Color.white;
+
+
+        // Record Type이 아직 선택되지 않았으므로
+        // Amount 영역 비활성화
+        if (amountPanel != null)
+        {
+            amountPanel.alpha = 0.4f;
+            amountPanel.interactable = false;
+            amountPanel.blocksRaycasts = false;
+        }
+
+
+        // -------------------------
+        // Amount 초기화
+        // -------------------------
+        amount = 30;
+
+        if (amountText != null)
+            amountText.text = amount.ToString();
+
+        if (unitDropdown != null)
+        {
+            unitDropdown.value = 0;
+            unitDropdown.RefreshShownValue();
+        }
+
+
+        // -------------------------
+        // Period 초기화
+        // 아무것도 선택하지 않음
+        // -------------------------
+        selectedPeriod = "";
+
+        if (dailyButton != null)
+            dailyButton.image.color = Color.white;
+
+        if (weeklyButton != null)
+            weeklyButton.image.color = Color.white;
     }
 
 
@@ -50,9 +138,23 @@ public class HabitGoalUI : MonoBehaviour
     {
         selectedRecordType = "check";
 
-        amountPanel.alpha = 0.4f;
-        amountPanel.interactable = false;
-        amountPanel.blocksRaycasts = false;
+        if (amountPanel != null)
+        {
+            amountPanel.alpha = 0.4f;
+            amountPanel.interactable = false;
+            amountPanel.blocksRaycasts = false;
+        }
+
+        if (completeButton != null)
+        {
+            completeButton.image.color =
+                new Color(0.9f, 1f, 0.9f);
+        }
+
+        if (valueButton != null)
+        {
+            valueButton.image.color = Color.white;
+        }
     }
 
 
@@ -60,9 +162,23 @@ public class HabitGoalUI : MonoBehaviour
     {
         selectedRecordType = "value";
 
-        amountPanel.alpha = 1f;
-        amountPanel.interactable = true;
-        amountPanel.blocksRaycasts = true;
+        if (amountPanel != null)
+        {
+            amountPanel.alpha = 1f;
+            amountPanel.interactable = true;
+            amountPanel.blocksRaycasts = true;
+        }
+
+        if (completeButton != null)
+        {
+            completeButton.image.color = Color.white;
+        }
+
+        if (valueButton != null)
+        {
+            valueButton.image.color =
+                new Color(0.9f, 1f, 0.9f);
+        }
     }
 
 
@@ -74,7 +190,10 @@ public class HabitGoalUI : MonoBehaviour
     {
         amount++;
 
-        amountText.text = amount.ToString();
+        if (amountText != null)
+        {
+            amountText.text = amount.ToString();
+        }
     }
 
 
@@ -85,10 +204,16 @@ public class HabitGoalUI : MonoBehaviour
             amount--;
         }
 
-        amountText.text = amount.ToString();
+        if (amountText != null)
+        {
+            amountText.text = amount.ToString();
+        }
     }
 
+
+    // =========================================
     // 카테고리
+    // =========================================
 
     public void SelectCategory(string category)
     {
@@ -124,7 +249,9 @@ public class HabitGoalUI : MonoBehaviour
     }
 
 
+    // =========================================
     // 반복 주기
+    // =========================================
 
     public void SelectPeriod(string period)
     {
@@ -159,6 +286,7 @@ public class HabitGoalUI : MonoBehaviour
             return;
         }
 
+
         // 카테고리 확인
         if (string.IsNullOrWhiteSpace(selectedCategory))
         {
@@ -169,6 +297,7 @@ public class HabitGoalUI : MonoBehaviour
 
         CreateHabitGoalRequest request =
             new CreateHabitGoalRequest();
+
 
         request.UserId =
             ApiClient.Instance.CurrentUserId;
@@ -186,19 +315,17 @@ public class HabitGoalUI : MonoBehaviour
             selectedPeriod;
 
 
-        // -----------------------------------------
-        // Record Type에 따른 목표값 처리
-        // -----------------------------------------
+        // =========================================
+        // Record Type에 따른 목표값
+        // =========================================
 
         if (selectedRecordType == "check")
         {
-            // Complete 방식
             request.TargetAmount = 1;
             request.Unit = "check";
         }
         else
         {
-            // Value 방식
             request.TargetAmount = amount;
 
             request.Unit =
@@ -227,33 +354,26 @@ public class HabitGoalUI : MonoBehaviour
         Debug.Log(json);
 
 
-        // -----------------------------------------
-        // API 실패 시에도 UI 테스트가 가능하도록
-        // 현재 입력값으로 local Habit 데이터 생성
-        // -----------------------------------------
+        // =========================================
+        // API 실패 시 로컬 테스트용 데이터
+        // =========================================
 
         HabitGoalResponse localHabit =
             new HabitGoalResponse
             {
                 UserId = request.UserId,
 
-                GoalName =
-                    request.GoalName,
+                GoalName = request.GoalName,
 
-                Category =
-                    request.Category,
+                Category = request.Category,
 
-                RecordType =
-                    request.RecordType,
+                RecordType = request.RecordType,
 
-                TargetAmount =
-                    request.TargetAmount,
+                TargetAmount = request.TargetAmount,
 
-                Unit =
-                    request.Unit,
+                Unit = request.Unit,
 
-                Period =
-                    request.Period,
+                Period = request.Period,
 
                 IsActive = true
             };
@@ -264,9 +384,11 @@ public class HabitGoalUI : MonoBehaviour
 
         try
         {
-            // 실제 DB에 습관 생성
+            // ServiceRegistry 사용
             HabitGoalResponse response =
-                await habitService.CreateGoalAsync(request);
+                await ServiceRegistry.Instance.Habit
+                    .CreateGoalAsync(request);
+
 
             if (response != null)
             {
@@ -287,8 +409,6 @@ public class HabitGoalUI : MonoBehaviour
         }
         catch (System.Exception e)
         {
-            // 현재 서버가 꺼져 있어도
-            // Unity UI 기능 테스트는 계속 가능
             Debug.LogWarning(
                 "Habit API 연결 실패 - 로컬 데이터로 추가합니다.\n"
                 + e.Message
@@ -297,10 +417,14 @@ public class HabitGoalUI : MonoBehaviour
             habitToAdd = localHabit;
         }
 
+
+        // =========================================
         // Habit 리스트에 추가
+        // =========================================
 
         HabitListManager listManager =
             FindObjectOfType<HabitListManager>();
+
 
         if (listManager != null)
         {
@@ -316,18 +440,17 @@ public class HabitGoalUI : MonoBehaviour
         }
 
 
+        // =========================================
         // Life 화면으로 복귀
+        // =========================================
 
         HabitUIManager uiManager =
             FindObjectOfType<HabitUIManager>();
+
 
         if (uiManager != null)
         {
             uiManager.BackToLife();
         }
-
-
-        // 입력창 초기화
-        habitNameInput.text = "";
     }
 }
