@@ -1,4 +1,7 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
+
+
 
 public class SpendingService
 {
@@ -9,11 +12,18 @@ public class SpendingService
         this.apiClient = apiClient;
     }
 
-    // 거래 내역 조회
+    // 소비 전체 내역 조회 ? 
     public Task<SpendingOverviewResponse> GetOverviewAsync(long userId)
     {
         return apiClient.GetAsync<SpendingOverviewResponse>(
             $"/spending/overview?userId={userId}");
+    }
+    // 소비 거래내역 조회
+    public Task<List<SpendingTransactionResponse>> GetTransactionsAsync()
+    {
+        return apiClient.GetAsync<List<SpendingTransactionResponse>>(
+            "/spending/transactions"
+        );
     }
 
     // 주간 예산 설정

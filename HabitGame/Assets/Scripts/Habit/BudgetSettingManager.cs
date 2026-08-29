@@ -18,12 +18,21 @@ public class BudgetSettingManager : MonoBehaviour
         spendingService = ServiceRegistry.Instance.Spending;
         uiManager = FindObjectOfType<HabitUIManager>();
 
-        saveButton.onClick.AddListener(OnClickSave);
-        backButton.onClick.AddListener(OnClickBack); 
+        if (saveButton != null)
+            saveButton.onClick.AddListener(OnClickSave);
+
+        if (backButton != null)
+            backButton.onClick.AddListener(OnClickBack);
     }
 
     private async void OnClickSave()
     {
+        if (budgetInput == null)
+        {
+            Debug.LogWarning("Budget Input이 연결되지 않았습니다.");
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(budgetInput.text))
         {
             Debug.Log("예산을 입력해주세요.");
@@ -36,50 +45,89 @@ public class BudgetSettingManager : MonoBehaviour
             return;
         }
 
-        saveButton.interactable = false;
-
-        // ⭐ UI 먼저 변경
-        if (SpendBudgetManager.Instance != null)
+        if (budget <= 0)
         {
-            SpendBudgetManager.Instance.SetWeeklyBudget(budget);
+            Debug.Log("예산은 0원보다 커야 합니다.");
+            return;
         }
 
-        CreateSpendingBudgetRequest request = new CreateSpendingBudgetRequest
+        if (spendingService == null)
         {
-            BudgetAmount = budget,
-            Period = "weekly"
-        };
+            Debug.LogWarning("SpendingService를 사용할 수 없습니다.");
+            return;
+        }
+
+        if (saveButton != null)
+            saveButton.interactable = false;
+
+        CreateSpendingBudgetRequest request =
+            new CreateSpendingBudgetRequest
+            {
+                BudgetAmount = budget,
+                Period = "weekly"
+            };
 
         try
         {
-            Debug.Log("===== Save 버튼 클릭 =====");
+            Debug.Log("===== 예산 저장 요청 시작 =====");
 
             SpendingBudgetResponse response =
-    await spendingService.CreateBudgetAsync(request);
+                await spendingService.CreateBudgetAsync(request);
 
-            SpendBudgetManager.Instance.SetBudgetId(response.Id);
+            if (response == null)
+            {
+                Debug.LogWarning(
+                    "예산 저장 API 응답이 비어있습니다."
+                );
+                return;
+            }
 
-            SpendBudgetManager.Instance.SetWeeklyBudget(response.BudgetAmount);
+            if (SpendBudgetManager.Instance != null)
+            {
+                SpendBudgetManager.Instance.SetBudgetId(
+                    response.Id
+                );
+
+                SpendBudgetManager.Instance.SetWeeklyBudget(
+                    response.BudgetAmount
+                );
+            }
+            else
+            {
+                Debug.LogWarning(
+                    "SpendBudgetManager.Instance가 없습니다."
+                );
+            }
+
+            Debug.Log("===== 예산 저장 성공 =====");
+            Debug.Log($"Budget ID : {response.Id}");
+            Debug.Log($"Budget Amount : {response.BudgetAmount}");
+
+            budgetInput.text = "";
+
+            if (uiManager != null)
+                uiManager.CloseBudgetSetting();
+            else
+                gameObject.SetActive(false);
         }
         catch (Exception e)
         {
-            // 서버가 꺼져있어도 정상
-            Debug.LogWarning(e.Message);
+            Debug.LogWarning(
+                "예산 저장 실패\n" +
+                e.Message
+            );
         }
-
-        budgetInput.text = "";
-
-        if (uiManager != null)
-            uiManager.CloseBudgetSetting();
-        else
-            gameObject.SetActive(false);
-
-        saveButton.interactable = true;
+        finally
+        {
+            if (saveButton != null)
+                saveButton.interactable = true;
+        }
     }
 
     private void OnClickBack()
     {
-        budgetInput.text = "";
+        if (budgetInput != null)
+            budgetInput.text = "";
 
         if (uiManager != null)
             uiManager.CloseBudgetSetting();
@@ -89,7 +137,10 @@ public class BudgetSettingManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        saveButton.onClick.RemoveListener(OnClickSave);
-        backButton.onClick.RemoveListener(OnClickBack);
+        if (saveButton != null)
+            saveButton.onClick.RemoveListener(OnClickSave);
+
+        if (backButton != null)
+            backButton.onClick.RemoveListener(OnClickBack);
     }
 }

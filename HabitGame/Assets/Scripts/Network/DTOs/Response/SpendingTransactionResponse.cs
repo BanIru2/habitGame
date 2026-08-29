@@ -9,9 +9,13 @@ public class SpendingTransactionResponse
     [JsonProperty("id")]
     public long Id { get; set; }
 
-    // 해당 지출이 포함된 주간 예산의 ID
-    [JsonProperty("budgetId")]
-    public long BudgetId { get; set; }
+    //// 해당 지출이 포함된 주간 예산의 ID
+    //[JsonProperty("budgetId")]
+    //public long BudgetId { get; set; } API명세에 없어서 우선 주석처리
+
+    // 외부 금융 거래 식별 ID
+    [JsonProperty("externalTransactionId")]
+    public string ExternalTransactionId { get; set; }
 
     // 실제 결제 금액
     [JsonProperty("amount")]
@@ -20,6 +24,14 @@ public class SpendingTransactionResponse
     // 가맹점 이름 (예: "스타벅스", "배달의민족")
     [JsonProperty("merchantName")]
     public string MerchantName { get; set; }
+
+    // 소비 카테고리
+    [JsonProperty("category")]
+    public string Category { get; set; }
+
+    // 거래 유형
+    [JsonProperty("transactionType")]
+    public string TransactionType { get; set; }
 
     // 결제 항목에 대한 상세 설명 (유저 메모 등)
     [JsonProperty("description")]
