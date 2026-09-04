@@ -61,8 +61,13 @@ public class HabitListManager : MonoBehaviour
              i >= 0;
              i--)
         {
+            Transform existingHabit =
+                content.GetChild(i);
+
+            existingHabit.SetParent(null, false);
+
             Destroy(
-                content.GetChild(i).gameObject
+                existingHabit.gameObject
             );
         }
 
@@ -149,7 +154,12 @@ public class HabitListManager : MonoBehaviour
 
         if (toggle != null)
         {
-            toggle.SetIsOnWithoutNotify(false);
+            toggle.SetIsOnWithoutNotify(
+                habit.CompletedToday
+            );
+
+            toggle.interactable =
+                !habit.CompletedToday;
         }
 
         // =========================================

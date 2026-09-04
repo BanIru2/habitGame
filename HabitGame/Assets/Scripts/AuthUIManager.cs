@@ -137,6 +137,25 @@ public sealed class AuthUIManager : MonoBehaviour
         UnbindControls();
     }
 
+    private void Update()
+    {
+        if (!Input.GetKeyDown(KeyCode.Tab)
+            || loginPanel == null
+            || !loginPanel.activeInHierarchy)
+            return;
+
+        bool shiftPressed = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+
+        if (loginEmailInput != null && loginEmailInput.isFocused && !shiftPressed)
+        {
+            FocusInput(loginPasswordInput);
+            return;
+        }
+
+        if (loginPasswordInput != null && loginPasswordInput.isFocused && shiftPressed)
+            FocusInput(loginEmailInput);
+    }
+
     private async void OnLoginClicked()
     {
         if (requestInProgress)
@@ -590,6 +609,15 @@ public sealed class AuthUIManager : MonoBehaviour
         input.contentType = TMP_InputField.ContentType.Password;
         input.lineType = TMP_InputField.LineType.SingleLine;
         input.ForceLabelUpdate();
+    }
+
+    private static void FocusInput(TMP_InputField input)
+    {
+        if (input == null || !input.IsInteractable())
+            return;
+
+        input.Select();
+        input.ActivateInputField();
     }
 
     private void BindControls()

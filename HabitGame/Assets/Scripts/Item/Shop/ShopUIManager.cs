@@ -79,6 +79,9 @@ public class ShopUIManager : Singleton<ShopUIManager>
 
     public async Task OpenShop()
     {
+        CharacterResponse character = await CharacterManager.Instance.RefreshCharacterAsync();
+        goldText.text = $"{character.Gold} G";
+
         await RefreshShopAsync();
         ShowEquipmentItems();
     }

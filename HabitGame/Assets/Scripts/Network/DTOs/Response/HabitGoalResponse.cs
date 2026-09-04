@@ -35,6 +35,10 @@ public class HabitGoalResponse
     [JsonProperty("period")]
     public string Period { get; set; }
 
+    // 오늘 달성 완료 여부
+    [JsonProperty("completedToday")]
+    public bool CompletedToday { get; set; }
+
     // 현재 연속 달성 횟수(스트릭)
     [JsonProperty("streakCount")]
     public int StreakCount { get; set; }
