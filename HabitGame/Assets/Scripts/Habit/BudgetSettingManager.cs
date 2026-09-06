@@ -10,6 +10,9 @@ public class BudgetSettingManager : MonoBehaviour
     [SerializeField] private Button saveButton;
     [SerializeField] private Button backButton;
 
+    [Header("Test Mode")]
+    [SerializeField] private bool useLocalMode = true;
+
     private SpendingService spendingService;
     private HabitUIManager uiManager;
 
@@ -29,50 +32,110 @@ public class BudgetSettingManager : MonoBehaviour
     {
         if (budgetInput == null)
         {
-            Debug.LogWarning("Budget Input이 연결되지 않았습니다.");
+            Debug.LogWarning(
+                "Budget Input이 연결되지 않았습니다."
+            );
             return;
         }
 
         if (string.IsNullOrWhiteSpace(budgetInput.text))
         {
-            Debug.Log("예산을 입력해주세요.");
+            Debug.LogWarning(
+                "예산을 입력해주세요."
+            );
             return;
         }
 
-        if (!int.TryParse(budgetInput.text, out int budget))
+        if (!int.TryParse(
+                budgetInput.text,
+                out int budget))
         {
-            Debug.Log("숫자만 입력 가능합니다.");
+            Debug.LogWarning(
+                "예산은 숫자로 입력해주세요."
+            );
             return;
         }
 
         if (budget <= 0)
         {
-            Debug.Log("예산은 0원보다 커야 합니다.");
-            return;
-        }
-
-        if (spendingService == null)
-        {
-            Debug.LogWarning("SpendingService를 사용할 수 없습니다.");
+            Debug.LogWarning(
+                "예산은 0원보다 커야 합니다."
+            );
             return;
         }
 
         if (saveButton != null)
             saveButton.interactable = false;
 
-        CreateSpendingBudgetRequest request =
-            new CreateSpendingBudgetRequest
-            {
-                BudgetAmount = budget,
-                Period = "weekly"
-            };
-
         try
         {
-            Debug.Log("===== 예산 저장 요청 시작 =====");
+            // =========================================
+            // LOCAL MODE
+            // 서버 없이 Unity에서만 예산 반영
+            // =========================================
+            if (useLocalMode)
+            {
+                Debug.Log(
+                    "===== LOCAL MODE : 예산 설정 ====="
+                );
+
+                if (SpendBudgetManager.Instance != null)
+                {
+                    SpendBudgetManager.Instance.SetWeeklyBudget(
+                        budget
+                    );
+
+                    // 로컬 테스트용 임시 ID
+                    SpendBudgetManager.Instance.SetBudgetId(
+                        -1
+                    );
+                }
+                else
+                {
+                    Debug.LogWarning(
+                        "SpendBudgetManager.Instance가 없습니다."
+                    );
+                    return;
+                }
+
+                Debug.Log(
+                    $"Local Budget Amount : {budget}"
+                );
+
+                budgetInput.text = "";
+
+                CloseBudgetPanel();
+
+                return;
+            }
+
+            // =========================================
+            // SERVER MODE
+            // 실제 Spring Boot API 저장
+            // =========================================
+            if (spendingService == null)
+            {
+                Debug.LogWarning(
+                    "SpendingService를 사용할 수 없습니다."
+                );
+                return;
+            }
+
+            CreateSpendingBudgetRequest request =
+                new CreateSpendingBudgetRequest
+                {
+                    BudgetAmount = budget,
+                    Period = "weekly"
+                };
+
+            Debug.Log(
+                "===== 예산 저장 요청 시작 ====="
+            );
 
             SpendingBudgetResponse response =
-                await spendingService.CreateBudgetAsync(request);
+                await spendingService.CreateBudgetAsync(
+                    request
+                );
 
             if (response == null)
             {
@@ -97,18 +160,24 @@ public class BudgetSettingManager : MonoBehaviour
                 Debug.LogWarning(
                     "SpendBudgetManager.Instance가 없습니다."
                 );
+                return;
             }
 
-            Debug.Log("===== 예산 저장 성공 =====");
-            Debug.Log($"Budget ID : {response.Id}");
-            Debug.Log($"Budget Amount : {response.BudgetAmount}");
+            Debug.Log(
+                "===== 예산 저장 성공 ====="
+            );
+
+            Debug.Log(
+                $"Budget ID : {response.Id}"
+            );
+
+            Debug.Log(
+                $"Budget Amount : {response.BudgetAmount}"
+            );
 
             budgetInput.text = "";
 
-            if (uiManager != null)
-                uiManager.CloseBudgetSetting();
-            else
-                gameObject.SetActive(false);
+            CloseBudgetPanel();
         }
         catch (Exception e)
         {
@@ -129,10 +198,19 @@ public class BudgetSettingManager : MonoBehaviour
         if (budgetInput != null)
             budgetInput.text = "";
 
+        CloseBudgetPanel();
+    }
+
+    private void CloseBudgetPanel()
+    {
         if (uiManager != null)
+        {
             uiManager.CloseBudgetSetting();
+        }
         else
+        {
             gameObject.SetActive(false);
+        }
     }
 
     private void OnDestroy()

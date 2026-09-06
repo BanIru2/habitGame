@@ -53,10 +53,11 @@ public class SpendBudgetManager : MonoBehaviour
                 "===== Spending Overview 조회 시작 ====="
             );
 
-            SpendingOverviewResponse response = await ServiceRegistry.Instance.Spending
-        .GetOverviewAsync(
-            ApiClient.Instance.CurrentUserId
-        );
+            SpendingOverviewResponse response =
+                await ServiceRegistry.Instance.Spending
+                    .GetOverviewAsync(
+                        ApiClient.Instance.CurrentUserId
+                    );
 
             if (response == null)
             {
@@ -98,10 +99,6 @@ public class SpendBudgetManager : MonoBehaviour
         }
         catch (System.Exception e)
         {
-            /*
-             * 서버가 꺼져 있거나 연결할 수 없는 경우
-             * 현재 임시 데이터 UI는 유지
-             */
             Debug.LogWarning(
                 "Spending Overview 조회 실패\n" +
                 e.Message
@@ -143,21 +140,24 @@ public class SpendBudgetManager : MonoBehaviour
     }
 
     // =========================================
-    // 사용 금액 추가
+    // 사용 금액 증감
+    // 양수 = 소비 추가
+    // 음수 = 예외 처리 등으로 소비 제외
     // =========================================
     public void AddSpending(int amount)
     {
-        if (amount <= 0)
-        {
-            Debug.LogWarning(
-                "추가할 소비 금액은 0보다 커야 합니다."
-            );
-            return;
-        }
-
         usedMoney += amount;
 
+        // 사용 금액은 0 아래로 내려가지 않게 보호
+        usedMoney =
+            Mathf.Max(0, usedMoney);
+
         RefreshUI();
+
+        Debug.Log(
+            $"사용 금액 변경 : {amount:N0}₩ / " +
+            $"현재 사용 금액 : {usedMoney:N0}₩"
+        );
     }
 
     // =========================================
@@ -165,14 +165,12 @@ public class SpendBudgetManager : MonoBehaviour
     // =========================================
     private void RefreshUI()
     {
-        // 예산 표시
         if (budgetText != null)
         {
             budgetText.text =
                 $"{weeklyBudget:N0}₩";
         }
 
-        // 사용률 계산
         float percent =
             weeklyBudget <= 0
                 ? 0f
@@ -193,7 +191,6 @@ public class SpendBudgetManager : MonoBehaviour
                 Mathf.Clamp01(percent);
         }
 
-        // 예상 보상 다시 계산
         if (SpendRewardManager.Instance != null)
         {
             SpendRewardManager.Instance
