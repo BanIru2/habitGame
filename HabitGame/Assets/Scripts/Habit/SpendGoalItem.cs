@@ -10,13 +10,9 @@ public class SpendGoalItem : MonoBehaviour
 
     private SpendingService spendingService;
 
-    // 서버에서 받아오는 SpecialGoalId
     private long specialGoalId = -1;
 
-    // 보상 지급 완료 여부
     private bool rewarded = false;
-
-    // 중복 API 요청 방지
     private bool isSubmitting = false;
 
     private void Start()
@@ -31,10 +27,13 @@ public class SpendGoalItem : MonoBehaviour
         }
     }
 
-    // SpendListManager에서 Special Goal 생성/조회 후 호출
     public void SetSpecialGoalId(long id)
     {
         specialGoalId = id;
+
+        Debug.Log(
+            $"SpendGoalItem SpecialGoalId 설정 : {id}"
+        );
     }
 
     private async void OnToggleChanged(bool isOn)
@@ -45,12 +44,11 @@ public class SpendGoalItem : MonoBehaviour
         if (rewarded || isSubmitting)
             return;
 
-        // 서버 SpecialGoalId가 없는 경우
         if (specialGoalId <= 0)
         {
             Debug.LogWarning(
                 "SpecialGoalId가 없어 " +
-                "특수 목표 보상을 요청할 수 없습니다."
+                "특수 목표 상태를 변경할 수 없습니다."
             );
 
             ResetToggle();
@@ -74,37 +72,76 @@ public class SpendGoalItem : MonoBehaviour
 
         try
         {
+            // 1. 특수 목표 달성 상태 업데이트
+            UpdateSpendingSpecialGoalStatusRequest
+                statusRequest =
+                    new UpdateSpendingSpecialGoalStatusRequest
+                    {
+                        SpecialGoalId = specialGoalId,
+                        IsAchieved = true
+                    };
+
             Debug.Log(
-                "===== 특수 목표 보상 요청 시작 ====="
+                "===== 특수 목표 달성 상태 업데이트 ====="
             );
 
-            SpendingSpecialGoalRewardClaimRequest request =
-                new SpendingSpecialGoalRewardClaimRequest
-                {
-                    SpecialGoalId = specialGoalId
-                };
+            SpendingSpecialGoalResponse
+                updatedGoal =
+                    await spendingService
+                        .UpdateSpecialGoalStatusAsync(
+                            statusRequest
+                        );
 
-            SpendingSpecialGoalRewardClaimResponse response =
-                await spendingService
-                    .ClaimSpecialGoalRewardAsync(request);
-
-            if (response == null)
+            if (updatedGoal == null)
             {
                 Debug.LogWarning(
-                    "특수 목표 보상 API 응답이 비어있습니다."
+                    "특수 목표 상태 업데이트 응답이 비어있습니다."
                 );
 
                 ResetToggle();
                 return;
             }
 
-            // 서버에서 정상 응답을 받은 뒤에만 보상 완료 처리
+            Debug.Log(
+                $"특수 목표 달성 처리 성공 : {specialGoalId}"
+            );
+
+            // 2. 달성 처리 성공 후 보상 요청
+            SpendingSpecialGoalRewardClaimRequest
+                rewardRequest =
+                    new SpendingSpecialGoalRewardClaimRequest
+                    {
+                        SpecialGoalId = specialGoalId
+                    };
+
+            Debug.Log(
+                "===== 특수 목표 보상 요청 시작 ====="
+            );
+
+            SpendingSpecialGoalRewardClaimResponse
+                rewardResponse =
+                    await spendingService
+                        .ClaimSpecialGoalRewardAsync(
+                            rewardRequest
+                        );
+
+            if (rewardResponse == null)
+            {
+                Debug.LogWarning(
+                    "특수 목표 보상 API 응답이 비어있습니다."
+                );
+
+                // 목표 달성 자체는 서버에 이미 저장됐으므로
+                // Toggle은 유지한다.
+                return;
+            }
+
             rewarded = true;
 
             if (SpendRewardManager.Instance != null)
             {
                 SpendRewardManager.Instance.SetGold(
-                    response.Gold
+                    rewardResponse.Gold
                 );
             }
             else
@@ -123,29 +160,33 @@ public class SpendGoalItem : MonoBehaviour
             );
 
             Debug.Log(
-                $"Earned Gold : {response.EarnedGold}"
+                $"Earned Gold : {rewardResponse.EarnedGold}"
             );
 
             Debug.Log(
-                $"Total Gold : {response.Gold}"
+                $"Total Gold : {rewardResponse.Gold}"
             );
         }
         catch (Exception e)
         {
             Debug.LogWarning(
-                "특수 목표 보상 지급 실패\n" +
+                "특수 목표 처리 실패\n" +
                 e.Message
             );
 
-            ResetToggle();
+            // 어느 API에서 실패했는지 확실하지 않으므로
+            // UI에서 완료로 확정하지 않는다.
+            if (!rewarded)
+                ResetToggle();
         }
         finally
         {
             isSubmitting = false;
 
-            if (completeToggle != null && !rewarded)
+            if (completeToggle != null)
             {
-                completeToggle.interactable = true;
+                completeToggle.interactable =
+                    !rewarded;
             }
         }
     }

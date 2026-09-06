@@ -13,7 +13,7 @@ public class HabitGoalUI : MonoBehaviour
     public TMP_Text amountText;
     public TMP_Dropdown unitDropdown;
 
-    private int amount = 30;
+    private int amount = 3;
 
     [Header("Category")]
     public Button physicalButton;
@@ -71,7 +71,6 @@ public class HabitGoalUI : MonoBehaviour
 
         // -------------------------
         // Record Type 초기화
-        // 아무것도 선택하지 않음
         // -------------------------
         selectedRecordType = "";
 
@@ -81,18 +80,21 @@ public class HabitGoalUI : MonoBehaviour
         if (valueButton != null)
             valueButton.image.color = Color.white;
 
-        // Record Type 선택 전 Amount 비활성화
-        if (amountPanel != null)
-        {
-            amountPanel.alpha = 0.4f;
-            amountPanel.interactable = false;
-            amountPanel.blocksRaycasts = false;
-        }
+        // -------------------------
+        // Period 초기화
+        // -------------------------
+        selectedPeriod = "";
+
+        if (dailyButton != null)
+            dailyButton.image.color = Color.white;
+
+        if (weeklyButton != null)
+            weeklyButton.image.color = Color.white;
 
         // -------------------------
         // Amount 초기화
         // -------------------------
-        amount = 30;
+        amount = 3;
 
         if (amountText != null)
             amountText.text = amount.ToString();
@@ -103,32 +105,15 @@ public class HabitGoalUI : MonoBehaviour
             unitDropdown.RefreshShownValue();
         }
 
-        // -------------------------
-        // Period 초기화
-        // 아무것도 선택하지 않음
-        // -------------------------
-        selectedPeriod = "";
-
-        if (dailyButton != null)
-            dailyButton.image.color = Color.white;
-
-        if (weeklyButton != null)
-            weeklyButton.image.color = Color.white;
+        UpdateAmountPanel();
     }
 
     // =========================================
-    // 기록 방식
+    // Complete 방식
     // =========================================
     public void CompleteMode()
     {
         selectedRecordType = "check";
-
-        if (amountPanel != null)
-        {
-            amountPanel.alpha = 0.4f;
-            amountPanel.interactable = false;
-            amountPanel.blocksRaycasts = false;
-        }
 
         if (completeButton != null)
         {
@@ -138,24 +123,24 @@ public class HabitGoalUI : MonoBehaviour
 
         if (valueButton != null)
         {
-            valueButton.image.color = Color.white;
+            valueButton.image.color =
+                Color.white;
         }
+
+        UpdateAmountPanel();
     }
 
+    // =========================================
+    // Value 방식
+    // =========================================
     public void ValueMode()
     {
         selectedRecordType = "value";
 
-        if (amountPanel != null)
-        {
-            amountPanel.alpha = 1f;
-            amountPanel.interactable = true;
-            amountPanel.blocksRaycasts = true;
-        }
-
         if (completeButton != null)
         {
-            completeButton.image.color = Color.white;
+            completeButton.image.color =
+                Color.white;
         }
 
         if (valueButton != null)
@@ -163,10 +148,12 @@ public class HabitGoalUI : MonoBehaviour
             valueButton.image.color =
                 new Color(0.9f, 1f, 0.9f);
         }
+
+        UpdateAmountPanel();
     }
 
     // =========================================
-    // 목표 수치
+    // Amount 증가
     // =========================================
     public void IncreaseAmount()
     {
@@ -174,10 +161,14 @@ public class HabitGoalUI : MonoBehaviour
 
         if (amountText != null)
         {
-            amountText.text = amount.ToString();
+            amountText.text =
+                amount.ToString();
         }
     }
 
+    // =========================================
+    // Amount 감소
+    // =========================================
     public void DecreaseAmount()
     {
         if (amount > 1)
@@ -187,65 +178,140 @@ public class HabitGoalUI : MonoBehaviour
 
         if (amountText != null)
         {
-            amountText.text = amount.ToString();
+            amountText.text =
+                amount.ToString();
         }
     }
 
     // =========================================
-    // 카테고리
+    // Category 선택
     // =========================================
     public void SelectCategory(string category)
     {
         selectedCategory = category;
 
-        physicalButton.image.color = Color.white;
-        rhythmButton.image.color = Color.white;
-        ecoButton.image.color = Color.white;
-        growthButton.image.color = Color.white;
+        if (physicalButton != null)
+            physicalButton.image.color = Color.white;
+
+        if (rhythmButton != null)
+            rhythmButton.image.color = Color.white;
+
+        if (ecoButton != null)
+            ecoButton.image.color = Color.white;
+
+        if (growthButton != null)
+            growthButton.image.color = Color.white;
 
         switch (category)
         {
             case "physical":
-                physicalButton.image.color =
-                    new Color(1f, 0.9f, 0.9f);
+                if (physicalButton != null)
+                {
+                    physicalButton.image.color =
+                        new Color(1f, 0.9f, 0.9f);
+                }
                 break;
 
             case "rhythm":
-                rhythmButton.image.color =
-                    new Color(0.9f, 0.95f, 1f);
+                if (rhythmButton != null)
+                {
+                    rhythmButton.image.color =
+                        new Color(0.9f, 0.95f, 1f);
+                }
                 break;
 
             case "eco":
-                ecoButton.image.color =
-                    new Color(0.9f, 1f, 0.9f);
+                if (ecoButton != null)
+                {
+                    ecoButton.image.color =
+                        new Color(0.9f, 1f, 0.9f);
+                }
                 break;
 
             case "growth":
-                growthButton.image.color =
-                    new Color(0.95f, 0.9f, 1f);
+                if (growthButton != null)
+                {
+                    growthButton.image.color =
+                        new Color(0.95f, 0.9f, 1f);
+                }
                 break;
         }
     }
 
     // =========================================
-    // 반복 주기
+    // Period 선택
     // =========================================
     public void SelectPeriod(string period)
     {
         selectedPeriod = period;
 
-        dailyButton.image.color = Color.white;
-        weeklyButton.image.color = Color.white;
+        if (dailyButton != null)
+            dailyButton.image.color = Color.white;
+
+        if (weeklyButton != null)
+            weeklyButton.image.color = Color.white;
 
         if (period == "daily")
         {
-            dailyButton.image.color =
-                new Color(0.9f, 1f, 0.9f);
+            if (dailyButton != null)
+            {
+                dailyButton.image.color =
+                    new Color(0.9f, 1f, 0.9f);
+            }
         }
-        else
+        else if (period == "weekly")
         {
-            weeklyButton.image.color =
-                new Color(0.9f, 1f, 0.9f);
+            if (weeklyButton != null)
+            {
+                weeklyButton.image.color =
+                    new Color(0.9f, 1f, 0.9f);
+            }
+        }
+
+        UpdateAmountPanel();
+    }
+
+    // =========================================
+    // Amount 영역 상태 갱신
+    // =========================================
+    private void UpdateAmountPanel()
+    {
+        if (amountPanel == null)
+            return;
+
+        bool enableAmount = false;
+
+        // Value 방식은 Daily/Weekly 모두 Amount 사용
+        if (selectedRecordType == "value")
+        {
+            enableAmount = true;
+        }
+
+        // Weekly + Complete는 "주 몇 회" 설정
+        if (selectedRecordType == "check" &&
+            selectedPeriod == "weekly")
+        {
+            enableAmount = true;
+        }
+
+        amountPanel.alpha =
+            enableAmount ? 1f : 0.4f;
+
+        amountPanel.interactable =
+            enableAmount;
+
+        amountPanel.blocksRaycasts =
+            enableAmount;
+
+        // Weekly + Complete에서는 단위를 직접 선택하지 않음
+        if (unitDropdown != null)
+        {
+            bool weeklyComplete =
+                selectedRecordType == "check" &&
+                selectedPeriod == "weekly";
+
+            unitDropdown.interactable =
+                enableAmount && !weeklyComplete;
         }
     }
 
@@ -254,31 +320,40 @@ public class HabitGoalUI : MonoBehaviour
     // =========================================
     public async void SaveGoal()
     {
-        // Habit Name 확인
-        if (string.IsNullOrWhiteSpace(habitNameInput.text))
+        // Habit Name
+        if (habitNameInput == null ||
+            string.IsNullOrWhiteSpace(habitNameInput.text))
         {
-            Debug.LogWarning("Habit Name을 입력해주세요.");
+            Debug.LogWarning(
+                "Habit Name을 입력해주세요."
+            );
             return;
         }
 
-        // Category 확인
+        // Category
         if (string.IsNullOrWhiteSpace(selectedCategory))
         {
-            Debug.LogWarning("Category를 선택해주세요.");
+            Debug.LogWarning(
+                "Category를 선택해주세요."
+            );
             return;
         }
 
-        // Record Type 확인
+        // Record Type
         if (string.IsNullOrWhiteSpace(selectedRecordType))
         {
-            Debug.LogWarning("Record Type을 선택해주세요.");
+            Debug.LogWarning(
+                "Record Type을 선택해주세요."
+            );
             return;
         }
 
-        // Repeat 확인
+        // Period
         if (string.IsNullOrWhiteSpace(selectedPeriod))
         {
-            Debug.LogWarning("Repeat을 선택해주세요.");
+            Debug.LogWarning(
+                "Repeat을 선택해주세요."
+            );
             return;
         }
 
@@ -298,31 +373,87 @@ public class HabitGoalUI : MonoBehaviour
             selectedPeriod;
 
         // =========================================
-        // Record Type에 따른 목표값
+        // 목표값 결정
         // =========================================
         if (selectedRecordType == "check")
         {
-            request.TargetAmount = 1;
-            request.Unit = "check";
+            // Weekly Complete
+            // 예: 일주일에 운동 3회
+            if (selectedPeriod == "weekly")
+            {
+                request.TargetAmount =
+                    amount;
+
+                request.Unit =
+                    "회";
+            }
+
+            // Daily Complete
+            else
+            {
+                request.TargetAmount =
+                    1;
+
+                request.Unit =
+                    "check";
+            }
         }
         else
         {
-            request.TargetAmount = amount;
+            // Value 방식
+            request.TargetAmount =
+                amount;
 
-            request.Unit =
-                unitDropdown
-                    .options[unitDropdown.value]
-                    .text
-                    .ToLower();
+            if (unitDropdown != null &&
+                unitDropdown.options.Count > 0)
+            {
+                request.Unit =
+                    unitDropdown
+                        .options[unitDropdown.value]
+                        .text;
+            }
+            else
+            {
+                request.Unit = "";
+            }
         }
 
-        Debug.Log("===== Habit Goal =====");
-        Debug.Log("Name : " + request.GoalName);
-        Debug.Log("Category : " + request.Category);
-        Debug.Log("RecordType : " + request.RecordType);
-        Debug.Log("Amount : " + request.TargetAmount);
-        Debug.Log("Unit : " + request.Unit);
-        Debug.Log("Period : " + request.Period);
+        // =========================================
+        // 요청 확인
+        // =========================================
+        Debug.Log(
+            "===== Habit Goal ====="
+        );
+
+        Debug.Log(
+            "Name : " +
+            request.GoalName
+        );
+
+        Debug.Log(
+            "Category : " +
+            request.Category
+        );
+
+        Debug.Log(
+            "RecordType : " +
+            request.RecordType
+        );
+
+        Debug.Log(
+            "Amount : " +
+            request.TargetAmount
+        );
+
+        Debug.Log(
+            "Unit : " +
+            request.Unit
+        );
+
+        Debug.Log(
+            "Period : " +
+            request.Period
+        );
 
         string json =
             JsonConvert.SerializeObject(
@@ -333,19 +464,34 @@ public class HabitGoalUI : MonoBehaviour
         Debug.Log(json);
 
         // =========================================
-        // API 실패 시 로컬 테스트용 데이터
+        // 서버 연결 실패 시 로컬 테스트 데이터
         // =========================================
         HabitGoalResponse localHabit =
             new HabitGoalResponse
             {
-                UserId = ApiClient.Instance.CurrentUserId,
-                GoalName = request.GoalName,
-                Category = request.Category,
-                RecordType = request.RecordType,
-                TargetAmount = request.TargetAmount,
-                Unit = request.Unit,
-                Period = request.Period,
-                IsActive = true
+                UserId =
+                    ApiClient.Instance.CurrentUserId,
+
+                GoalName =
+                    request.GoalName,
+
+                Category =
+                    request.Category,
+
+                RecordType =
+                    request.RecordType,
+
+                TargetAmount =
+                    request.TargetAmount,
+
+                Unit =
+                    request.Unit,
+
+                Period =
+                    request.Period,
+
+                IsActive =
+                    true
             };
 
         HabitGoalResponse habitToAdd = null;
@@ -358,11 +504,22 @@ public class HabitGoalUI : MonoBehaviour
 
             if (response != null)
             {
-                habitToAdd = response;
+                habitToAdd =
+                    response;
 
-                Debug.Log("===== API Success =====");
-                Debug.Log("Goal ID : " + response.Id);
-                Debug.Log("Message : " + response.Message);
+                Debug.Log(
+                    "===== API Success ====="
+                );
+
+                Debug.Log(
+                    "Goal ID : " +
+                    response.Id
+                );
+
+                Debug.Log(
+                    "Message : " +
+                    response.Message
+                );
             }
             else
             {
@@ -370,28 +527,32 @@ public class HabitGoalUI : MonoBehaviour
                     "API 응답이 비어있어 로컬 데이터로 표시합니다."
                 );
 
-                habitToAdd = localHabit;
+                habitToAdd =
+                    localHabit;
             }
         }
         catch (System.Exception e)
         {
             Debug.LogWarning(
-                "Habit API 연결 실패 - 로컬 데이터로 추가합니다.\n"
-                + e.Message
+                "Habit API 연결 실패 - 로컬 데이터로 추가합니다.\n" +
+                e.Message
             );
 
-            habitToAdd = localHabit;
+            habitToAdd =
+                localHabit;
         }
 
         // =========================================
-        // Habit 리스트에 추가
+        // Habit List에 추가
         // =========================================
         HabitListManager listManager =
             FindObjectOfType<HabitListManager>();
 
         if (listManager != null)
         {
-            listManager.AddHabit(habitToAdd);
+            listManager.AddHabit(
+                habitToAdd
+            );
         }
         else
         {

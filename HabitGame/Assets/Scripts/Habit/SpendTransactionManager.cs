@@ -44,34 +44,19 @@ public class SpendTransactionManager : MonoBehaviour
                 return;
             }
 
-            // 기존 UI 제거 후 서버 데이터로 다시 표시
             ClearTransactions();
 
             Debug.Log(
                 $"거래내역 조회 성공 : {transactions.Count}건"
             );
 
-            foreach (SpendingTransactionResponse transaction in transactions)
+            foreach (SpendingTransactionResponse transaction
+                     in transactions)
             {
                 if (transaction == null)
                     continue;
 
-                string date =
-                    transaction.RecordedAt;
-
-                if (DateTime.TryParse(
-                    transaction.RecordedAt,
-                    out DateTime parsedDate))
-                {
-                    date =
-                        parsedDate.ToString("yyyy.MM.dd");
-                }
-
-                AddTransaction(
-                    transaction.Category,
-                    transaction.Amount,
-                    date
-                );
+                CreateTransactionItem(transaction);
             }
         }
         catch (Exception e)
@@ -84,66 +69,14 @@ public class SpendTransactionManager : MonoBehaviour
     }
 
     // =========================================
-    // 테스트용 거래내역
+    // 서버 거래내역 Item 생성
     // =========================================
-    private void CreateTestTransactions()
+    private void CreateTransactionItem(
+        SpendingTransactionResponse transaction)
     {
-        AddTransaction(
-            "Cafe",
-            5000,
-            "2026.08.17"
-        );
+        if (transaction == null)
+            return;
 
-        AddTransaction(
-            "Food",
-            12000,
-            "2026.08.17"
-        );
-
-        AddTransaction(
-            "Transport",
-            1500,
-            "2026.08.16"
-        );
-
-        AddTransaction(
-            "Shopping",
-            30000,
-            "2026.08.15"
-        );
-
-        AddTransaction(
-            "Convenience Store",
-            8500,
-            "2026.08.14"
-        );
-    }
-
-    // =========================================
-    // 사용자가 직접 소비 기록 추가할 때
-    // =========================================
-    public void AddTransaction(
-        string category,
-        int amount)
-    {
-        string date =
-            DateTime.Now.ToString("yyyy.MM.dd");
-
-        AddTransaction(
-            category,
-            amount,
-            date
-        );
-    }
-
-    // =========================================
-    // 거래내역 Item 생성 공통 함수
-    // =========================================
-    private void AddTransaction(
-        string category,
-        int amount,
-        string date)
-    {
         if (content == null)
         {
             Debug.LogWarning(
@@ -166,19 +99,12 @@ public class SpendTransactionManager : MonoBehaviour
                 content
             );
 
+        // -----------------------------------------
+        // Category
+        // -----------------------------------------
         Transform categoryTransform =
             newItem.transform.Find(
                 "CategoryText"
-            );
-
-        Transform amountTransform =
-            newItem.transform.Find(
-                "AmountText"
-            );
-
-        Transform dateTransform =
-            newItem.transform.Find(
-                "DateText"
             );
 
         if (categoryTransform != null)
@@ -190,11 +116,20 @@ public class SpendTransactionManager : MonoBehaviour
             if (categoryText != null)
             {
                 categoryText.text =
-                    string.IsNullOrWhiteSpace(category)
+                    string.IsNullOrWhiteSpace(
+                        transaction.Category)
                         ? "-"
-                        : category;
+                        : transaction.Category;
             }
         }
+
+        // -----------------------------------------
+        // Amount
+        // -----------------------------------------
+        Transform amountTransform =
+            newItem.transform.Find(
+                "AmountText"
+            );
 
         if (amountTransform != null)
         {
@@ -206,10 +141,18 @@ public class SpendTransactionManager : MonoBehaviour
             {
                 amountText.text =
                     "-" +
-                    amount.ToString("N0") +
+                    transaction.Amount.ToString("N0") +
                     "₩";
             }
         }
+
+        // -----------------------------------------
+        // Date
+        // -----------------------------------------
+        Transform dateTransform =
+            newItem.transform.Find(
+                "DateText"
+            );
 
         if (dateTransform != null)
         {
@@ -219,6 +162,19 @@ public class SpendTransactionManager : MonoBehaviour
 
             if (dateText != null)
             {
+                string date =
+                    transaction.RecordedAt;
+
+                if (DateTime.TryParse(
+                        transaction.RecordedAt,
+                        out DateTime parsedDate))
+                {
+                    date =
+                        parsedDate.ToString(
+                            "yyyy.MM.dd"
+                        );
+                }
+
                 dateText.text =
                     string.IsNullOrWhiteSpace(date)
                         ? "-"
@@ -226,8 +182,103 @@ public class SpendTransactionManager : MonoBehaviour
             }
         }
 
+        // -----------------------------------------
+        // 거래 ID + 기존 예외 상태 전달
+        // -----------------------------------------
+        SpendTransactionItem transactionItem =
+            newItem.GetComponent<SpendTransactionItem>();
+
+        if (transactionItem != null)
+        {
+            transactionItem.SetData(
+                transaction
+            );
+        }
+        else
+        {
+            Debug.LogWarning(
+                "TransactionItem Prefab에 " +
+                "SpendTransactionItem이 없습니다."
+            );
+        }
+
         Debug.Log(
-            $"거래내역 추가 : {category} / {amount:N0}₩ / {date}"
+            $"거래내역 추가 : " +
+            $"{transaction.Id} / " +
+            $"{transaction.Category} / " +
+            $"{transaction.Amount:N0}₩ / " +
+            $"Exception={transaction.IsException}"
+        );
+    }
+
+    // =========================================
+    // 테스트용 거래내역
+    // =========================================
+    private void CreateTestTransactions()
+    {
+        CreateTransactionItem(
+            new SpendingTransactionResponse
+            {
+                Id = 1,
+                Category = "Cafe",
+                Amount = 5000,
+                RecordedAt = "2026-08-17",
+                IsException = false,
+                ExceptionReason = ""
+            }
+        );
+
+        CreateTransactionItem(
+            new SpendingTransactionResponse
+            {
+                Id = 2,
+                Category = "Food",
+                Amount = 12000,
+                RecordedAt = "2026-08-17",
+                IsException = false,
+                ExceptionReason = ""
+            }
+        );
+
+        CreateTransactionItem(
+            new SpendingTransactionResponse
+            {
+                Id = 3,
+                Category = "Transport",
+                Amount = 1500,
+                RecordedAt = "2026-08-16",
+                IsException = true,
+                ExceptionReason = "사용자 지정 예외"
+            }
+        );
+    }
+
+    // =========================================
+    // 사용자가 직접 소비 기록 추가할 때
+    // =========================================
+    public void AddTransaction(
+        string category,
+        int amount)
+    {
+        SpendingTransactionResponse transaction =
+            new SpendingTransactionResponse
+            {
+                // 직접 입력 소비는 아직 서버 ID가 없음
+                Id = -1,
+
+                Category = category,
+                Amount = amount,
+                RecordedAt =
+                    DateTime.Now.ToString(
+                        "yyyy-MM-dd"
+                    ),
+
+                IsException = false,
+                ExceptionReason = ""
+            };
+
+        CreateTransactionItem(
+            transaction
         );
     }
 
