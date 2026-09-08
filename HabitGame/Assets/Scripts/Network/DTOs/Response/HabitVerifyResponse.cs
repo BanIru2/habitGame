@@ -17,7 +17,7 @@ public class HabitVerifyResponse
     [JsonProperty("detectedAction")]
     public string DetectedAction { get; set; }
 
-    // »πµÊ«“ ¥ÎªÛ ∆Øº∫
+    // »πµÊ«“ ¥ÎªÛ ∆Øº∫ (Fire, Water, Grass, Aurora)
     [JsonProperty("rewardAttribute")]
     public string RewardAttribute { get; set; }
 

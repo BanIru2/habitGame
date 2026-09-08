@@ -15,6 +15,7 @@ public class HabitItem : MonoBehaviour
 
     // 이 HabitItem의 습관 데이터
     private HabitGoalResponse habitData;
+    public HabitGoalResponse HabitData => habitData;
 
     // API 중복 요청 방지
     private bool isSubmitting = false;
