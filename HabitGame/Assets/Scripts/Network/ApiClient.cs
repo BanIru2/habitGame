@@ -91,6 +91,19 @@ public class ApiClient : Singleton<ApiClient>
     {
         return SendAsync<TResponse>("POST", path, body);
     }
+
+    /// <summary>
+    /// 사진 파일(byte[])과 일반 텍스트 데이터를 묶어서 전송하는 멀티파트 POST 함수 (외부접근용)
+    /// </summary>
+    /// <typeparam name="TResponse">응답받을 DTO 타입</typeparam>
+    /// <param name="path">요청 주소 (예: "/api/habits/verify")</param>
+    /// <param name="formData">사진 파일 및 텍스트 파라미터 리스트</param>
+    /// <param name="timeoutSeconds">타임아웃 (AI 분석 대기 기본 45초)</param>
+    public Task<TResponse> PostMultipartAsync<TResponse>(string path, List<IMultipartFormSection> formData, int timeoutSeconds = 45)
+    {
+        return SendMultipartAsync<TResponse>(path, formData, timeoutSeconds);
+    }
+
     /// <summary>
     /// ���� �����͸� �Ϻ� �����ϱ� ���� ������ ������ ������ ���� �Լ�
     /// </summary>
@@ -186,6 +199,82 @@ public class ApiClient : Singleton<ApiClient>
             return default;
 
         // Json ���ڿ��� C#Ŭ����(��û���� Task<TResponse> Ÿ��)�� ������ȭ - await�� TResponse ���� ��� ����
+        return JsonConvert.DeserializeObject<TResponse>(responseText);
+    }
+
+    // 멀티파트 데이터의 서버 연동 시도 관리
+    private async Task<TResponse> SendMultipartAsync<TResponse>(string path, List<IMultipartFormSection> formData, int timeoutSeconds)
+    {
+        AuthenticationSnapshot authentication = CaptureAuthentication();
+
+        try
+        {
+            return await SendMultipartOnceAsync<TResponse>(path, formData, authentication.AccessToken, timeoutSeconds);
+        }
+        catch (ApiException exception) when (
+            exception.StatusCode == 401 && CanAttemptRefresh(path, authentication))
+        {
+            Task refreshTask = GetOrStartRefreshTask(authentication);
+
+            try
+            {
+                await refreshTask;
+            }
+            catch (Exception refreshException)
+            {
+                if (IsAuthenticationExpired(refreshException))
+                    HandleAuthenticationExpired();
+
+                throw;
+            }
+
+            AuthenticationSnapshot retryAuthentication = CaptureAuthentication();
+
+            try
+            {
+                return await SendMultipartOnceAsync<TResponse>(
+                    path,
+                    formData,
+                    retryAuthentication.AccessToken,
+                    timeoutSeconds
+                );
+            }
+            catch (ApiException retryException) when (retryException.StatusCode == 401)
+            {
+                HandleAuthenticationExpired();
+                throw;
+            }
+        }
+    }
+
+    // 멀티파트 데이터에 대한 서버 요청 및 응답 수령 후 역직렬화를 시도
+    private async Task<TResponse> SendMultipartOnceAsync<TResponse>(string path, List<IMultipartFormSection> formData, string accessToken, int timeoutSeconds)
+    {
+        string url = BASE_URL + path;
+        // UnityWebRequest.Post가 multipart boundary와 헤더를 자동으로 생성해 줌
+        using UnityWebRequest request = UnityWebRequest.Post(url, formData);
+        request.timeout = timeoutSeconds;
+
+        request.SetRequestHeader("Accept", "application/json");
+        if (!string.IsNullOrEmpty(accessToken))
+            request.SetRequestHeader("Authorization", "Bearer " + accessToken);
+
+        UnityWebRequestAsyncOperation operation = request.SendWebRequest();
+        while (!operation.isDone)
+            await Task.Yield();
+
+        string responseText = request.downloadHandler != null
+            ? request.downloadHandler.text : string.Empty;
+
+        if (request.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError($"[ApiClient] POST (Multipart) {url} failed\nStatus: {request.responseCode}\nBody: {responseText}");
+            throw ApiException.FromResponse(request.responseCode, request.error, responseText);
+        }
+
+        if (string.IsNullOrWhiteSpace(responseText))
+            return default;
+
         return JsonConvert.DeserializeObject<TResponse>(responseText);
     }
 
