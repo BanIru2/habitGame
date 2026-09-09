@@ -18,6 +18,18 @@ public class HabitListManager : MonoBehaviour
     [SerializeField]
     private HabitSummaryManager summaryManager;
 
+    private void Start()
+    {
+        // 테스트용 습관 1개 생성해서 화면에 꽂아주기!
+        AddHabit(new HabitGoalResponse
+        {
+            Id = 1,                 // 백엔드 mock DB의 '물 2L 마시기' ID
+            GoalName = "물 2L 마시기",
+            RecordType = "photo",   // 사진 인증 타입
+            Category = "biorhythm"
+        });
+    }
+
     // =========================================
     // Habit 하나 추가
     // =========================================

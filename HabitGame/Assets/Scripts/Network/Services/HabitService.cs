@@ -63,7 +63,7 @@ public class HabitService
     }
 
     // 생활 습관 사진 인증 요청
-    public Task<HabitVerifyResponse> VerifyHabitPhotoAsync(long goalId, byte[] photoBytes)
+    public Task<HabitVerifyResponse> VerifyHabitPhotoAsync(long goalId, byte[] photoBytes, int achievedAmount)
     {
         if (goalId <= 0) throw new ArgumentException("유효하지 않은 goalId입니다.", nameof(goalId));
 
@@ -75,6 +75,8 @@ public class HabitService
             // 멀티파트폼 데이터 섹션 : 목표Id
             // 필드명, 목표id 저장
             new MultipartFormDataSection("goalId", goalId.ToString()),
+            // CreateHabitRecordRequeset를 사용한 DB 접근을 하지 않도록 하기 위해 필드 추가
+            new MultipartFormDataSection("achievedAmount", achievedAmount.ToString()),
             // 멀티파트폼 파일 섹션 : 사진데이터
             // 필드명, 사진데이터(바이트배열), 파일명, 확장자 타입(MIME) 저장
             new MultipartFormFileSection("photo", photoBytes, "habit_photo.jpg", "image/jpeg")

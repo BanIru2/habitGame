@@ -99,7 +99,7 @@ public class ApiClient : Singleton<ApiClient>
     /// <param name="path">요청 주소 (예: "/api/habits/verify")</param>
     /// <param name="formData">사진 파일 및 텍스트 파라미터 리스트</param>
     /// <param name="timeoutSeconds">타임아웃 (AI 분석 대기 기본 45초)</param>
-    public Task<TResponse> PostMultipartAsync<TResponse>(string path, List<IMultipartFormSection> formData, int timeoutSeconds = 45)
+    public Task<TResponse> PostMultipartAsync<TResponse>(string path, List<IMultipartFormSection> formData, int timeoutSeconds = 120)
     {
         return SendMultipartAsync<TResponse>(path, formData, timeoutSeconds);
     }

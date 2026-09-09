@@ -32,6 +32,4 @@ public class HabitVerifyResponse
     // 연속 달성 일수
     [JsonProperty("currentStreak")]
     public int CurrentStreak { get; set; }
-
-
 }

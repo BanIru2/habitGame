@@ -12,6 +12,7 @@ public class HabitItem : MonoBehaviour
 
     private HabitSummaryManager summaryManager;
     private HabitDetailManager detailManager;
+    private PhotoVerificationManager photoVerificationManager;
 
     // 이 HabitItem의 습관 데이터
     private HabitGoalResponse habitData;
@@ -19,6 +20,8 @@ public class HabitItem : MonoBehaviour
 
     // API 중복 요청 방지
     private bool isSubmitting = false;
+    // 인증 성공 여부 저장
+    private bool isSuccessVerify = false;
 
     private void Start()
     {
@@ -27,6 +30,8 @@ public class HabitItem : MonoBehaviour
 
         detailManager =
             FindObjectOfType<HabitDetailManager>();
+
+        photoVerificationManager = FindObjectOfType<PhotoVerificationManager>();
 
         // =========================================
         // Toggle 이벤트
@@ -96,7 +101,37 @@ public class HabitItem : MonoBehaviour
             return;
         }
 
+        if(habitData.RecordType == "photo")
+        {
+            if (photoVerificationManager == null)
+            {
+                photoVerificationManager = FindObjectOfType<PhotoVerificationManager>();
+            }
+            
+            // 체크박스 끄기
+            if (completeToggle != null) completeToggle.SetIsOnWithoutNotify(false);    
+
+            // achievedAmount 전달인자 값 1로 임시 세팅상태. 입력 받는 기능 추가 후 수정 필요 
+            if (photoVerificationManager != null)
+                photoVerificationManager.ActivatePhotoVerificationPopup(this, habitData.Id, 1);
+            return;
+        }
+
         await SubmitHabitRecord();
+    }
+
+    public void GetSuccessOrFailToVerify(bool result, int currentStreak = 0)
+    {
+        if (completeToggle == null) return;
+        completeToggle.SetIsOnWithoutNotify(result);
+        completeToggle.interactable = !result;
+
+        if(result && currentStreak > 0 && habitData != null)
+        {
+            habitData.StreakCount = currentStreak;
+        }
+
+        RefreshSummary();
     }
 
     // =========================================
