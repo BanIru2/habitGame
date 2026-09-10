@@ -25,7 +25,8 @@ public class HabitListManager : MonoBehaviour
         {
             Id = 1,                 // 백엔드 mock DB의 '물 2L 마시기' ID
             GoalName = "물 2L 마시기",
-            RecordType = "photo",   // 사진 인증 타입
+            RecordType = "check",
+            VerificationType = "photo",    // 사진 인증 타입
             Category = "biorhythm"
         });
     }

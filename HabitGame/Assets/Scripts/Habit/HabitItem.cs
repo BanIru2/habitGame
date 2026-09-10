@@ -101,7 +101,7 @@ public class HabitItem : MonoBehaviour
             return;
         }
 
-        if(habitData.RecordType == "photo")
+        if(habitData.VerificationType == "photo")
         {
             if (photoVerificationManager == null)
             {
@@ -109,11 +109,12 @@ public class HabitItem : MonoBehaviour
             }
             
             // 체크박스 끄기
-            if (completeToggle != null) completeToggle.SetIsOnWithoutNotify(false);    
+            if (completeToggle != null) completeToggle.SetIsOnWithoutNotify(false);
 
-            // achievedAmount 전달인자 값 1로 임시 세팅상태. 입력 받는 기능 추가 후 수정 필요 
+            // achievedAmount 전달인자 값 체크 타입이 아닌 목표의 경우 TargetAmount로 임시 세팅상태. 입력 받는 기능 추가 후 수정 필요 
+            int achievedAmount = (habitData.RecordType == "check") ? 1 : habitData.TargetAmount;
             if (photoVerificationManager != null)
-                photoVerificationManager.ActivatePhotoVerificationPopup(this, habitData.Id, 1);
+                photoVerificationManager.ActivatePhotoVerificationPopup(this, habitData.Id, achievedAmount);
             return;
         }
 

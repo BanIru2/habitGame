@@ -23,6 +23,10 @@ public class HabitGoalResponse
     [JsonProperty("recordType")]
     public string RecordType { get; set; }
 
+    // 인증 방식 (Photo, none ...)
+    [JsonProperty("verificationType")]
+    public string VerificationType { get; set; }
+
     // 목표로 하는 수치
     [JsonProperty("targetAmount")]
     public int TargetAmount { get; set; }
