@@ -40,6 +40,23 @@ public class SpendingService
         );
     }
 
+    // 특수 목표 생성
+    public Task<SpendingSpecialGoalResponse> CreateSpecialGoalAsync(
+        CreateSpendingGoalRequest request)
+    {
+        if (request == null)
+            throw new System.ArgumentNullException(nameof(request));
+
+        request.UserId = apiClient.CurrentUserId;
+
+        return apiClient.PostAsync<
+            CreateSpendingGoalRequest,
+            SpendingSpecialGoalResponse>(
+            "/spending/goals",
+            request
+        );
+    }
+
     // 예외 비용 처리
     public Task<SpendingOverviewResponse> UpdateExceptionAsync(UpdateSpendingExceptionRequest request)
     {

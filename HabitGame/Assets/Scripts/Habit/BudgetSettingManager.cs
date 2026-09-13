@@ -16,20 +16,42 @@ public class BudgetSettingManager : MonoBehaviour
     private SpendingService spendingService;
     private HabitUIManager uiManager;
 
+    private const string BudgetWeekKey =
+        "SpendingBudget_WeekKey";
+
     private void Start()
     {
-        spendingService = ServiceRegistry.Instance.Spending;
-        uiManager = FindObjectOfType<HabitUIManager>();
+        spendingService =
+            ServiceRegistry.Instance.Spending;
+
+        uiManager =
+            HabitUIManager.Instance;
 
         if (saveButton != null)
             saveButton.onClick.AddListener(OnClickSave);
 
         if (backButton != null)
             backButton.onClick.AddListener(OnClickBack);
+
+        RefreshBudgetSettingState();
     }
 
     private async void OnClickSave()
     {
+        // =========================================
+        // 이번 주 예산 중복 설정 확인
+        // =========================================
+        if (IsBudgetAlreadySetThisWeek())
+        {
+            Debug.LogWarning(
+                "이번 주 주간예산은 이미 설정되었습니다. " +
+                "다음 주 월요일부터 다시 설정할 수 있습니다."
+            );
+
+            RefreshBudgetSettingState();
+            return;
+        }
+
         if (budgetInput == null)
         {
             Debug.LogWarning(
@@ -79,18 +101,7 @@ public class BudgetSettingManager : MonoBehaviour
                     "===== LOCAL MODE : 예산 설정 ====="
                 );
 
-                if (SpendBudgetManager.Instance != null)
-                {
-                    SpendBudgetManager.Instance.SetWeeklyBudget(
-                        budget
-                    );
-
-                    // 로컬 테스트용 임시 ID
-                    SpendBudgetManager.Instance.SetBudgetId(
-                        -1
-                    );
-                }
-                else
+                if (SpendBudgetManager.Instance == null)
                 {
                     Debug.LogWarning(
                         "SpendBudgetManager.Instance가 없습니다."
@@ -98,13 +109,28 @@ public class BudgetSettingManager : MonoBehaviour
                     return;
                 }
 
+                SpendBudgetManager.Instance.SetWeeklyBudget(
+                    budget
+                );
+
+                SpendBudgetManager.Instance.SetBudgetId(
+                    -1
+                );
+
+                SaveCurrentBudgetWeek();
+
                 Debug.Log(
-                    $"Local Budget Amount : {budget}"
+                    $"Local Budget Amount : {budget:N0}원"
+                );
+
+                Debug.Log(
+                    $"Budget Week : {GetCurrentWeekKey()}"
                 );
 
                 budgetInput.text = "";
 
-                CloseBudgetPanel();
+                // 예산 저장 후 특수목표 설정 화면으로 이동
+                OpenSpecialGoalSetting();
 
                 return;
             }
@@ -145,23 +171,23 @@ public class BudgetSettingManager : MonoBehaviour
                 return;
             }
 
-            if (SpendBudgetManager.Instance != null)
-            {
-                SpendBudgetManager.Instance.SetBudgetId(
-                    response.Id
-                );
-
-                SpendBudgetManager.Instance.SetWeeklyBudget(
-                    response.BudgetAmount
-                );
-            }
-            else
+            if (SpendBudgetManager.Instance == null)
             {
                 Debug.LogWarning(
                     "SpendBudgetManager.Instance가 없습니다."
                 );
                 return;
             }
+
+            SpendBudgetManager.Instance.SetBudgetId(
+                response.Id
+            );
+
+            SpendBudgetManager.Instance.SetWeeklyBudget(
+                response.BudgetAmount
+            );
+
+            SaveCurrentBudgetWeek();
 
             Debug.Log(
                 "===== 예산 저장 성공 ====="
@@ -172,12 +198,17 @@ public class BudgetSettingManager : MonoBehaviour
             );
 
             Debug.Log(
-                $"Budget Amount : {response.BudgetAmount}"
+                $"Budget Amount : {response.BudgetAmount:N0}원"
+            );
+
+            Debug.Log(
+                $"Budget Week : {GetCurrentWeekKey()}"
             );
 
             budgetInput.text = "";
 
-            CloseBudgetPanel();
+            // 예산 저장 후 특수목표 설정 화면으로 이동
+            OpenSpecialGoalSetting();
         }
         catch (Exception e)
         {
@@ -188,8 +219,7 @@ public class BudgetSettingManager : MonoBehaviour
         }
         finally
         {
-            if (saveButton != null)
-                saveButton.interactable = true;
+            RefreshBudgetSettingState();
         }
     }
 
@@ -199,6 +229,107 @@ public class BudgetSettingManager : MonoBehaviour
             budgetInput.text = "";
 
         CloseBudgetPanel();
+    }
+
+    // =========================================
+    // 예산 저장 후 특수목표 설정 화면으로 이동
+    // =========================================
+    private void OpenSpecialGoalSetting()
+    {
+        if (uiManager != null)
+        {
+            uiManager.OpenSpendAddPanel();
+        }
+        else
+        {
+            Debug.LogWarning(
+                "HabitUIManager를 찾을 수 없습니다."
+            );
+        }
+    }
+
+    // =========================================
+    // 이번 주 예산 설정 여부
+    // =========================================
+    public bool IsBudgetAlreadySetThisWeek()
+    {
+        string savedWeekKey =
+            PlayerPrefs.GetString(
+                BudgetWeekKey,
+                ""
+            );
+
+        string currentWeekKey =
+            GetCurrentWeekKey();
+
+        return savedWeekKey ==
+               currentWeekKey;
+    }
+
+    // =========================================
+    // 현재 주 저장
+    // =========================================
+    private void SaveCurrentBudgetWeek()
+    {
+        string currentWeekKey =
+            GetCurrentWeekKey();
+
+        PlayerPrefs.SetString(
+            BudgetWeekKey,
+            currentWeekKey
+        );
+
+        PlayerPrefs.Save();
+    }
+
+    // =========================================
+    // 월요일 기준 Week Key
+    // =========================================
+    private string GetCurrentWeekKey()
+    {
+        DateTime today =
+            DateTime.Now.Date;
+
+        int daysSinceMonday =
+            ((int)today.DayOfWeek + 6) % 7;
+
+        DateTime monday =
+            today.AddDays(
+                -daysSinceMonday
+            );
+
+        return monday.ToString(
+            "yyyy-MM-dd"
+        );
+    }
+
+    // =========================================
+    // UI 상태 갱신
+    // =========================================
+    private void RefreshBudgetSettingState()
+    {
+        bool alreadySet =
+            IsBudgetAlreadySetThisWeek();
+
+        if (saveButton != null)
+        {
+            saveButton.interactable =
+                !alreadySet;
+        }
+
+        if (budgetInput != null)
+        {
+            budgetInput.interactable =
+                !alreadySet;
+        }
+
+        if (alreadySet)
+        {
+            Debug.Log(
+                "이번 주 주간예산 설정 완료 - " +
+                "다음 주 월요일에 다시 설정 가능합니다."
+            );
+        }
     }
 
     private void CloseBudgetPanel()
@@ -213,12 +344,40 @@ public class BudgetSettingManager : MonoBehaviour
         }
     }
 
+#if UNITY_EDITOR
+
+    [ContextMenu("TEST - Reset Weekly Budget Lock")]
+    private void ResetWeeklyBudgetLockForTest()
+    {
+        PlayerPrefs.DeleteKey(
+            BudgetWeekKey
+        );
+
+        PlayerPrefs.Save();
+
+        RefreshBudgetSettingState();
+
+        Debug.Log(
+            "주간예산 설정 제한 테스트 데이터가 초기화되었습니다."
+        );
+    }
+
+#endif
+
     private void OnDestroy()
     {
         if (saveButton != null)
-            saveButton.onClick.RemoveListener(OnClickSave);
+        {
+            saveButton.onClick.RemoveListener(
+                OnClickSave
+            );
+        }
 
         if (backButton != null)
-            backButton.onClick.RemoveListener(OnClickBack);
+        {
+            backButton.onClick.RemoveListener(
+                OnClickBack
+            );
+        }
     }
 }

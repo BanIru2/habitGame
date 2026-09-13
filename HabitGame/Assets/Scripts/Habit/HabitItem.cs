@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,11 +11,19 @@ public class HabitItem : MonoBehaviour
     [Header("Detail")]
     [SerializeField] private Button labelButton;
 
+    [Header("Progress")]
+    [SerializeField] private Slider progressBar;
+    [SerializeField] private TextMeshProUGUI progressText;
+
     private HabitSummaryManager summaryManager;
     private HabitDetailManager detailManager;
 
     // 이 HabitItem의 습관 데이터
     private HabitGoalResponse habitData;
+
+    // 현재 누적 달성량
+    // 현재는 클라이언트 실행 중에만 유지되는 임시 값
+    private int currentAmount = 0;
 
     // API 중복 요청 방지
     private bool isSubmitting = false;
@@ -44,6 +53,8 @@ public class HabitItem : MonoBehaviour
             labelButton.onClick
                 .AddListener(OnClickLabel);
         }
+
+        RefreshProgressUI();
     }
 
     // =========================================
@@ -52,6 +63,20 @@ public class HabitItem : MonoBehaviour
     public void SetData(HabitGoalResponse data)
     {
         habitData = data;
+
+        /*
+         * 현재 HabitGoalResponse에는
+         * 서버에 저장된 현재 누적 달성량이 없음.
+         *
+         * 따라서 새로 생성된 HabitItem은
+         * 우선 0부터 시작.
+         *
+         * 추후 백엔드에서 currentAmount 같은 값을
+         * 내려주면 이 부분에서 연결하면 됨.
+         */
+        currentAmount = 0;
+
+        RefreshProgressUI();
     }
 
     // =========================================
@@ -66,7 +91,7 @@ public class HabitItem : MonoBehaviour
             return;
         }
 
-        // 이미 서버 요청 중이면 중복 실행 방지
+        // 이미 처리 중이면 중복 실행 방지
         if (isSubmitting)
         {
             return;
@@ -82,26 +107,159 @@ public class HabitItem : MonoBehaviour
             return;
         }
 
-        // 로컬 테스트 데이터인 경우
-        // 서버에서 생성된 ID가 없을 수 있음
-        if (habitData.Id <= 0)
+        // 이미 목표 달성 상태라면 추가 기록 방지
+        if (IsGoalCompleted())
         {
-            Debug.LogWarning(
-                "Habit Goal ID가 없습니다.\n" +
-                "현재 Habit이 로컬 테스트 데이터일 가능성이 있습니다."
-            );
-
-            RefreshSummary();
+            SetCompletedState();
             return;
         }
 
-        await SubmitHabitRecord();
+        // =========================================
+        // Value 타입
+        // 실제 달성량 입력 Overlay 표시
+        // =========================================
+        if (habitData.RecordType == "value")
+        {
+            if (AchievedAmountOverlay.Instance == null)
+            {
+                Debug.LogWarning(
+                    "AchievedAmountOverlay를 찾을 수 없습니다."
+                );
+
+                ResetToggle();
+                return;
+            }
+
+            if (completeToggle != null)
+            {
+                completeToggle.interactable = false;
+            }
+
+            AchievedAmountOverlay.Instance.Open(
+                habitData,
+                OnAchievedAmountConfirmed,
+                OnAchievedAmountCancelled
+            );
+
+            return;
+        }
+
+        // =========================================
+        // Check 타입
+        // 한 번 체크할 때마다 1씩 달성
+        // =========================================
+
+        // 로컬 Habit
+        if (habitData.Id <= 0)
+        {
+            HandleLocalHabitRecord(1);
+            return;
+        }
+
+        // 실제 서버 Habit
+        await SubmitHabitRecord(1);
+    }
+
+    // =========================================
+    // 달성량 입력 Confirm
+    // =========================================
+    private async void OnAchievedAmountConfirmed(
+        int achievedAmount)
+    {
+        if (habitData == null)
+        {
+            Debug.LogWarning(
+                "Habit 데이터가 없습니다."
+            );
+
+            ResetToggle();
+            return;
+        }
+
+        if (achievedAmount <= 0)
+        {
+            Debug.LogWarning(
+                "달성량은 0보다 커야 합니다."
+            );
+
+            ResetToggle();
+            return;
+        }
+
+        // =========================================
+        // 로컬 Habit
+        // =========================================
+        if (habitData.Id <= 0)
+        {
+            HandleLocalHabitRecord(
+                achievedAmount
+            );
+
+            return;
+        }
+
+        // =========================================
+        // 실제 서버 Habit
+        // =========================================
+        await SubmitHabitRecord(
+            achievedAmount
+        );
+    }
+
+    // =========================================
+    // 달성량 입력 Cancel
+    // =========================================
+    private void OnAchievedAmountCancelled()
+    {
+        ResetToggle();
+    }
+
+    // =========================================
+    // 로컬 Habit 기록 처리
+    // =========================================
+    private void HandleLocalHabitRecord(
+        int achievedAmount)
+    {
+        Debug.Log(
+            "===== LOCAL Habit Record ====="
+        );
+
+        Debug.Log(
+            "Habit Name : " +
+            habitData.GoalName
+        );
+
+        Debug.Log(
+            "Record Type : " +
+            habitData.RecordType
+        );
+
+        Debug.Log(
+            "Achieved Amount : " +
+            achievedAmount
+        );
+
+        Debug.Log(
+            "Unit : " +
+            habitData.Unit
+        );
+
+        Debug.Log(
+            "서버 ID가 없는 로컬 Habit이므로 " +
+            "API 요청 없이 UI 테스트만 처리합니다."
+        );
+
+        // 달성량 누적
+        AddProgress(
+            achievedAmount
+        );
     }
 
     // =========================================
     // Habit 실천 기록 저장
     // =========================================
-    private async Task SubmitHabitRecord()
+    private async Task SubmitHabitRecord(
+        int achievedAmount)
     {
         isSubmitting = true;
 
@@ -126,25 +284,8 @@ public class HabitItem : MonoBehaviour
              * 현재 로그인 사용자 ID로 설정함.
              */
 
-            // =========================================
-            // 달성량 설정
-            // =========================================
-            if (habitData.RecordType == "check")
-            {
-                request.AchievedAmount = 1;
-            }
-            else
-            {
-                /*
-                 * 현재 UI에는 실제 달성량 입력창이 없으므로
-                 * Toggle 체크 시 목표량 전체를 완료한 것으로 처리.
-                 *
-                 * 추후 실제 달성량 입력 UI를 만들면
-                 * 이 부분을 수정하면 됨.
-                 */
-                request.AchievedAmount =
-                    habitData.TargetAmount;
-            }
+            request.AchievedAmount =
+                achievedAmount;
 
             // 현재 인증 이미지 기능은 사용하지 않음
             request.ProofImageUrl = null;
@@ -210,7 +351,7 @@ public class HabitItem : MonoBehaviour
             );
 
             // =========================================
-            // 서버에서 Record ID가 정상적으로 생성됐는지 확인
+            // Record ID 확인
             // =========================================
             if (recordResponse.Id <= 0)
             {
@@ -219,9 +360,16 @@ public class HabitItem : MonoBehaviour
                     "보상을 요청할 수 없습니다."
                 );
 
-                RefreshSummary();
+                ResetToggle();
                 return;
             }
+
+            // =========================================
+            // 기록 성공 → 현재 진행률 반영
+            // =========================================
+            AddProgress(
+                achievedAmount
+            );
 
             // =========================================
             // 이미 보상을 받은 Record라면
@@ -242,20 +390,6 @@ public class HabitItem : MonoBehaviour
                     recordResponse.Id
                 );
             }
-
-            // =========================================
-            // Summary 갱신
-            // =========================================
-            RefreshSummary();
-
-            /*
-             * 현재 기록 취소 API가 확인되지 않았기 때문에
-             * 성공한 Habit은 다시 체크 해제하지 못하도록 함.
-             */
-            if (completeToggle != null)
-            {
-                completeToggle.interactable = false;
-            }
         }
         catch (System.Exception e)
         {
@@ -271,15 +405,205 @@ public class HabitItem : MonoBehaviour
             isSubmitting = false;
 
             /*
-             * 실패해서 Toggle이 OFF 상태인 경우에만
-             * 다시 클릭할 수 있도록 함.
+             * 목표 미달 상태라면
+             * 다음 기록을 다시 입력할 수 있게 함.
              */
             if (completeToggle != null &&
-                !completeToggle.isOn)
+                !IsGoalCompleted())
             {
                 completeToggle.interactable = true;
             }
         }
+    }
+
+    // =========================================
+    // 진행률 누적
+    // =========================================
+    private void AddProgress(
+        int achievedAmount)
+    {
+        currentAmount += achievedAmount;
+
+        int targetAmount =
+            GetTargetAmount();
+
+        // 목표량을 초과해서 표시하지 않도록 제한
+        if (currentAmount > targetAmount)
+        {
+            currentAmount = targetAmount;
+        }
+
+        Debug.Log(
+            "===== Habit Progress ====="
+        );
+
+        Debug.Log(
+            "Current : " +
+            currentAmount
+        );
+
+        Debug.Log(
+            "Target : " +
+            targetAmount
+        );
+
+        RefreshProgressUI();
+
+        // =========================================
+        // 목표 달성 여부에 따라 Toggle 상태 변경
+        // =========================================
+        if (IsGoalCompleted())
+        {
+            SetCompletedState();
+        }
+        else
+        {
+            SetInProgressState();
+        }
+
+        RefreshSummary();
+    }
+
+    // =========================================
+    // 목표량 반환
+    // =========================================
+    private int GetTargetAmount()
+    {
+        if (habitData == null)
+        {
+            return 1;
+        }
+
+        if (habitData.TargetAmount <= 0)
+        {
+            return 1;
+        }
+
+        return habitData.TargetAmount;
+    }
+
+    // =========================================
+    // 목표 완료 여부
+    // =========================================
+    private bool IsGoalCompleted()
+    {
+        int targetAmount =
+            GetTargetAmount();
+
+        return currentAmount >= targetAmount;
+    }
+
+    // =========================================
+    // 진행 중 상태
+    // =========================================
+    private void SetInProgressState()
+    {
+        if (completeToggle != null)
+        {
+            completeToggle
+                .SetIsOnWithoutNotify(false);
+
+            completeToggle.interactable =
+                true;
+        }
+    }
+
+    // =========================================
+    // 완료 상태
+    // =========================================
+    private void SetCompletedState()
+    {
+        if (completeToggle != null)
+        {
+            completeToggle
+                .SetIsOnWithoutNotify(true);
+
+            completeToggle.interactable =
+                false;
+        }
+
+        RefreshProgressUI();
+        RefreshSummary();
+    }
+
+    // =========================================
+    // 진행률 UI 갱신
+    // =========================================
+    private void RefreshProgressUI()
+    {
+        if (habitData == null)
+        {
+            if (progressBar != null)
+            {
+                progressBar.minValue = 0f;
+                progressBar.maxValue = 1f;
+                progressBar.value = 0f;
+            }
+
+            if (progressText != null)
+            {
+                progressText.text =
+                    "0 / 0";
+            }
+
+            return;
+        }
+
+        int targetAmount =
+            GetTargetAmount();
+
+        float progress =
+            targetAmount <= 0
+                ? 0f
+                : (float)currentAmount /
+                  targetAmount;
+
+        progress =
+            Mathf.Clamp01(progress);
+
+        if (progressBar != null)
+        {
+            progressBar.minValue = 0f;
+            progressBar.maxValue = 1f;
+            progressBar.value = progress;
+        }
+
+        if (progressText != null)
+        {
+            progressText.text =
+                GetProgressText(
+                    currentAmount,
+                    targetAmount
+                );
+        }
+    }
+
+    // =========================================
+    // 진행률 Text 생성
+    // =========================================
+    private string GetProgressText(
+        int current,
+        int target)
+    {
+        if (habitData == null)
+        {
+            return "0 / 0";
+        }
+
+        string unit =
+            habitData.Unit;
+
+        // Complete형에서 unit이 check면
+        // 화면에는 표시하지 않음
+        if (string.IsNullOrWhiteSpace(unit) ||
+            unit.ToLower() == "check")
+        {
+            return
+                $"{current} / {target}";
+        }
+
+        return
+            $"{current} / {target} {unit}";
     }
 
     // =========================================
@@ -370,7 +694,7 @@ public class HabitItem : MonoBehaviour
              * Record 저장은 성공했는데
              * Reward만 실패할 수도 있음.
              *
-             * 그래서 여기서는 Toggle 자체를
+             * 그래서 여기서는 Habit 기록 자체를
              * 실패 처리하지 않음.
              */
             Debug.LogWarning(
@@ -387,10 +711,6 @@ public class HabitItem : MonoBehaviour
     {
         if (completeToggle != null)
         {
-            /*
-             * 이벤트를 다시 발생시키지 않고
-             * Toggle만 OFF로 변경
-             */
             completeToggle
                 .SetIsOnWithoutNotify(false);
 
