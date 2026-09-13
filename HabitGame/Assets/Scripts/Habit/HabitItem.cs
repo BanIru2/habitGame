@@ -17,16 +17,23 @@ public class HabitItem : MonoBehaviour
 
     private HabitSummaryManager summaryManager;
     private HabitDetailManager detailManager;
+    private PhotoVerificationManager photoVerificationManager;
 
     // 이 HabitItem의 습관 데이터
     private HabitGoalResponse habitData;
+    public HabitGoalResponse HabitData => habitData;
 
     // 현재 누적 달성량
     // 현재는 클라이언트 실행 중에만 유지되는 임시 값
     private int currentAmount = 0;
 
+    // 최근 입력한 달성량 저장
+    private int pendingAchievedAmount = 1;
+
     // API 중복 요청 방지
     private bool isSubmitting = false;
+    // 인증 성공 여부 저장
+    private bool isSuccessVerify = false;
 
     private void Start()
     {
@@ -35,6 +42,8 @@ public class HabitItem : MonoBehaviour
 
         detailManager =
             FindObjectOfType<HabitDetailManager>();
+
+        photoVerificationManager = FindObjectOfType<PhotoVerificationManager>();
 
         // =========================================
         // Toggle 이벤트
@@ -149,6 +158,13 @@ public class HabitItem : MonoBehaviour
         // 한 번 체크할 때마다 1씩 달성
         // =========================================
 
+        // 사진 인증 목표인 경우
+        if (habitData.VerificationType == "photo")
+        {
+            TryVerifyPhoto(1);
+            return;
+        }
+
         // 로컬 Habit
         if (habitData.Id <= 0)
         {
@@ -183,6 +199,13 @@ public class HabitItem : MonoBehaviour
             );
 
             ResetToggle();
+            return;
+        }
+
+        // 사진 인증 목표인 경우
+        if (habitData.VerificationType == "photo")
+        {
+            TryVerifyPhoto(achievedAmount);
             return;
         }
 
@@ -253,6 +276,41 @@ public class HabitItem : MonoBehaviour
         AddProgress(
             achievedAmount
         );
+    }
+
+    private void TryVerifyPhoto(int achievedAmount)
+    {
+        pendingAchievedAmount = achievedAmount;
+
+        if (photoVerificationManager == null)
+        {
+            photoVerificationManager = FindObjectOfType<PhotoVerificationManager>();
+        }
+
+        // 체크박스 끄기
+        if (completeToggle != null) completeToggle.SetIsOnWithoutNotify(false);
+
+        if (photoVerificationManager != null)
+        {
+            photoVerificationManager.ActivatePhotoVerificationPopup(this, habitData.Id, achievedAmount);
+        }
+    }
+
+    public void GetSuccessOrFailToVerify(bool result, int currentStreak = 0)
+    {
+        if (completeToggle == null) return;
+
+        if(result)
+        {
+            if (currentStreak > 0 && habitData != null)
+            {
+                habitData.StreakCount = currentStreak;
+            }
+            AddProgress(pendingAchievedAmount);
+            return;
+        }
+
+        ResetToggle();
     }
 
     // =========================================

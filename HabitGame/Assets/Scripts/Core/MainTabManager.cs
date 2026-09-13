@@ -7,7 +7,7 @@ using UnityEngine.UI;
 /// <summary>
 /// 탭 이동을 관장하는 매니저 클래스
 /// </summary>
-public class MainTapManager : Singleton<MainTapManager>
+public class MainTabManager : Singleton<MainTabManager>
 {
     [Header("각 탭의 부모 오브젝트")]
     [SerializeField]
