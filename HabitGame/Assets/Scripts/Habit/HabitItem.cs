@@ -15,6 +15,9 @@ public class HabitItem : MonoBehaviour
     [SerializeField] private Slider progressBar;
     [SerializeField] private TextMeshProUGUI progressText;
 
+    [Header("Streak")]
+    [SerializeField] private TextMeshProUGUI streakText;
+
     private HabitSummaryManager summaryManager;
     private HabitDetailManager detailManager;
     private PhotoVerificationManager photoVerificationManager;
@@ -86,6 +89,7 @@ public class HabitItem : MonoBehaviour
         currentAmount = 0;
 
         RefreshProgressUI();
+        RefreshStreakUI();
     }
 
     // =========================================
@@ -306,6 +310,7 @@ public class HabitItem : MonoBehaviour
             {
                 habitData.StreakCount = currentStreak;
             }
+            RefreshStreakUI();
             AddProgress(pendingAchievedAmount);
             return;
         }
@@ -634,8 +639,44 @@ public class HabitItem : MonoBehaviour
                     targetAmount
                 );
         }
+        RefreshStreakUI();
     }
+    // =========================================
+    // Streak UI 갱신
+    // =========================================
+    private void RefreshStreakUI()
+    {
+        if (streakText == null)
+            return;
 
+        if (habitData == null)
+        {
+            streakText.gameObject.SetActive(false);
+            return;
+        }
+
+        bool isWeekly =
+            !string.IsNullOrEmpty(habitData.Period) &&
+            habitData.Period.Trim().Equals(
+                "weekly",
+                System.StringComparison.OrdinalIgnoreCase
+            );
+
+        streakText.gameObject.SetActive(isWeekly);
+
+        if (isWeekly)
+        {
+            streakText.text =
+                $"{habitData.StreakCount} Week Streak";
+        }
+
+        Debug.Log(
+            $"[Habit Streak] {habitData.GoalName} / " +
+            $"Period={habitData.Period} / " +
+            $"Streak={habitData.StreakCount} / " +
+            $"Weekly={isWeekly}"
+        );
+    }
     // =========================================
     // 진행률 Text 생성
     // =========================================
