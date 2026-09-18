@@ -25,6 +25,16 @@ public class ShopService
         );
     }
 
+
+    // ∞°√≠ ø‰√ª
+    public Task<GachaResponse> GachaAsync(GachaRequest request)
+    {
+        return apiClient.PostAsync<GachaRequest, GachaResponse>(
+            "/shop/gacha",
+            request
+        );
+    }
+
     public Task<List<InventoryItemResponse>> GetInventoryAsync(long userId)
     {
         return apiClient.GetAsync<List<InventoryItemResponse>>(

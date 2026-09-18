@@ -42,10 +42,14 @@ public class GachaManager : MonoBehaviour
     private GameObject[] gachaSlotPool = new GameObject[10];
     private int poolPointer = 0;
 
+    private ShopBackendManager shopBackendManager;
+
     private void Awake()
     {
         oneGachaButton.onClick.AddListener(() => DoGacha(1));
         tenGachaButton.onClick.AddListener(() => DoGacha(10));
+
+        shopBackendManager = FindObjectOfType<ShopBackendManager>();
     }
 
     // 가챠탭(상점)이 열릴 때 호출
@@ -107,8 +111,8 @@ public class GachaManager : MonoBehaviour
         return canGetList[0];
     }
 
-    public void DoGacha(int count)
-    {       
+    public async void DoGacha(int count)
+    {
         // 골드 조건 검사
         int cost = (count == 1) ? gachaCost : tenGachaCost;
         var charData = CharacterManager.Instance.characterStatusData;
@@ -125,20 +129,52 @@ public class GachaManager : MonoBehaviour
             return;
         }
 
-        // 골드 차감
-        // DB연동 추가 필요
-        charData.Gold -= cost;
-        ShopUIManager.Instance.UpdateGoldUI();
+        oneGachaButton.interactable = false;
+        tenGachaButton.interactable = false;
 
-        // 뽑기 결과 리스트를 만들고 요청 뽑기 횟수(1 or 10)만큼 뽑아서 담기!
-        List<EquipmentDataSO> results = new List<EquipmentDataSO>(count);
-        for (int i = 0; i < count; i++)
+        try
         {
-            results.Add(PickOneItem());
-        }
+            List<EquipmentDataSO> results = new List<EquipmentDataSO>(count);
+            List<string> itemIds = new List<string>(count);
+            // 가챠돌리기
+            for (int i = 0; i < count; i++)
+            {
+                EquipmentDataSO pickedItem = PickOneItem();
+                results.Add(pickedItem);
+                itemIds.Add(pickedItem.itemId);
+            }
 
-        // 결과 팝업 화면에 띄우기!
-        ShowGachaResult(results);
+            // 백엔드 저장 요청
+            GachaResponse response = await shopBackendManager.GachaAsync(count, itemIds);
+
+            if (response == null)
+            {
+                Debug.LogError("가챠 응답 데이터가 null입니다.");
+                return;
+            }
+
+            // 골드 동기화 (캐릭터 전체 재요청 X, 골드 변수 하나만 갱신)
+            charData.Gold = response.RemainingGold;
+            ShopUIManager.Instance.UpdateGoldUI(response.RemainingGold);
+
+            // 결과 팝업 화면에 띄우기
+            ShowGachaResult(results);
+        }
+        catch (ApiException e)
+        {
+            Debug.LogError($"가챠 API 실패 ({e.StatusCode}): {e.Message}");
+            ErrorPopupManager.Instance.ShowApiError(e);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"가챠 시스템 오류: {e.Message}");
+            ErrorPopupManager.Instance.ShowSystemError();
+        }
+        finally
+        {
+            oneGachaButton.interactable = true;
+            tenGachaButton.interactable = true;
+        }
     }
 
     // --------------------------- 결과 처리 --------------------------------

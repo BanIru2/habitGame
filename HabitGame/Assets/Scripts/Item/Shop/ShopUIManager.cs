@@ -438,12 +438,12 @@ public class ShopUIManager : Singleton<ShopUIManager>
     }
 
     // °¡Ã­ ÈÄ °ñµå UI °»½Å
-    public void UpdateGoldUI()
+    public void UpdateGoldUI(int curGold)
     {
         var charData = CharacterManager.Instance.characterStatusData;
         if (charData != null && goldText != null)
         {
-            goldText.text = $"{charData.Gold} G";
+            goldText.text = $"{curGold.ToString()} G";
         }
     }
 }

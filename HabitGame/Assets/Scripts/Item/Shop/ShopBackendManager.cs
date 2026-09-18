@@ -20,4 +20,15 @@ public class ShopBackendManager : MonoBehaviour
 
         return await ServiceRegistry.Instance.Shop.PurchaseItemAsync(request);
     }
+
+    public async Task<GachaResponse> GachaAsync(int count, List<string> itemIds)
+    {
+        GachaRequest request = new GachaRequest
+        {
+            UserId = ApiClient.Instance.CurrentUserId,
+            Count = count,
+            ItemIds = itemIds
+        };
+        return await ServiceRegistry.Instance.Shop.GachaAsync(request);
+    }
 }
