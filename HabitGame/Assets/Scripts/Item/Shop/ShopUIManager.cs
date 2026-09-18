@@ -20,6 +20,8 @@ public class ShopUIManager : Singleton<ShopUIManager>
     private ShopItemSlotUI itemSlotPrefab;
     [SerializeField]
     private Transform itemSlotParent;
+    [SerializeField]
+    private GameObject shopScrollView;
 
     private readonly List<ShopItemSlotUI> slotPool = new List<ShopItemSlotUI>();    // 아이템 정보를 출력할 슬롯 pool
 
@@ -64,6 +66,8 @@ public class ShopUIManager : Singleton<ShopUIManager>
     [SerializeField]
     private Button purchasePopupCloseButton;
 
+    private GachaManager gachaManager;
+
     protected override void Awake()
     {
         base.Awake();
@@ -75,6 +79,8 @@ public class ShopUIManager : Singleton<ShopUIManager>
         closeButton.onClick.AddListener(ClosePopup);
 
         purchasePopupCloseButton.onClick.AddListener(ClosePurchaseFailPopup);
+
+        gachaManager = FindObjectOfType<GachaManager>();
     }
 
     public async Task OpenShop()
@@ -168,15 +174,18 @@ public class ShopUIManager : Singleton<ShopUIManager>
         return viewDataList;
     }
 
-    // 장비 아이템 출력 (장비 버튼 onClick)
+    // 장비 아이템 가챠 출력 (장비 버튼 onClick)
     public void ShowEquipmentItems()
     {
-        RenderItems(equipmentItems);
+        shopScrollView.SetActive(false);
+        gachaManager.OpenGachaPanel();
     }
 
     // 소비 아이템 출력 (소비 버튼 onClick)
     public void ShowConsumableItems()
     {
+        gachaManager.CloseGachaPanel();
+        shopScrollView.SetActive(true);
         RenderItems(consumableItems);
     }
 
@@ -406,4 +415,35 @@ public class ShopUIManager : Singleton<ShopUIManager>
         OpenPurchaseFailPopup(message);
     }
     // -----------------------------------------------------------------------------------
+
+    // 가챠시스템으로 리스트 전달
+    public List<EquipmentDataSO> GetUnlockedEquipmnetList()
+    {
+        List<EquipmentDataSO> unlockedList = new List<EquipmentDataSO>();
+
+        foreach(var data in equipmentItems)
+        {
+            if (data == null || data.ItemSO == null || data.ItemResponse == null) continue;
+
+            if(data.ItemResponse.PurchaseStatus != "REQUIREMENT_NOT_MET")
+            {
+                if(data.ItemSO is EquipmentDataSO equipSO)
+                {
+                    unlockedList.Add(equipSO);
+                }
+            }
+        }
+
+        return unlockedList;
+    }
+
+    // 가챠 후 골드 UI 갱신
+    public void UpdateGoldUI()
+    {
+        var charData = CharacterManager.Instance.characterStatusData;
+        if (charData != null && goldText != null)
+        {
+            goldText.text = $"{charData.Gold} G";
+        }
+    }
 }

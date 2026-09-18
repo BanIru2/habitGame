@@ -10641,6 +10641,7 @@ MonoBehaviour:
   consumablePanelButton: {fileID: 1981541517}
   itemSlotPrefab: {fileID: 541508143182013969, guid: ef5eb18ae4a681649b6d593e4ee09170, type: 3}
   itemSlotParent: {fileID: 1687970852}
+  shopScrollView: {fileID: 4729249235596113410}
   shopConfigSO: {fileID: 11400000, guid: c8d34535bf546ee4a9d44a9e362bd4c4, type: 2}
   shopBackendManager: {fileID: 3561288553597872746}
   itemDetailPopup: {fileID: 985027029}
@@ -35475,6 +35476,11 @@ RectTransform:
 --- !u!224 &4729249235596113409 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 3675963516497721374, guid: 545caedeb10c82c40bb4f0cfefc436ff, type: 3}
+  m_PrefabInstance: {fileID: 4729249235596113407}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &4729249235596113410 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3392836570722252203, guid: 545caedeb10c82c40bb4f0cfefc436ff, type: 3}
   m_PrefabInstance: {fileID: 4729249235596113407}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &9111801387107057511

@@ -36,11 +36,110 @@ public class GachaManager : MonoBehaviour
     private const int tenGachaCost = 5000;
 
     private List<EquipmentDataSO> canGetList;
+    private int totalWeight;
 
     // 결과 출력용 슬롯 풀링 변수들
     private GameObject[] gachaSlotPool = new GameObject[10];
     private int poolPointer = 0;
 
+    private void Awake()
+    {
+        oneGachaButton.onClick.AddListener(() => DoGacha(1));
+        tenGachaButton.onClick.AddListener(() => DoGacha(10));
+    }
+
+    // 가챠탭(상점)이 열릴 때 호출
+    public void OpenGachaPanel()
+    {
+        gachaPanel.SetActive(true);
+        GetList();
+        CalcWeight();
+    }
+
+    // 가챠탭 닫기
+    public void CloseGachaPanel()
+    {
+        gachaPanel.SetActive(false);
+    }
+
+    // 획득 가능 장비 리스트 세팅
+    private void GetList()
+    {
+        canGetList = ShopUIManager.Instance.GetUnlockedEquipmnetList();
+    }
+
+    private void CalcWeight()
+    {
+        totalWeight = 0;
+        foreach (var item in canGetList)
+        {
+            totalWeight += GetItemWeight(item);
+        }
+    }
+
+    // --------------------------- 뽑기 및 가중치 --------------------------------
+    private int GetItemWeight(EquipmentDataSO item)
+    {
+        if (item == null) return 0;
+
+        int reqLevel = item.unlockCondition.requiredAttributeLevel;
+        // 요구 레벨이 높을수록 가중치를 낮게 하여 확률 낮추기
+        if (reqLevel >= 7) return 5;
+        if (reqLevel >= 4) return 20;
+        if (reqLevel >= 1) return 50;
+        return 100;
+    }
+
+    private EquipmentDataSO PickOneItem()
+    {
+        // 0 ~ totalWeight 사이 랜덤 숫자 뽑기
+        int randomValue = Random.Range(0, totalWeight);
+        // 당첨 아이템 찾기 (누적 가중치 차감 방식)
+        foreach (var item in canGetList)
+        {
+            int weight = GetItemWeight(item);
+            if (randomValue < weight)
+            {
+                return item;    // 결정된 아이템
+            }
+            randomValue -= weight; // 랜덤 값에서 이번 순서 아이템 가중치를 빼고 다음으로 넘김
+        }
+        return canGetList[0];
+    }
+
+    public void DoGacha(int count)
+    {       
+        // 골드 조건 검사
+        int cost = (count == 1) ? gachaCost : tenGachaCost;
+        var charData = CharacterManager.Instance.characterStatusData;
+
+
+        if (charData == null)
+        {
+            Debug.LogError("캐릭터 데이터가 없습니다");
+            return;
+        }
+        if (charData.Gold < cost)
+        {
+            Debug.LogWarning("골드가 부족합니다");
+            return;
+        }
+
+        // 골드 차감
+        // DB연동 추가 필요
+        charData.Gold -= cost;
+        ShopUIManager.Instance.UpdateGoldUI();
+
+        // 뽑기 결과 리스트를 만들고 요청 뽑기 횟수(1 or 10)만큼 뽑아서 담기!
+        List<EquipmentDataSO> results = new List<EquipmentDataSO>(count);
+        for (int i = 0; i < count; i++)
+        {
+            results.Add(PickOneItem());
+        }
+
+        // 결과 팝업 화면에 띄우기!
+        ShowGachaResult(results);
+    }
 
     // --------------------------- 결과 처리 --------------------------------
     private void ShowGachaResult(List<EquipmentDataSO> results)
@@ -102,5 +201,4 @@ public class GachaManager : MonoBehaviour
         gachaResultPopup.SetActive(false);
         dim.SetActive(false);
     }
-
 }
