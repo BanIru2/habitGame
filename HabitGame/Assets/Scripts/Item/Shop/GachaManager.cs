@@ -113,6 +113,13 @@ public class GachaManager : MonoBehaviour
 
     public async void DoGacha(int count)
     {
+        if (canGetList == null || canGetList.Count == 0)
+        {
+            Debug.LogWarning("획득 가능한 장비 목록이 없습니다.");
+            ErrorPopupManager.Instance.ShowMessage("장비 목록을 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
+            return;
+        }
+
         // 골드 조건 검사
         int cost = (count == 1) ? gachaCost : tenGachaCost;
         var charData = CharacterManager.Instance.characterStatusData;
@@ -121,11 +128,13 @@ public class GachaManager : MonoBehaviour
         if (charData == null)
         {
             Debug.LogError("캐릭터 데이터가 없습니다");
+            ErrorPopupManager.Instance.ShowMessage("캐릭터 정보를 불러오지 못했습니다.");
             return;
         }
         if (charData.Gold < cost)
         {
             Debug.LogWarning("골드가 부족합니다");
+            ErrorPopupManager.Instance.ShowMessage("골드가 부족합니다.");
             return;
         }
 

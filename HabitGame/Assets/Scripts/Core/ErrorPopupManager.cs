@@ -41,6 +41,12 @@ public class ErrorPopupManager : Singleton<ErrorPopupManager>
         errorPopup.SetActive(true);
     }
 
+    public void ShowMessage(string message)
+    {
+        errorMessageText.text = message;
+        errorPopup.SetActive(true);
+    }
+
     private void ClosePopup()
     {
         errorMessageText.text = "";

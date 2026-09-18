@@ -443,7 +443,7 @@ public class ShopUIManager : Singleton<ShopUIManager>
         var charData = CharacterManager.Instance.characterStatusData;
         if (charData != null && goldText != null)
         {
-            goldText.text = $"{curGold.ToString()} G";
+            goldText.SetText("{0} G", curGold);
         }
     }
 }
