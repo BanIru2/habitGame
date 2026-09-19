@@ -40,6 +40,10 @@ public class SpendListManager : MonoBehaviour
         runtimePreviewItems =
             new List<GameObject>();
 
+    private readonly List<GameObject>
+        runtimeMainGoalItems =
+            new List<GameObject>();
+
     // 이번 주 특수목표 설정 완료 여부
     private const string SpecialGoalWeekKey =
         "SpendingSpecialGoal_WeekKey";
@@ -52,6 +56,9 @@ public class SpendListManager : MonoBehaviour
     private void Start()
     {
         uiManager = HabitUIManager.Instance;
+
+        if (spendItemPrefab != null)
+            spendItemPrefab.SetActive(false);
 
         if (skipButton != null)
             skipButton.onClick.AddListener(SkipSpecialGoals);
@@ -263,9 +270,47 @@ public class SpendListManager : MonoBehaviour
     // =========================================================
     // 소비 메인 화면 Additional Goal 생성
     // =========================================================
+    public void RefreshMainGoals(
+        List<SpendingSpecialGoalResponse> goals)
+    {
+        foreach (GameObject item in runtimeMainGoalItems)
+        {
+            if (item != null)
+                Destroy(item);
+        }
+
+        runtimeMainGoalItems.Clear();
+
+        if (goals == null)
+            return;
+
+        foreach (SpendingSpecialGoalResponse response in goals)
+        {
+            if (response == null || response.Id <= 0)
+            {
+                Debug.LogWarning(
+                    "소비 목표 ID가 없어 UI 항목을 생성하지 않습니다."
+                );
+                continue;
+            }
+
+            CreateMainGoalItem(
+                new CreateSpendingSpecialGoalData
+                {
+                    GoalName = response.GoalName,
+                    LimitAmount = response.LimitAmount,
+                    RewardGold = response.RewardGold
+                },
+                response.Id,
+                response.IsCompleted
+            );
+        }
+    }
+
     private void CreateMainGoalItem(
         CreateSpendingSpecialGoalData goal,
-        long specialGoalId = -1)
+        long specialGoalId = -1,
+        bool isCompleted = false)
     {
         if (goal == null)
             return;
@@ -293,6 +338,9 @@ public class SpendListManager : MonoBehaviour
                 spendItemPrefab,
                 mainContent
             );
+
+        newItem.SetActive(true);
+        runtimeMainGoalItems.Add(newItem);
 
         Transform goalNameTransform =
             newItem.transform.Find(
@@ -356,18 +404,15 @@ public class SpendListManager : MonoBehaviour
             toggle.SetIsOnWithoutNotify(false);
         }
 
-        // 서버에서 생성된 ID가 있다면 SpendGoalItem에 전달
-        if (specialGoalId > 0)
-        {
-            SpendGoalItem spendGoalItem =
-                newItem.GetComponent<SpendGoalItem>();
+        SpendGoalItem spendGoalItem =
+            newItem.GetComponent<SpendGoalItem>();
 
-            if (spendGoalItem != null)
-            {
-                spendGoalItem.SetSpecialGoalId(
-                    specialGoalId
-                );
-            }
+        if (spendGoalItem != null)
+        {
+            spendGoalItem.Initialize(
+                specialGoalId,
+                isCompleted
+            );
         }
 
         Debug.Log(
@@ -535,6 +580,14 @@ public class SpendListManager : MonoBehaviour
                 {
                     throw new Exception(
                         $"특수목표 저장 응답이 없습니다. " +
+                        $"Goal : {goal.GoalName}"
+                    );
+                }
+
+                if (response.Id <= 0)
+                {
+                    throw new Exception(
+                        $"특수목표 생성 응답에 ID가 없습니다. " +
                         $"Goal : {goal.GoalName}"
                     );
                 }

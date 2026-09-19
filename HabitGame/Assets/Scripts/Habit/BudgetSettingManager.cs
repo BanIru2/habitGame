@@ -19,6 +19,9 @@ public class BudgetSettingManager : MonoBehaviour
     private const string BudgetWeekKey =
         "SpendingBudget_WeekKey";
 
+    private const string SpecialGoalWeekKey =
+        "SpendingSpecialGoal_WeekKey";
+
     private void Start()
     {
         spendingService =
@@ -359,6 +362,20 @@ public class BudgetSettingManager : MonoBehaviour
 
         Debug.Log(
             "주간예산 설정 제한 테스트 데이터가 초기화되었습니다."
+        );
+    }
+
+    [ContextMenu("TEST - Reset Special Goal Lock")]
+    private void ResetSpecialGoalLockForTest()
+    {
+        PlayerPrefs.DeleteKey(
+            SpecialGoalWeekKey
+        );
+
+        PlayerPrefs.Save();
+
+        Debug.Log(
+            "[TEST] 특수목표 주간 설정 잠금 초기화 완료"
         );
     }
 

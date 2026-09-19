@@ -27,9 +27,16 @@ public class SpendGoalItem : MonoBehaviour
         }
     }
 
-    public void SetSpecialGoalId(long id)
+    public void Initialize(long id, bool isCompleted)
     {
         specialGoalId = id;
+        rewarded = isCompleted;
+
+        if (completeToggle != null)
+        {
+            completeToggle.SetIsOnWithoutNotify(isCompleted);
+            completeToggle.interactable = id > 0 && !isCompleted;
+        }
 
         Debug.Log(
             $"SpendGoalItem SpecialGoalId 설정 : {id}"
@@ -72,27 +79,25 @@ public class SpendGoalItem : MonoBehaviour
 
         try
         {
-            // 1. 특수 목표 달성 상태 업데이트
             UpdateSpendingSpecialGoalStatusRequest
-                statusRequest =
+                request =
                     new UpdateSpendingSpecialGoalStatusRequest
                     {
-                        SpecialGoalId = specialGoalId,
-                        IsAchieved = true
+                        GoalId = specialGoalId
                     };
 
             Debug.Log(
                 "===== 특수 목표 달성 상태 업데이트 ====="
             );
 
-            SpendingSpecialGoalResponse
-                updatedGoal =
+            SpendingSpecialGoalRewardClaimResponse
+                response =
                     await spendingService
-                        .UpdateSpecialGoalStatusAsync(
-                            statusRequest
+                        .CompleteGoalAsync(
+                            request
                         );
 
-            if (updatedGoal == null)
+            if (response == null || !response.IsCompleted)
             {
                 Debug.LogWarning(
                     "특수 목표 상태 업데이트 응답이 비어있습니다."
@@ -106,42 +111,12 @@ public class SpendGoalItem : MonoBehaviour
                 $"특수 목표 달성 처리 성공 : {specialGoalId}"
             );
 
-            // 2. 달성 처리 성공 후 보상 요청
-            SpendingSpecialGoalRewardClaimRequest
-                rewardRequest =
-                    new SpendingSpecialGoalRewardClaimRequest
-                    {
-                        SpecialGoalId = specialGoalId
-                    };
-
-            Debug.Log(
-                "===== 특수 목표 보상 요청 시작 ====="
-            );
-
-            SpendingSpecialGoalRewardClaimResponse
-                rewardResponse =
-                    await spendingService
-                        .ClaimSpecialGoalRewardAsync(
-                            rewardRequest
-                        );
-
-            if (rewardResponse == null)
-            {
-                Debug.LogWarning(
-                    "특수 목표 보상 API 응답이 비어있습니다."
-                );
-
-                // 목표 달성 자체는 서버에 이미 저장됐으므로
-                // Toggle은 유지한다.
-                return;
-            }
-
             rewarded = true;
 
             if (SpendRewardManager.Instance != null)
             {
                 SpendRewardManager.Instance.SetGold(
-                    rewardResponse.Gold
+                    response.TotalGold
                 );
             }
             else
@@ -160,11 +135,11 @@ public class SpendGoalItem : MonoBehaviour
             );
 
             Debug.Log(
-                $"Earned Gold : {rewardResponse.EarnedGold}"
+                $"Earned Gold : {response.RewardGold}"
             );
 
             Debug.Log(
-                $"Total Gold : {rewardResponse.Gold}"
+                $"Total Gold : {response.TotalGold}"
             );
         }
         catch (Exception e)
