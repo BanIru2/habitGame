@@ -66,11 +66,14 @@ public class SpendingService
         );
     }
 
-    // 특수 목표 성공/실패 결정
-    public Task<SpendingSpecialGoalResponse> UpdateSpecialGoalStatusAsync(UpdateSpendingSpecialGoalStatusRequest request)
+    // 소비 목표 완료 및 보상 지급
+    public Task<SpendingSpecialGoalRewardClaimResponse> CompleteGoalAsync(
+        UpdateSpendingSpecialGoalStatusRequest request)
     {
-        return apiClient.PatchAsync<UpdateSpendingSpecialGoalStatusRequest, SpendingSpecialGoalResponse>(
-            "/spending/special-goals/status",
+        return apiClient.PostAsync<
+            UpdateSpendingSpecialGoalStatusRequest,
+            SpendingSpecialGoalRewardClaimResponse>(
+            "/spending/goals/complete",
             request
         );
     }
@@ -84,12 +87,4 @@ public class SpendingService
         );
     }
 
-    // 특수 목표 보상 수령
-    public Task<SpendingSpecialGoalRewardClaimResponse> ClaimSpecialGoalRewardAsync(SpendingSpecialGoalRewardClaimRequest request)
-    {
-        return apiClient.PostAsync<SpendingSpecialGoalRewardClaimRequest, SpendingSpecialGoalRewardClaimResponse>(
-            "/spending/special-goals/rewards/claim",
-            request
-        );
-    }
 }

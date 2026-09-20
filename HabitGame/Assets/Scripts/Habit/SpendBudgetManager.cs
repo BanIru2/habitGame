@@ -76,6 +76,16 @@ public class SpendBudgetManager : MonoBehaviour
             usedMoney =
                 response.CurrentSpent;
 
+            SpendListManager[] spendListManagers =
+                FindObjectsOfType<SpendListManager>(true);
+
+            foreach (SpendListManager spendListManager in spendListManagers)
+            {
+                spendListManager.RefreshMainGoals(
+                    response.Goals
+                );
+            }
+
             RefreshUI();
 
             Debug.Log(
