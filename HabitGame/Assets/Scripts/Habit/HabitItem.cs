@@ -18,6 +18,13 @@ public class HabitItem : MonoBehaviour
     [Header("Streak")]
     [SerializeField] private TextMeshProUGUI streakText;
 
+    [Header("Streak Reward")]
+    [SerializeField] private StreakRewardPopup streakRewardPopup;
+
+    // 같은 실행 중 동일 Streak 마일스톤 중복 처리 방지
+    // 영구적인 중복 지급 방지는 서버에서 처리해야 함.
+    private int lastProcessedStreakMilestone = -1;
+
     private HabitSummaryManager summaryManager;
     private HabitDetailManager detailManager;
     private PhotoVerificationManager photoVerificationManager;
@@ -47,6 +54,11 @@ public class HabitItem : MonoBehaviour
             FindObjectOfType<HabitDetailManager>();
 
         photoVerificationManager = FindObjectOfType<PhotoVerificationManager>();
+
+        if (streakRewardPopup == null)
+        {
+            streakRewardPopup = FindObjectOfType<StreakRewardPopup>(true);
+        }
 
         // =========================================
         // Toggle 이벤트
@@ -304,12 +316,17 @@ public class HabitItem : MonoBehaviour
     {
         if (completeToggle == null) return;
 
-        if(result)
+        if (result)
         {
             if (currentStreak > 0 && habitData != null)
             {
                 habitData.StreakCount = currentStreak;
+
+                // 사진 인증 응답으로 Streak가 갱신된 경우
+                // Daily 10일 / Weekly 2주 단위 보상 마일스톤 확인
+                CheckStreakReward();
             }
+
             RefreshStreakUI();
             AddProgress(pendingAchievedAmount);
             return;
@@ -678,6 +695,150 @@ public class HabitItem : MonoBehaviour
         );
     }
     // =========================================
+    // Streak 보상 마일스톤 확인
+    // =========================================
+    private void CheckStreakReward()
+    {
+        if (habitData == null)
+            return;
+
+        int streakCount = habitData.StreakCount;
+
+        if (streakCount <= 0)
+            return;
+
+        string period = habitData.Period;
+
+        if (string.IsNullOrWhiteSpace(period))
+            return;
+
+        bool isDaily =
+            period.Trim().Equals(
+                "daily",
+                System.StringComparison.OrdinalIgnoreCase
+            );
+
+        bool isWeekly =
+            period.Trim().Equals(
+                "weekly",
+                System.StringComparison.OrdinalIgnoreCase
+            );
+
+        bool isRewardMilestone = false;
+
+        // Daily: 10 / 20 / 30 ... 일마다 보상
+        if (isDaily)
+        {
+            isRewardMilestone =
+                streakCount >= 10 &&
+                streakCount % 10 == 0;
+        }
+
+        // Weekly: 2 / 4 / 6 ... 주마다 보상
+        if (isWeekly)
+        {
+            isRewardMilestone =
+                streakCount >= 2 &&
+                streakCount % 2 == 0;
+        }
+
+        if (!isRewardMilestone)
+            return;
+
+        // 현재 실행 중 같은 HabitItem에서 동일 마일스톤 중복 처리 방지
+        if (lastProcessedStreakMilestone == streakCount)
+        {
+            Debug.Log(
+                $"[Streak Reward] 이미 처리한 마일스톤입니다. " +
+                $"Goal={habitData.GoalName}, Streak={streakCount}"
+            );
+            return;
+        }
+
+        lastProcessedStreakMilestone = streakCount;
+
+        HandleStreakReward(
+            streakCount,
+            isDaily,
+            isWeekly
+        );
+    }
+
+    // =========================================
+    // Streak 보상 처리
+    // =========================================
+    private void HandleStreakReward(
+        int streakCount,
+        bool isDaily,
+        bool isWeekly)
+    {
+        Debug.Log("===== Habit Streak Reward =====");
+        Debug.Log($"Goal ID : {habitData.Id}");
+        Debug.Log($"Goal Name : {habitData.GoalName}");
+        Debug.Log($"Period : {habitData.Period}");
+        Debug.Log($"Streak : {streakCount}");
+        Debug.Log("Reward : Trait Ticket x1");
+
+        /*
+         * TODO - Backend 연동
+         *
+         * 현재 InventoryService에는 탐색권을 '지급'하는 API가 없음.
+         * 현재 단계에서는 Streak 마일스톤 감지,
+         * 클라이언트 중복 실행 방지, 보상 팝업 표시까지만 처리함.
+         *
+         * 추후 서버 지급 API가 추가되면 이 위치에서 호출하고,
+         * 실제 지급 성공 응답을 받은 뒤 팝업을 표시하도록 변경하면 됨.
+         *
+         * 영구 중복 지급 방지는
+         * userId + goalId + milestone 기준으로 서버에서 처리 필요.
+         */
+
+        ShowStreakRewardPopup(
+            streakCount,
+            isDaily,
+            isWeekly
+        );
+    }
+
+    // =========================================
+    // Streak 보상 팝업 표시
+    // =========================================
+    private void ShowStreakRewardPopup(
+        int streakCount,
+        bool isDaily,
+        bool isWeekly)
+    {
+        if (streakRewardPopup == null)
+        {
+            streakRewardPopup =
+                FindObjectOfType<StreakRewardPopup>(true);
+        }
+
+        if (streakRewardPopup == null)
+        {
+            Debug.LogWarning(
+                "StreakRewardPopup을 찾을 수 없습니다."
+            );
+            return;
+        }
+
+        if (isDaily)
+        {
+            streakRewardPopup.ShowDailyReward(
+                streakCount
+            );
+            return;
+        }
+
+        if (isWeekly)
+        {
+            streakRewardPopup.ShowWeeklyReward(
+                streakCount
+            );
+        }
+    }
+
+    // =========================================
     // 진행률 Text 생성
     // =========================================
     private string GetProgressText(
@@ -858,7 +1019,44 @@ public class HabitItem : MonoBehaviour
             habitData
         );
     }
+    // =========================================
+    // TEST - Daily Streak Reward
+    // 최종 정리 시 삭제
+    // =========================================
+    [ContextMenu("TEST Daily 10 Day Streak Reward")]
+    private void TestDailyStreakReward()
+    {
+        if (habitData == null)
+        {
+            Debug.LogWarning("Habit 데이터가 없어 테스트할 수 없습니다.");
+            return;
+        }
 
+        habitData.Period = "daily";
+        habitData.StreakCount = 10;
+
+        RefreshStreakUI();
+        CheckStreakReward();
+    }
+    // =========================================
+    // TEST - Weekly Streak Reward
+    // 최종 정리 시 삭제
+    // =========================================
+    [ContextMenu("TEST Weekly 2 Week Streak Reward")]
+    private void TestWeeklyStreakReward()
+    {
+        if (habitData == null)
+        {
+            Debug.LogWarning("Habit 데이터가 없어 테스트할 수 없습니다.");
+            return;
+        }
+
+        habitData.Period = "weekly";
+        habitData.StreakCount = 2;
+
+        RefreshStreakUI();
+        CheckStreakReward();
+    }
     // =========================================
     // 이벤트 제거
     // =========================================
