@@ -33,7 +33,19 @@ public class HabitGoalUI : MonoBehaviour
     public Button dailyButton;
     public Button weeklyButton;
 
+    // =========================================
+    // Long-term
+    // =========================================
+    public Button longTermButton;
+    public GameObject durationPanel;
+    public TMP_InputField durationInput;
+
     private string selectedPeriod = "";
+
+    // Long-term은 현재 백엔드 DTO에 기간 필드가 없으므로
+    // 로컬 테스트용으로만 보관
+    private int selectedDurationDays = 0;
+
 
     // =========================================
     // Add Habit 화면이 켜질 때마다 초기화
@@ -42,6 +54,7 @@ public class HabitGoalUI : MonoBehaviour
     {
         ResetForm();
     }
+
 
     // =========================================
     // 입력 폼 초기화
@@ -69,6 +82,7 @@ public class HabitGoalUI : MonoBehaviour
         if (growthButton != null)
             growthButton.image.color = Color.white;
 
+
         // -------------------------
         // Record Type 초기화
         // -------------------------
@@ -80,6 +94,7 @@ public class HabitGoalUI : MonoBehaviour
         if (valueButton != null)
             valueButton.image.color = Color.white;
 
+
         // -------------------------
         // Period 초기화
         // -------------------------
@@ -90,6 +105,22 @@ public class HabitGoalUI : MonoBehaviour
 
         if (weeklyButton != null)
             weeklyButton.image.color = Color.white;
+
+        if (longTermButton != null)
+            longTermButton.image.color = Color.white;
+
+
+        // -------------------------
+        // Long-term 초기화
+        // -------------------------
+        selectedDurationDays = 0;
+
+        if (durationInput != null)
+            durationInput.text = "";
+
+        if (durationPanel != null)
+            durationPanel.SetActive(false);
+
 
         // -------------------------
         // Amount 초기화
@@ -107,6 +138,7 @@ public class HabitGoalUI : MonoBehaviour
 
         UpdateAmountPanel();
     }
+
 
     // =========================================
     // Complete 방식
@@ -130,6 +162,7 @@ public class HabitGoalUI : MonoBehaviour
         UpdateAmountPanel();
     }
 
+
     // =========================================
     // Value 방식
     // =========================================
@@ -152,6 +185,7 @@ public class HabitGoalUI : MonoBehaviour
         UpdateAmountPanel();
     }
 
+
     // =========================================
     // Amount 증가
     // =========================================
@@ -165,6 +199,7 @@ public class HabitGoalUI : MonoBehaviour
                 amount.ToString();
         }
     }
+
 
     // =========================================
     // Amount 감소
@@ -182,6 +217,7 @@ public class HabitGoalUI : MonoBehaviour
                 amount.ToString();
         }
     }
+
 
     // =========================================
     // Category 선택
@@ -238,6 +274,7 @@ public class HabitGoalUI : MonoBehaviour
         }
     }
 
+
     // =========================================
     // Period 선택
     // =========================================
@@ -251,6 +288,11 @@ public class HabitGoalUI : MonoBehaviour
         if (weeklyButton != null)
             weeklyButton.image.color = Color.white;
 
+        if (longTermButton != null)
+            longTermButton.image.color = Color.white;
+
+
+        // Daily
         if (period == "daily")
         {
             if (dailyButton != null)
@@ -258,7 +300,12 @@ public class HabitGoalUI : MonoBehaviour
                 dailyButton.image.color =
                     new Color(0.9f, 1f, 0.9f);
             }
+
+            if (durationPanel != null)
+                durationPanel.SetActive(false);
         }
+
+        // Weekly
         else if (period == "weekly")
         {
             if (weeklyButton != null)
@@ -266,10 +313,27 @@ public class HabitGoalUI : MonoBehaviour
                 weeklyButton.image.color =
                     new Color(0.9f, 1f, 0.9f);
             }
+
+            if (durationPanel != null)
+                durationPanel.SetActive(false);
+        }
+
+        // Long-term
+        else if (period == "long-term")
+        {
+            if (longTermButton != null)
+            {
+                longTermButton.image.color =
+                    new Color(1f, 0.95f, 0.8f);
+            }
+
+            if (durationPanel != null)
+                durationPanel.SetActive(true);
         }
 
         UpdateAmountPanel();
     }
+
 
     // =========================================
     // Amount 영역 상태 갱신
@@ -281,18 +345,28 @@ public class HabitGoalUI : MonoBehaviour
 
         bool enableAmount = false;
 
-        // Value 방식은 Daily/Weekly 모두 Amount 사용
+        // Value 방식은 모든 Period에서 Amount 사용
         if (selectedRecordType == "value")
         {
             enableAmount = true;
         }
 
-        // Weekly + Complete는 "주 몇 회" 설정
+        // Weekly + Complete
+        // 예: 일주일에 운동 3회
         if (selectedRecordType == "check" &&
             selectedPeriod == "weekly")
         {
             enableAmount = true;
         }
+
+        // Long-term + Complete
+        // 예: 30일 동안 운동 20회
+        if (selectedRecordType == "check" &&
+            selectedPeriod == "long-term")
+        {
+            enableAmount = true;
+        }
+
 
         amountPanel.alpha =
             enableAmount ? 1f : 0.4f;
@@ -303,17 +377,59 @@ public class HabitGoalUI : MonoBehaviour
         amountPanel.blocksRaycasts =
             enableAmount;
 
-        // Weekly + Complete에서는 단위를 직접 선택하지 않음
+
         if (unitDropdown != null)
         {
-            bool weeklyComplete =
+            bool completeWithFixedUnit =
                 selectedRecordType == "check" &&
-                selectedPeriod == "weekly";
+                (selectedPeriod == "weekly" ||
+                 selectedPeriod == "long-term");
 
             unitDropdown.interactable =
-                enableAmount && !weeklyComplete;
+                enableAmount && !completeWithFixedUnit;
         }
     }
+
+
+    // =========================================
+    // Long-term 기간 검사
+    // =========================================
+    private bool TryGetDurationDays(out int durationDays)
+    {
+        durationDays = 0;
+
+        if (durationInput == null)
+        {
+            Debug.LogWarning(
+                "Duration Input이 연결되지 않았습니다."
+            );
+
+            return false;
+        }
+
+        if (!int.TryParse(
+                durationInput.text.Trim(),
+                out durationDays))
+        {
+            Debug.LogWarning(
+                "Duration에는 숫자를 입력해주세요."
+            );
+
+            return false;
+        }
+
+        if (durationDays <= 0)
+        {
+            Debug.LogWarning(
+                "Duration은 1일 이상이어야 합니다."
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
 
     // =========================================
     // 저장
@@ -327,8 +443,10 @@ public class HabitGoalUI : MonoBehaviour
             Debug.LogWarning(
                 "Habit Name을 입력해주세요."
             );
+
             return;
         }
+
 
         // Category
         if (string.IsNullOrWhiteSpace(selectedCategory))
@@ -336,8 +454,10 @@ public class HabitGoalUI : MonoBehaviour
             Debug.LogWarning(
                 "Category를 선택해주세요."
             );
+
             return;
         }
+
 
         // Record Type
         if (string.IsNullOrWhiteSpace(selectedRecordType))
@@ -345,8 +465,10 @@ public class HabitGoalUI : MonoBehaviour
             Debug.LogWarning(
                 "Record Type을 선택해주세요."
             );
+
             return;
         }
+
 
         // Period
         if (string.IsNullOrWhiteSpace(selectedPeriod))
@@ -354,8 +476,23 @@ public class HabitGoalUI : MonoBehaviour
             Debug.LogWarning(
                 "Repeat을 선택해주세요."
             );
+
             return;
         }
+
+
+        // =========================================
+        // Long-term 기간 검사
+        // =========================================
+        if (selectedPeriod == "long-term")
+        {
+            if (!TryGetDurationDays(
+                    out selectedDurationDays))
+            {
+                return;
+            }
+        }
+
 
         CreateHabitGoalRequest request =
             new CreateHabitGoalRequest();
@@ -372,6 +509,7 @@ public class HabitGoalUI : MonoBehaviour
         request.Period =
             selectedPeriod;
 
+
         // =========================================
         // 목표값 결정
         // =========================================
@@ -380,6 +518,17 @@ public class HabitGoalUI : MonoBehaviour
             // Weekly Complete
             // 예: 일주일에 운동 3회
             if (selectedPeriod == "weekly")
+            {
+                request.TargetAmount =
+                    amount;
+
+                request.Unit =
+                    "회";
+            }
+
+            // Long-term Complete
+            // 예: 30일 동안 운동 20회
+            else if (selectedPeriod == "long-term")
             {
                 request.TargetAmount =
                     amount;
@@ -418,6 +567,7 @@ public class HabitGoalUI : MonoBehaviour
             }
         }
 
+
         // =========================================
         // 요청 확인
         // =========================================
@@ -455,6 +605,16 @@ public class HabitGoalUI : MonoBehaviour
             request.Period
         );
 
+        if (selectedPeriod == "long-term")
+        {
+            Debug.Log(
+                "Duration : " +
+                selectedDurationDays +
+                " Days"
+            );
+        }
+
+
         string json =
             JsonConvert.SerializeObject(
                 request,
@@ -463,8 +623,9 @@ public class HabitGoalUI : MonoBehaviour
 
         Debug.Log(json);
 
+
         // =========================================
-        // 서버 연결 실패 시 로컬 테스트 데이터
+        // 로컬 테스트 데이터
         // =========================================
         HabitGoalResponse localHabit =
             new HabitGoalResponse
@@ -494,53 +655,84 @@ public class HabitGoalUI : MonoBehaviour
                     true
             };
 
+
         HabitGoalResponse habitToAdd = null;
 
-        try
+
+        // =========================================
+        // Long-term
+        //
+        // 현재 백엔드 DTO에 durationDays/startDate/endDate가
+        // 없으므로 서버 요청을 보내지 않고 로컬 테스트만 진행
+        // =========================================
+        if (selectedPeriod == "long-term")
         {
-            HabitGoalResponse response =
-                await ServiceRegistry.Instance.Habit
-                    .CreateGoalAsync(request);
+            Debug.Log(
+                "===== Long-term Local Test =====\n" +
+                "현재 서버 DTO에 장기목표 기간 필드가 없어 " +
+                "API 요청 없이 로컬 목표로 생성합니다.\n" +
+                "Duration : " +
+                selectedDurationDays +
+                " Days"
+            );
 
-            if (response != null)
+            habitToAdd =
+                localHabit;
+        }
+
+        // =========================================
+        // Daily / Weekly
+        // 기존 API 저장 방식 유지
+        // =========================================
+        else
+        {
+            try
             {
-                habitToAdd =
-                    response;
+                HabitGoalResponse response =
+                    await ServiceRegistry.Instance.Habit
+                        .CreateGoalAsync(request);
 
-                Debug.Log(
-                    "===== API Success ====="
-                );
+                if (response != null)
+                {
+                    habitToAdd =
+                        response;
 
-                Debug.Log(
-                    "Goal ID : " +
-                    response.Id
-                );
+                    Debug.Log(
+                        "===== API Success ====="
+                    );
 
-                Debug.Log(
-                    "Message : " +
-                    response.Message
-                );
+                    Debug.Log(
+                        "Goal ID : " +
+                        response.Id
+                    );
+
+                    Debug.Log(
+                        "Message : " +
+                        response.Message
+                    );
+                }
+                else
+                {
+                    Debug.LogWarning(
+                        "API 응답이 비어있어 로컬 데이터로 표시합니다."
+                    );
+
+                    habitToAdd =
+                        localHabit;
+                }
             }
-            else
+            catch (System.Exception e)
             {
                 Debug.LogWarning(
-                    "API 응답이 비어있어 로컬 데이터로 표시합니다."
+                    "Habit API 연결 실패 - 로컬 데이터로 추가합니다.\n" +
+                    e.Message
                 );
 
                 habitToAdd =
                     localHabit;
             }
         }
-        catch (System.Exception e)
-        {
-            Debug.LogWarning(
-                "Habit API 연결 실패 - 로컬 데이터로 추가합니다.\n" +
-                e.Message
-            );
 
-            habitToAdd =
-                localHabit;
-        }
 
         // =========================================
         // Habit List에 추가
@@ -562,6 +754,7 @@ public class HabitGoalUI : MonoBehaviour
 
             return;
         }
+
 
         // =========================================
         // Life 화면으로 복귀
