@@ -13,9 +13,18 @@ public class InventoryItemResponse
     [JsonProperty("itemId")]
     public string ItemId { get; set; }
 
-    // 보유 수량
+    // 보유 수량 (소비 아이템)
     [JsonProperty("quantity")]
     public int Quantity { get; set; }
+
+    // 장비 아이템 레벨
+    [JsonProperty("level")]
+    public int Level { get; set; }
+
+    // 장비 아이템 경험치
+    [JsonProperty("exp")]
+    public int Exp { get; set; }
+
 
     // 장착 상태 (true: 장착 중)
     [JsonProperty("isEquipped")]
