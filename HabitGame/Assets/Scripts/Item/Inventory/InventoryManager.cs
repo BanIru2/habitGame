@@ -6,6 +6,9 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Threading.Tasks;
+using Unity.VisualScripting.Dependencies.Sqlite;
+using System.Text;
+using Photon.Pun.Demo.Cockpit;
 
 
 public class InventoryManager : Singleton<InventoryManager>
@@ -17,6 +20,8 @@ public class InventoryManager : Singleton<InventoryManager>
     private ItemSlotUI itemSlotPrefab;
     [SerializeField] 
     private Transform itemSlotParent;
+    [SerializeField]
+    private RectTransform scrollView;
 
     private readonly List<InventoryItemViewData> allItems = new List<InventoryItemViewData>();
     private readonly List<InventoryItemViewData> equipmentItems = new List<InventoryItemViewData>();
@@ -45,6 +50,8 @@ public class InventoryManager : Singleton<InventoryManager>
     private TextMeshProUGUI equipDescText;
     [SerializeField]
     private Button doEquipButton;
+    [SerializeField]
+    private Button enhanceButton;
     [SerializeField]
     private Button equipCloseButton;
     [SerializeField]
@@ -76,18 +83,58 @@ public class InventoryManager : Singleton<InventoryManager>
     [SerializeField]
     private Button funcCloseButton;
 
+    [Header("장비 강화 UI")]
+    [SerializeField]
+    private GameObject enhanceTap;
+    [SerializeField]
+    private TextMeshProUGUI enhanceTargetItemNameText;
+    [SerializeField]
+    private Image enhanceTargetItemIcon;
+    [SerializeField]
+    private TextMeshProUGUI enhanceTargetItemLevelText;
+    [SerializeField]
+    private TextMeshProUGUI enhanceTargetItemExpText;
+    [SerializeField]
+    private Image enhanceTargetItemExpBarFill;
+    [SerializeField]
+    private GameObject enhanceButtonBar;
+    [SerializeField]
+    private Button doEnhanceButton;
+    [SerializeField]
+    private Button enhanceCancelButton;
+
+    // 테스트 데이터 사용 여부 체크
+    [SerializeField]
+    private bool useLocalTestInventory = false;
+
     // 현재 보고있는 아이템 데이터 저장
     private InventoryItemViewData selectedItem;
 
-    private readonly List<ItemSlotUI> slotPool = new List<ItemSlotUI>();    // 아이템 정보를 출력할 슬롯 pool
+    // 아이템 정보를 출력할 슬롯 pool
+    private readonly List<ItemSlotUI> slotPool = new List<ItemSlotUI>();
 
     // 아이템 교체가 진행중인지 체크 
     public bool IsEquipmentChangeInProgress { get; private set; }
     private bool isItemUseInProgress;
     public bool IsItemUseInProgress => isItemUseInProgress;
 
-    [SerializeField] 
-    private bool useLocalTestInventory = false;
+
+    // 강화 진행중인지 저장하는 플래그
+    private bool isEnhanceMode = false;
+    // 아이템 강화 창 띄울 때 스크롤 뷰 사이즈 변경을 위한 스크롤뷰 높이 저장
+    private const int normalScrollTop = 110;
+    private const int normalScrollBottom = 180;
+    private const int enhanceScrollTop = 610;
+    private const int enhanceScrollBottom = 430;
+    // 강화 대상 아이템 데이터
+    private InventoryItemViewData enhanceTargetItemData;
+    // 강화 대상을 제외한 장비 리스트
+    private readonly List<InventoryItemViewData> enhanceMaterialItems = new List<InventoryItemViewData>();
+    // 강화 재료로 선택된 아이템Id 리스트
+    private List<long> selectedMaterialIds = new List<long>();
+
+    private readonly StringBuilder sb = new StringBuilder(64);
+
 
     protected override void Awake()
     {
@@ -103,6 +150,10 @@ public class InventoryManager : Singleton<InventoryManager>
         doEquipButton.onClick.AddListener(OnEquipActionButtonClicked);
         funcUseButton.onClick.AddListener(UseFuncItem);
 
+        enhanceButton.onClick.AddListener(OpenEnhance);
+        doEnhanceButton.onClick.AddListener(DoEnhance);
+        enhanceCancelButton.onClick.AddListener(CloseEnhance);
+
         ClosePopup();
     }
 
@@ -112,6 +163,7 @@ public class InventoryManager : Singleton<InventoryManager>
     {
         /*        // 로컬 테스트용 응답 객체 생성
                 List<InventoryItemResponse> responses = CreateTestInventoryResponses();*/
+        if (isEnhanceMode) CloseEnhance();
 
         await RefreshInventoryAsync();
         ShowEquipmentItems();
@@ -251,6 +303,12 @@ public class InventoryManager : Singleton<InventoryManager>
     // 아이템 상세 정보 창 띄우기
     private void OnItemSlotClicked(InventoryItemViewData viewData)
     {
+        if (isEnhanceMode)
+        {
+            OnMaterialSlotClicked(viewData);
+            return;
+        }
+
         ClosePopup();
 
         var itemSO = viewData.ItemSO;
@@ -597,6 +655,271 @@ public class InventoryManager : Singleton<InventoryManager>
         finally
         {
             isItemUseInProgress = false;
+        }
+    }
+
+    // --------------------------------- 장비 강화 --------------------------------
+    private void OpenEnhance()
+    {
+        isEnhanceMode = true;
+        selectedMaterialIds.Clear();
+
+        enhanceTargetItemData = selectedItem;
+
+        equipDetail.SetActive(false);
+        SetScrollArea(enhanceScrollTop, enhanceScrollBottom);
+        enhanceTap.SetActive(true);
+        enhanceButtonBar.SetActive(true);
+        SetEnhanceTargetData();
+        ShowEnhanceMaterials();
+    }
+
+    private void CloseEnhance()
+    {
+        isEnhanceMode = false;
+        selectedMaterialIds.Clear();
+        enhanceTargetItemData = null;
+
+        enhanceTap.SetActive(false);
+        enhanceButtonBar.SetActive(false);
+        SetScrollArea(normalScrollTop, normalScrollBottom);
+        ShowEquipmentItems();
+    }
+
+    private void SetScrollArea(float top, float bottom)
+    {
+        if (scrollView == null) return;
+        // Top 설정: offsetMax.y에 -top을 대입 (Right인 offsetMax.x는 유지)
+        scrollView.offsetMax = new Vector2(scrollView.offsetMax.x, -top);
+        // Bottom 설정: offsetMin.y에 bottom을 그대로 대입 (Left인 offsetMin.x는 유지)
+        scrollView.offsetMin = new Vector2(scrollView.offsetMin.x, bottom);
+    }
+
+    // 강화 대상 아이템 데이터 UI세팅
+    private void SetEnhanceTargetData()
+    {
+        if (enhanceTargetItemData == null || enhanceTargetItemData.Response == null) return;
+
+        int level = enhanceTargetItemData.Response.Level;
+        int curExp = enhanceTargetItemData.Response.Exp;
+        if (enhanceTargetItemData.ItemSO is EquipmentDataSO equipSO)
+        {
+            int reqExp = equipSO.GetRequiredExp(level);
+            enhanceTargetItemNameText.text = enhanceTargetItemData.ItemSO.displayName;
+            enhanceTargetItemIcon.sprite = enhanceTargetItemData.ItemSO.icon;
+            if (enhanceTargetItemData.Response.Level == EquipmentDataSO.MaxLevel)
+            {
+                enhanceTargetItemLevelText.text = "MaxLevel";
+                enhanceTargetItemExpText.text = "MAX";
+                ApplyExpFill(1.0f);
+            }
+            else
+            {
+                sb.Clear();
+                sb.Append("Lv. ").Append(level);
+                enhanceTargetItemLevelText.SetText(sb);
+
+                sb.Clear();
+                sb.Append(curExp).Append("/").Append(reqExp);
+                enhanceTargetItemExpText.SetText(sb);
+
+                float ratio = (reqExp > 0) ? (float)curExp / reqExp : 0f;
+                ApplyExpFill(ratio);
+            }
+        }
+    }
+
+    private void ApplyExpFill(float ratio)
+    {
+        if (enhanceTargetItemExpBarFill == null) return;
+        Vector3 scale = enhanceTargetItemExpBarFill.rectTransform.localScale;
+        scale.x = Mathf.Clamp01(ratio);
+        enhanceTargetItemExpBarFill.rectTransform.localScale = scale;
+    }
+
+    private void ShowEnhanceMaterials()
+    {
+        enhanceMaterialItems.Clear();
+        foreach (var item in equipmentItems)
+        {
+            // 강화 대상 장비 본인은 재료 목록에서 제외
+            if (item.Response.InventoryId == enhanceTargetItemData.Response.InventoryId)
+                continue;
+            // 현재 캐릭터가 장착 중인(isEquipped) 장비 제외
+            if (item.Response.IsEquipped)
+                continue;
+            enhanceMaterialItems.Add(item);
+        }
+        // 필터링된 재료 장비들만 하단 스크롤뷰에 렌더링
+        RenderItems(enhanceMaterialItems);
+    }
+
+    private void OnMaterialSlotClicked(InventoryItemViewData viewData)
+    {
+        if (viewData == null || viewData.Response == null) return;
+
+        long invenId = viewData.Response.InventoryId;
+        // 이미 선택된 재료면 선택 해제
+        if (selectedMaterialIds.Contains(invenId))
+        {
+            selectedMaterialIds.Remove(invenId);
+        }
+        // 아직 선택 안 된 재료면 선택 추가
+        else
+        {
+            selectedMaterialIds.Add(invenId);
+        }
+
+        // 슬롯 선택에 따른 하이라이트 갱신
+        RefreshMaterialSlotsHighlight();
+        // 상단 게이지 프리뷰 갱신
+        UpdateEnhancePreview();
+    }
+
+    // 선택한 슬롯에 색상 하이라이트 추가
+    private void RefreshMaterialSlotsHighlight()
+    {
+        for (int i = 0; i < enhanceMaterialItems.Count; i++)
+        {
+            ItemSlotUI slot = GetSlot(i);
+            long slotInvId = enhanceMaterialItems[i].Response.InventoryId;
+            slot.SetSelected(selectedMaterialIds.Contains(slotInvId));
+        }
+    }
+
+    // 선택된 재료들의 경험치를 합산하여 상단 게이지를 통해 상승 레벨 미리보기 갱신
+    private void UpdateEnhancePreview()
+    {
+        if (enhanceTargetItemData == null || !(enhanceTargetItemData.ItemSO is EquipmentDataSO targetSO)) return;
+
+        // 선택된 재료가 0개면 원래 상태로 복구
+        if (selectedMaterialIds.Count == 0)
+        {
+            SetEnhanceTargetData();
+            // 강화 실행 버튼 비활성화
+            if (doEnhanceButton != null) doEnhanceButton.interactable = false;
+            return;
+        }
+        // 선택된 모든 재료 장비의 재료 경험치 총합 계산
+        int totalAddedExp = 0;
+        foreach (long matId in selectedMaterialIds)
+        {
+            InventoryItemViewData matItem = null;
+            foreach (var item in equipmentItems)
+            {
+                if (item.Response.InventoryId == matId)
+                {
+                    matItem = item;
+                    break;
+                }
+            }
+
+            if (matItem != null && matItem.ItemSO is EquipmentDataSO matSO)
+            {
+                totalAddedExp += matSO.ProvideExp;
+            }
+        }
+        // 레벨업 시뮬레이션 계산
+        int previewLevel = enhanceTargetItemData.Response.Level;
+        int previewExp = enhanceTargetItemData.Response.Exp + totalAddedExp;
+        while (previewLevel < EquipmentDataSO.MaxLevel)
+        {
+            int reqExp = targetSO.GetRequiredExp(previewLevel);
+            if (previewExp >= reqExp)
+            {
+                previewExp -= reqExp;
+                previewLevel++;
+            }
+            else
+            {
+                break;
+            }
+        }
+        // 미리보기 UI 반영
+        if (previewLevel >= EquipmentDataSO.MaxLevel)
+        {
+            enhanceTargetItemLevelText.text = "MaxLevel";
+            enhanceTargetItemExpText.text = "MAX";
+            ApplyExpFill(1.0f);
+        }
+        else
+        {
+            int reqExp = targetSO.GetRequiredExp(previewLevel);
+            sb.Clear();
+            sb.Append("Lv. ").Append(previewLevel);
+            enhanceTargetItemLevelText.SetText(sb);
+
+            sb.Clear();
+            sb.Append(previewExp).Append(" / ").Append(reqExp);
+            enhanceTargetItemExpText.SetText(sb);
+
+            float ratio = (reqExp > 0) ? (float)previewExp / reqExp : 0f;
+            ApplyExpFill(ratio);
+        }
+        // 강화 버튼 활성화
+        if (doEnhanceButton != null)
+        {
+            // 대상이 이미 만렙이 아니고 재료가 선택되었을 때만 활성화
+            doEnhanceButton.interactable = (enhanceTargetItemData.Response.Level < EquipmentDataSO.MaxLevel);
+        }
+    }
+
+    // 강화 버튼을 통한 강화 동작
+    private async void DoEnhance()
+    {
+        if (enhanceTargetItemData == null || selectedMaterialIds.Count == 0) return;
+
+        if (doEnhanceButton != null) doEnhanceButton.interactable = false;
+
+        long targetId = enhanceTargetItemData.Response.InventoryId;
+        try
+        {
+            // 서버에 강화 요청 (대상 ID와 재료 ID 리스트 전달)
+            List<InventoryItemResponse> enhancedResponses = await inventoryBackendManager.EnhanceItemAsync(targetId, selectedMaterialIds);
+            if (enhancedResponses != null)
+            {
+                // 인벤토리 전체 최신 데이터로 동기화
+                BuildViewData(enhancedResponses);
+
+                // 대상 장비가 착용 중이었으면 캐릭터 최종 스탯도 즉시 재계산
+                if (enhanceTargetItemData.Response.IsEquipped)
+                {
+                    await CharacterManager.Instance.RefreshCharacterAsync();
+                }
+
+                // 대상 장비의 최신 정보로 갱신
+                foreach (var item in equipmentItems)
+                {
+                    if (item.Response.InventoryId == targetId)
+                    {
+                        enhanceTargetItemData = item;
+                        break;
+                    }
+                }
+
+                // 선택 목록 비우고 UI 갱신
+                selectedMaterialIds.Clear();
+                SetEnhanceTargetData();
+                ShowEnhanceMaterials();
+            }
+        }
+        catch (ApiException e)
+        {
+            Debug.LogError($"강화 통신 오류: {e.Message}");
+            ErrorPopupManager.Instance.ShowApiError(e);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"강화 시스템 오류: {e.Message}");
+            ErrorPopupManager.Instance.ShowSystemError();
+        }
+        finally
+        {
+            // 강화 성공 시 버튼 비활성화, 에러 발생으로 실패 시 재시도 가능하도록 활성화
+            if (doEnhanceButton != null)
+            {
+                doEnhanceButton.interactable = (selectedMaterialIds.Count > 0);
+            }
         }
     }
 }
