@@ -368,7 +368,7 @@ MonoBehaviour:
   enhanceButtonBar: {fileID: 1338236335}
   doEnhanceButton: {fileID: 1585783634}
   enhanceCancelButton: {fileID: 144595872}
-  useLocalTestInventory: 0
+  useLocalTestInventory: 1
 --- !u!4 &15656556
 Transform:
   m_ObjectHideFlags: 0
