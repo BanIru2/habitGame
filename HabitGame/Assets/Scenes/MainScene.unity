@@ -9001,7 +9001,7 @@ MonoBehaviour:
   skipButton: {fileID: 2020266173}
   completeButton: {fileID: 1544773483}
   reward: 300
-  useLocalMode: 1
+  useLocalMode: 0
 --- !u!224 &632915452
 RectTransform:
   m_ObjectHideFlags: 0
