@@ -7182,7 +7182,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2727059238593678193}
-  - component: {fileID: 5207537206784432187}
   m_Layer: 5
   m_Name: GachaRoot
   m_TagString: Untagged
@@ -7210,28 +7209,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &5207537206784432187
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2090534539725195155}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b31f2226c81e86b4295cc7cdff68cc7e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gachaPanel: {fileID: 6022830487541097515}
-  gachaMainImage: {fileID: 786296231784282059}
-  oneGachaButton: {fileID: 3395329298222806801}
-  tenGachaButton: {fileID: 3271639451812593555}
-  probabilityButton: {fileID: 2129678624592552198}
-  dim: {fileID: 5587330781927105691}
-  gachaResultPopup: {fileID: 2348363437617384633}
-  resultContainer: {fileID: 3139782882708673381}
-  resultGridLayout: {fileID: 1998495191207777731}
-  resultItemPrefab: {fileID: 5218292020140413325, guid: b7b587a1b09be5046b523012d25acdb5, type: 3}
 --- !u!1 &2101834092230904647
 GameObject:
   m_ObjectHideFlags: 0
@@ -19128,7 +19105,7 @@ MonoBehaviour:
   onDimTouch:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 5207537206784432187}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: GachaManager, Assembly-CSharp
         m_MethodName: OnTouchedDim
         m_Mode: 1
