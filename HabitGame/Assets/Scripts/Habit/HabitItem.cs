@@ -88,20 +88,32 @@ public class HabitItem : MonoBehaviour
     {
         habitData = data;
 
-        /*
-         * 현재 HabitGoalResponse에는
-         * 서버에 저장된 현재 누적 달성량이 없음.
-         *
-         * 따라서 새로 생성된 HabitItem은
-         * 우선 0부터 시작.
-         *
-         * 추후 백엔드에서 currentAmount 같은 값을
-         * 내려주면 이 부분에서 연결하면 됨.
-         */
-        currentAmount = 0;
+        // 서버에서 받은 현재 기간의 누적 달성량으로 진행도 복원
+        currentAmount = habitData != null
+            ? Mathf.Max(0, habitData.CurrentAmount)
+            : 0;
+
+        // 목표량보다 큰 값이 들어온 경우 UI에서는 목표량까지만 표시
+        if (habitData != null)
+        {
+            currentAmount = Mathf.Min(
+                currentAmount,
+                GetTargetAmount()
+            );
+        }
 
         RefreshProgressUI();
         RefreshStreakUI();
+
+        // 이미 목표를 달성한 상태라면 완료 상태로 복원
+        if (habitData != null && IsGoalCompleted())
+        {
+            SetCompletedState();
+        }
+        else
+        {
+            SetInProgressState();
+        }
     }
 
     // =========================================
@@ -429,6 +441,27 @@ public class HabitItem : MonoBehaviour
                 "Message : " +
                 recordResponse.Message
             );
+
+            // =========================================
+            // 최신 Streak 반영
+            // =========================================
+            if (recordResponse.StreakCount.HasValue &&
+                habitData != null)
+            {
+                habitData.StreakCount =
+                    recordResponse.StreakCount.Value;
+
+                Debug.Log(
+                    "Updated Streak Count : " +
+                    habitData.StreakCount
+                );
+
+                RefreshStreakUI();
+
+                // Daily 10일 / Weekly 2주 단위
+                // Streak 보상 마일스톤 확인
+                CheckStreakReward();
+            }
 
             // =========================================
             // Record ID 확인

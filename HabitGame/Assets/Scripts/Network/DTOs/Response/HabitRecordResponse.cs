@@ -24,6 +24,11 @@ public class HabitRecordResponse
     [JsonProperty("isVerified")]
     public bool IsVerified { get; set; }
 
+    // 기록 처리 후 최신 연속 달성 횟수
+    // 백엔드가 아직 해당 필드를 반환하지 않는 경우 null
+    [JsonProperty("streakCount")]
+    public int? StreakCount { get; set; }
+
     [JsonProperty("message")]
     public string Message { get; set; }
 

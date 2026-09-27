@@ -76,6 +76,24 @@ public class SpendBudgetManager : MonoBehaviour
             usedMoney =
                 response.CurrentSpent;
 
+            // =========================================
+            // 서버에서 받은 소비 Streak 반영
+            // =========================================
+            if (SpendRewardManager.Instance != null)
+            {
+                SpendRewardManager.Instance
+                    .ApplyOverview(response);
+            }
+            else
+            {
+                Debug.LogWarning(
+                    "SpendRewardManager.Instance를 찾을 수 없습니다."
+                );
+            }
+
+            // =========================================
+            // 서버에서 받은 특수 목표 목록 반영
+            // =========================================
             SpendListManager[] spendListManagers =
                 FindObjectsOfType<SpendListManager>(true);
 
@@ -105,6 +123,11 @@ public class SpendBudgetManager : MonoBehaviour
             Debug.Log(
                 "Used Money : " +
                 usedMoney
+            );
+
+            Debug.Log(
+                "Weekly Streak : " +
+                response.StreakCount
             );
         }
         catch (System.Exception e)

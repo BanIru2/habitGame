@@ -31,6 +31,10 @@ public class HabitGoalResponse
     [JsonProperty("targetAmount")]
     public int TargetAmount { get; set; }
 
+    // 현재 목표 기간의 누적 달성량
+    [JsonProperty("currentAmount")]
+    public int CurrentAmount { get; set; }
+
     // 수치 단위 (분, 회, 페이지 등)
     [JsonProperty("unit")]
     public string Unit { get; set; }

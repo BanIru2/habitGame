@@ -11,6 +11,7 @@ public class ServiceRegistry : Singleton<ServiceRegistry>
     public CharacterService Character { get; private set; }
     public HabitService Habit { get; private set; }
     public SpendingService Spending { get; private set; }
+    public WeeklyReportService WeeklyReport { get; private set; }
     public InventoryService Inventory { get; private set; }
     public ShopService Shop { get; private set; }
     public BattleService Battle { get; private set; }
@@ -32,6 +33,7 @@ public class ServiceRegistry : Singleton<ServiceRegistry>
         Character = new CharacterService(apiClient);
         Habit = new HabitService(apiClient);
         Spending = new SpendingService(apiClient);
+        WeeklyReport = new WeeklyReportService(apiClient);
         Inventory = new InventoryService(apiClient);
         Shop = new ShopService(apiClient);
         Battle = new BattleService(apiClient);
