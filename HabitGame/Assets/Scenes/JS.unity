@@ -8759,6 +8759,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: AuthCanvas
       objectReference: {fileID: 0}
+    - target: {fileID: 4884062679617154766, guid: a26177eba33f5974682a3254f05a89ab, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5571389994558976060, guid: a26177eba33f5974682a3254f05a89ab, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -34898,7 +34902,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 798313661}
   m_Direction: 2
   m_Value: 0
-  m_Size: 0.5611892
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
