@@ -19,6 +19,9 @@ public class HabitUIManager : Singleton<HabitUIManager>
     [SerializeField] private GameObject budgetSettingPanel;
     [SerializeField] private GameObject spendHistoryPanel;
 
+    [Header("Weekly Report")]
+    [SerializeField] private GameObject weeklyReportPanel;
+
     [Header("Habit")]
     [SerializeField] private HabitListManager habitListManager;
 
@@ -91,6 +94,8 @@ public class HabitUIManager : Singleton<HabitUIManager>
 
         SetActive(budgetSettingPanel, false);
         SetActive(spendHistoryPanel, false);
+
+        SetActive(weeklyReportPanel, false);
     }
 
     // =========================================
@@ -108,6 +113,8 @@ public class HabitUIManager : Singleton<HabitUIManager>
 
         SetActive(budgetSettingPanel, false);
         SetActive(spendHistoryPanel, false);
+
+        SetActive(weeklyReportPanel, false);
     }
 
     // =========================================
@@ -125,6 +132,8 @@ public class HabitUIManager : Singleton<HabitUIManager>
 
         SetActive(budgetSettingPanel, false);
         SetActive(spendHistoryPanel, false);
+
+        SetActive(weeklyReportPanel, false);
     }
 
     // =========================================
@@ -142,6 +151,8 @@ public class HabitUIManager : Singleton<HabitUIManager>
 
         SetActive(budgetSettingPanel, false);
         SetActive(spendHistoryPanel, false);
+
+        SetActive(weeklyReportPanel, false);
     }
 
     // =========================================
@@ -159,6 +170,8 @@ public class HabitUIManager : Singleton<HabitUIManager>
 
         SetActive(budgetSettingPanel, true);
         SetActive(spendHistoryPanel, false);
+
+        SetActive(weeklyReportPanel, false);
     }
 
     public void CloseBudgetSetting()
@@ -197,11 +210,37 @@ public class HabitUIManager : Singleton<HabitUIManager>
 
         SetActive(budgetSettingPanel, false);
         SetActive(spendHistoryPanel, true);
+
+        SetActive(weeklyReportPanel, false);
     }
 
     public void BackToSpendHistory()
     {
         OpenSpend();
+    }
+
+    // =========================================
+    // Weekly Report 화면
+    // =========================================
+    public void OpenWeeklyReport()
+    {
+        SetActive(topTab, false);
+
+        SetActive(lifePanel, false);
+        SetActive(spendPanel, false);
+
+        SetActive(lifeAddPanel, false);
+        SetActive(spendAddPanel, false);
+
+        SetActive(budgetSettingPanel, false);
+        SetActive(spendHistoryPanel, false);
+
+        SetActive(weeklyReportPanel, true);
+    }
+
+    public void BackFromWeeklyReport()
+    {
+        OpenLife();
     }
 
     // =========================================

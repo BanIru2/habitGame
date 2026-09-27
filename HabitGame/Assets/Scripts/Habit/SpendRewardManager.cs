@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class SpendRewardManager : MonoBehaviour
 {
@@ -13,6 +14,9 @@ public class SpendRewardManager : MonoBehaviour
     [Header("Streak UI")]
     [SerializeField] private TextMeshProUGUI streakText;
     [SerializeField] private TextMeshProUGUI streakBonusText;
+
+    [Header("Reward Claim")]
+    [SerializeField] private Button claimRewardButton;
 
     [Header("Reward Setting")]
     [SerializeField] private int maxWeeklyGold = 1000;
@@ -37,6 +41,12 @@ public class SpendRewardManager : MonoBehaviour
     // 사용률
     private float usedRate = 0f;
 
+    // 보상 수령 처리 중 여부
+    private bool isClaimingReward = false;
+
+    // 현재 예산 보상 수령 여부
+    private bool rewardClaimed = false;
+
     // 최종 획득 가능 골드
     public int TotalGold =>
         baseGold +
@@ -51,6 +61,168 @@ public class SpendRewardManager : MonoBehaviour
     private void Awake()
     {
         Instance = this;
+
+        if (claimRewardButton != null)
+        {
+            claimRewardButton.onClick.AddListener(
+                ClaimReward
+            );
+        }
+    }
+
+    // =========================================================
+    // 서버 SpendingOverviewResponse 반영
+    // =========================================================
+    public void ApplyOverview(SpendingOverviewResponse response)
+    {
+        if (response == null)
+        {
+            Debug.LogWarning(
+                "SpendingOverviewResponse가 null입니다."
+            );
+
+            return;
+        }
+
+        SetStreakCount(
+            response.StreakCount
+        );
+
+        Debug.Log(
+            $"서버 소비 Streak 반영 : " +
+            $"{response.StreakCount}주"
+        );
+    }
+
+    // =========================================================
+    // 소비 보상 수령
+    // =========================================================
+    public async void ClaimReward()
+    {
+        if (isClaimingReward)
+        {
+            return;
+        }
+
+        if (rewardClaimed)
+        {
+            Debug.LogWarning(
+                "이미 수령한 소비 보상입니다."
+            );
+
+            return;
+        }
+
+        if (SpendBudgetManager.Instance == null)
+        {
+            Debug.LogWarning(
+                "SpendBudgetManager.Instance를 찾을 수 없습니다."
+            );
+
+            return;
+        }
+
+        long budgetId =
+            SpendBudgetManager.Instance.BudgetId;
+
+        if (budgetId <= 0)
+        {
+            Debug.LogWarning(
+                "유효한 Budget ID가 없습니다."
+            );
+
+            return;
+        }
+
+        SpendingRewardClaimRequest request =
+            new SpendingRewardClaimRequest
+            {
+                BudgetId = budgetId
+            };
+
+        try
+        {
+            isClaimingReward = true;
+
+            if (claimRewardButton != null)
+            {
+                claimRewardButton.interactable = false;
+            }
+
+            Debug.Log(
+                "===== 소비 보상 수령 요청 ====="
+            );
+
+            Debug.Log(
+                "Budget ID : " +
+                budgetId
+            );
+
+            SpendingRewardClaimResponse response =
+                await ServiceRegistry.Instance.Spending
+                    .ClaimRewardAsync(request);
+
+            if (response == null)
+            {
+                Debug.LogWarning(
+                    "소비 보상 수령 응답이 비어있습니다."
+                );
+
+                return;
+            }
+
+            rewardClaimed =
+                response.RewardClaimed;
+
+            Debug.Log(
+                "===== 소비 보상 수령 응답 ====="
+            );
+
+            Debug.Log(
+                "Budget ID : " +
+                response.BudgetId
+            );
+
+            Debug.Log(
+                "Earned Gold : " +
+                response.EarnedGold
+            );
+
+            Debug.Log(
+                "Total User Gold : " +
+                response.Gold
+            );
+
+            Debug.Log(
+                "Reward Claimed : " +
+                response.RewardClaimed
+            );
+
+            if (response.RewardClaimed)
+            {
+                Debug.Log(
+                    $"소비 보상 수령 완료 : " +
+                    $"+{response.EarnedGold} Gold"
+                );
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning(
+                "소비 보상 수령 실패\n" +
+                e.Message
+            );
+        }
+        finally
+        {
+            isClaimingReward = false;
+
+            if (claimRewardButton != null)
+            {
+                claimRewardButton.interactable =
+                    !rewardClaimed;
+            }
+        }
     }
 
     // =========================================================
@@ -67,11 +239,9 @@ public class SpendRewardManager : MonoBehaviour
             return;
         }
 
-        // 사용률
         usedRate =
             (float)spent / budget;
 
-        // 남은 예산
         int savedMoney =
             budget - spent;
 
@@ -80,14 +250,12 @@ public class SpendRewardManager : MonoBehaviour
             savedMoney = 0;
         }
 
-        // 절약률
         float savingRate =
             (float)savedMoney / budget;
 
         savingRate =
             Mathf.Clamp01(savingRate);
 
-        // 기본 보상
         baseGold =
             Mathf.RoundToInt(
                 maxWeeklyGold *
@@ -168,9 +336,6 @@ public class SpendRewardManager : MonoBehaviour
 
     // =========================================================
     // 연속 달성 주차 설정
-    //
-    // 나중에는 서버의 streakCount 값을 받아서 호출
-    // 현재는 로컬 테스트용
     // =========================================================
     public void SetStreakCount(int count)
     {
@@ -333,4 +498,19 @@ public class SpendRewardManager : MonoBehaviour
     }
 
 #endif
+
+    private void OnDestroy()
+    {
+        if (claimRewardButton != null)
+        {
+            claimRewardButton.onClick.RemoveListener(
+                ClaimReward
+            );
+        }
+
+        if (Instance == this)
+        {
+            Instance = null;
+        }
+    }
 }
