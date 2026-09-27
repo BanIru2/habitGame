@@ -31,6 +31,17 @@ public class InventoryBackendManager : MonoBehaviour
         return await ServiceRegistry.Instance.Inventory.UnequipItemAsync(request);
     }
 
+    public async Task<List<InventoryItemResponse>> EnhanceItemAsync(long targetInventoryId, List<long> materialInventoryIds)
+    {
+        var request = new EnhanceEquipmentRequest
+        {
+            UserId = ApiClient.Instance.CurrentUserId,
+            TargetInventoryId = targetInventoryId,
+            MaterialInventoryId = materialInventoryIds
+        };
+        return await ServiceRegistry.Instance.Inventory.EnhanceItemAsync(request);
+    }
+
     public async Task<List<InventoryItemResponse>> UseItemAsync(long inventoryId)
     {
         UseItemRequest request = new UseItemRequest { InventoryId = inventoryId, UserId = ApiClient.Instance.CurrentUserId };
