@@ -29,6 +29,8 @@ public class GachaManager : MonoBehaviour
     [SerializeField]
     private GameObject resultItemPrefab;
 
+    private DimCloser dimCloser;
+
     // 비용 임시값(G)
     // 1회 뽑기 비용
     private const int gachaCost = 500;
@@ -50,6 +52,17 @@ public class GachaManager : MonoBehaviour
         tenGachaButton.onClick.AddListener(() => DoGacha(10));
 
         shopBackendManager = FindObjectOfType<ShopBackendManager>();
+
+        dimCloser = dim.GetComponent<DimCloser>();
+
+        if (dimCloser != null)
+        {
+            dimCloser.AddListener(OnTouchedDim);
+        }
+        else
+        {
+            Debug.LogError("Dim 오브젝트에 DimCloser 컴포넌트가 없습니다.");
+        }
     }
 
     // 가챠탭(상점)이 열릴 때 호출

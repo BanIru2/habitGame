@@ -4,11 +4,20 @@ using UnityEngine.EventSystems;
 
 public class DimCloser : MonoBehaviour, IPointerDownHandler
 {
-    [SerializeField]
-    private UnityEvent onDimTouch;
+    private UnityEvent onDimTouch = new UnityEvent();
+
+    public void AddListener(UnityAction listener)
+    {
+        onDimTouch.AddListener(listener);
+    }
+
+    public void RemoveListener(UnityAction listener)
+    {
+        onDimTouch.RemoveListener(listener);
+    }
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        onDimTouch?.Invoke();
+        onDimTouch.Invoke();
     }
 }
