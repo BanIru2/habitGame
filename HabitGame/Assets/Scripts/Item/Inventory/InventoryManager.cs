@@ -11,7 +11,7 @@ using System.Text;
 using Photon.Pun.Demo.Cockpit;
 
 
-public class InventoryManager : Singleton<InventoryManager>
+public class InventoryManager : SceneSingleton<InventoryManager>
 {
     [SerializeField]
     private InventoryBackendManager inventoryBackendManager;

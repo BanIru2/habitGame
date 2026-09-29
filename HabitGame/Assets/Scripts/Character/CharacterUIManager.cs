@@ -6,7 +6,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class CharacterUIManager : Singleton<CharacterUIManager>
+public class CharacterUIManager : SceneSingleton<CharacterUIManager>
 {
     [SerializeField]
     private TextMeshProUGUI nameText;
@@ -52,7 +52,7 @@ public class CharacterUIManager : Singleton<CharacterUIManager>
         base.Awake();
     }
 
-    // Å×½ºÆ®¿ë ÀÓ½Ã µ¥ÀÌÅÍ »ı¼º ÇÔ¼ö
+    // í…ŒìŠ¤íŠ¸ìš© ì„ì‹œ ë°ì´í„° ìƒì„± í•¨ìˆ˜
     private CharacterResponse CreateTMPCharacterData()
     {
         return new CharacterResponse    

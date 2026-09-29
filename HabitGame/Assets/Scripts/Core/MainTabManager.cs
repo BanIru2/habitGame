@@ -5,11 +5,11 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// ÅÇ ÀÌµ¿À» °üÀåÇÏ´Â ¸Å´ÏÀú Å¬·¡½º
+/// íƒ­ ì´ë™ì„ ê´€ì¥í•˜ëŠ” ë§¤ë‹ˆì € í´ë˜ìŠ¤
 /// </summary>
-public class MainTabManager : Singleton<MainTabManager>
+public class MainTabManager : SceneSingleton<MainTabManager>
 {
-    [Header("°¢ ÅÇÀÇ ºÎ¸ğ ¿ÀºêÁ§Æ®")]
+    [Header("ê° íƒ­ì˜ ë¶€ëª¨ ì˜¤ë¸Œì íŠ¸")]
     [SerializeField]
     private GameObject habitTap;
     [SerializeField]
@@ -21,7 +21,7 @@ public class MainTabManager : Singleton<MainTabManager>
     [SerializeField]
     private GameObject battleTap;
 
-    [Header("°¢ ÅÇÀÇ ¹öÆ°")]
+    [Header("ê° íƒ­ì˜ ë²„íŠ¼")]
     [SerializeField]
     private Button habitTapButton;
     [SerializeField]
@@ -36,7 +36,7 @@ public class MainTabManager : Singleton<MainTabManager>
     [SerializeField]
     private RankingboardManager rankingboardManager;
 
-    // ÅÇ ÀüÈ¯ µ¿ÀÛ ¿äÃ»ÁßÀÎÁö Ã¼Å©
+    // íƒ­ ì „í™˜ ë™ì‘ ìš”ì²­ì¤‘ì¸ì§€ ì²´í¬
     private bool isChangingTap;
 
     protected override void Awake()
@@ -85,12 +85,12 @@ public class MainTabManager : Singleton<MainTabManager>
         catch (ApiException exception)
         {
             Debug.LogError(
-                $"½À°ü Á¤º¸ ¿äÃ» ½ÇÆĞ ({exception.StatusCode}): " + exception.Message
+                $"ìŠµê´€ ì •ë³´ ìš”ì²­ ì‹¤íŒ¨ ({exception.StatusCode}): " + exception.Message
             );
         }
         catch (Exception exception)
         {
-            Debug.LogError($"½À°ü Á¶È¸ ½ÇÆĞ: {exception.Message}");
+            Debug.LogError($"ìŠµê´€ ì¡°íšŒ ì‹¤íŒ¨: {exception.Message}");
         }
         finally
         {
@@ -113,12 +113,12 @@ public class MainTabManager : Singleton<MainTabManager>
         catch (ApiException exception)
         {
             Debug.LogError(
-                $"Ä³¸¯ÅÍ Á¤º¸ ¿äÃ» ½ÇÆĞ ({exception.StatusCode}): " + exception.Message
+                $"ìºë¦­í„° ì •ë³´ ìš”ì²­ ì‹¤íŒ¨ ({exception.StatusCode}): " + exception.Message
             );
         }
         catch (Exception exception)
         {
-            Debug.LogError($"Ä³¸¯ÅÍ Á¶È¸ ½ÇÆĞ: {exception.Message}");
+            Debug.LogError($"ìºë¦­í„° ì¡°íšŒ ì‹¤íŒ¨: {exception.Message}");
         }
         finally
         {
@@ -141,12 +141,12 @@ public class MainTabManager : Singleton<MainTabManager>
         catch (ApiException exception)
         {
             Debug.LogError(
-                $"ÀÎº¥Åä¸® Á¤º¸ ¿äÃ» ½ÇÆĞ ({exception.StatusCode}): " + exception.Message
+                $"ì¸ë²¤í† ë¦¬ ì •ë³´ ìš”ì²­ ì‹¤íŒ¨ ({exception.StatusCode}): " + exception.Message
             );
         }
         catch (Exception exception)
         {
-            Debug.LogError($"ÀÎº¥Åä¸® Á¶È¸ ½ÇÆĞ: {exception.Message}");
+            Debug.LogError($"ì¸ë²¤í† ë¦¬ ì¡°íšŒ ì‹¤íŒ¨: {exception.Message}");
         }
         finally
         {
@@ -169,12 +169,12 @@ public class MainTabManager : Singleton<MainTabManager>
         catch (ApiException exception)
         {
             Debug.LogError(
-                $"»óÁ¡ Á¤º¸ ¿äÃ» ½ÇÆĞ ({exception.StatusCode}): " + exception.Message
+                $"ìƒì  ì •ë³´ ìš”ì²­ ì‹¤íŒ¨ ({exception.StatusCode}): " + exception.Message
             );
         }
         catch (Exception exception)
         {
-            Debug.LogError($"»óÁ¡ Á¶È¸ ½ÇÆĞ: {exception.Message}");
+            Debug.LogError($"ìƒì  ì¡°íšŒ ì‹¤íŒ¨: {exception.Message}");
         }
         finally
         {
@@ -199,12 +199,12 @@ public class MainTabManager : Singleton<MainTabManager>
         catch (ApiException exception)
         {
             Debug.LogError(
-                $"·©Å· Á¤º¸ ¿äÃ» ½ÇÆĞ ({exception.StatusCode}): " + exception.Message
+                $"ë­í‚¹ ì •ë³´ ìš”ì²­ ì‹¤íŒ¨ ({exception.StatusCode}): " + exception.Message
             );
         }
         catch (Exception exception)
         {
-            Debug.LogError($"·©Å· º¸µå Á¶È¸ ½ÇÆĞ: {exception.Message}");
+            Debug.LogError($"ë­í‚¹ ë³´ë“œ ì¡°íšŒ ì‹¤íŒ¨: {exception.Message}");
         }
         finally
         {

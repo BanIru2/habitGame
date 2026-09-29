@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using UnityEngine;
 
-public class BattleManager : Singleton<BattleManager>
+public class BattleManager : SceneSingleton<BattleManager>
 {
     private bool isBattle = false;    // 전투 로직/마스터 클라이언트 계산 진행 여부
     private PhotonView photonView;
