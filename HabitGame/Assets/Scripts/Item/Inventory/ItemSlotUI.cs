@@ -43,90 +43,103 @@ public class ItemSlotUI : MonoBehaviour
     {
         this.viewData = vData;
 
-        ApplyItemInfo();
-        ApplyQuantity();
-        ApplyEquipType();
-        ApplyEquippedState();
-        ApplyClickEvent(onClick);
-    }
+        ResetUI();
 
-    // 아이템 정보 UI 적용
-    private void ApplyItemInfo()
-    {
-        if (viewData.ItemSO == null)
+        // SO가 없거나 데이터가 비정상인 경우 예외 처리
+        if (viewData == null || viewData.ItemSO == null)
         {
-            itemNameText.text = viewData.Response.ItemId;
-            itemDescribeText.text = "SO 매칭 실패";
-
-            iconImage.enabled = false;
-            backgroundImage.color = Color.red;
+            ApplyFallbackUI();
+            ApplyClickEvent(onClick);
             return;
         }
 
-        // 장비 아이템의 경우 레벨, 경험치 정보를 이름 옆에 한번에 세팅
+        // 공통 정보 적용
+        ApplyCommonInfo();
+
+        // 아이템 타입별 정보 적용
         if (viewData.ItemSO is EquipmentDataSO equipSO)
         {
-            ApplyEquipLevel(equipSO);
+            ApplyEquipmentInfo(equipSO);
         }
-        // 소비 아이템의 경우 SO에 이미 존재하는 문자열 포인터만 그대로 전달
-        else
+        else if (viewData.ItemSO is ConsumableDataSO consumableSO)
         {
-            itemNameText.text = viewData.ItemSO.displayName;
+            ApplyConsumableInfo(consumableSO);
         }
 
+        ApplyClickEvent(onClick);
+    }
+
+    // UI 값 일괄 초기화
+    private void ResetUI()
+    {
+        quantityBackground.SetActive(false);
+        equipTypeText.gameObject.SetActive(false);
+        iconImage.enabled = false;
+        backgroundImage.color = normalColor;
+    }
+
+    // 아이템 공통 정보 UI 적용
+    private void ApplyCommonInfo()
+    {
         itemDescribeText.text = viewData.ItemSO.description;
-        iconImage.enabled = viewData.ItemSO.icon != null;
-        iconImage.sprite = viewData.ItemSO.icon;
-    }
 
-    // 소모품의 경우 보유 개수 UI 적용
-    private void ApplyQuantity()
-    {
-        // 소모품인지 확인
-        bool showQuantity = viewData.ItemSO is ConsumableDataSO && viewData.Response.Quantity > 0;
-
-        quantityBackground.SetActive(showQuantity);
-
-        if (showQuantity)
+        bool hasIcon = viewData.ItemSO.icon != null;
+        iconImage.enabled = hasIcon;
+        if (hasIcon)
         {
-            quantityText.text = $"{viewData.Response.Quantity}";
+            iconImage.sprite = viewData.ItemSO.icon;
         }
     }
 
-    // 장비의 경우 장비 종류 UI 적용
-    private void ApplyEquipType()
+    // SO 누락 등 비정상 데이터 방어용 UI 처리
+    private void ApplyFallbackUI()
     {
-        bool isEquip = viewData.ItemSO is EquipmentDataSO;
-
-        equipTypeText.gameObject.SetActive(isEquip);
-
-        if (isEquip)
-        {
-            EquipmentDataSO equipmentSO = viewData.ItemSO as EquipmentDataSO;
-            switch (equipmentSO.equipmentType)
-            {
-                case EquipmentType.Clothes:
-                    equipTypeText.text = "옷";
-                    break;
-                case EquipmentType.Shoes:
-                    equipTypeText.text = "신발";
-                    break;
-                case EquipmentType.Hat:
-                    equipTypeText.text = "모자";
-                    break;
-                case EquipmentType.Weapon:
-                    equipTypeText.text = "무기";
-                    break;
-            }
-        }
+        // viewData, viewData.Response에 대한 null 여부 검사 및 예외 처리(Unknown)
+        itemNameText.text = viewData?.Response?.ItemId ?? "Unknown";
+        itemDescribeText.text = "SO 매칭 실패";
+        iconImage.enabled = false;
+        backgroundImage.color = Color.red;
     }
 
-    // 장비 아이템의 경우 장착 여부 UI 적용
-    private void ApplyEquippedState()
+    // 소모품 UI 적용
+    private void ApplyConsumableInfo(ConsumableDataSO consumableSO)
     {
-        if (viewData.ItemSO == null) return;
+        // 이름 표기
+        itemNameText.text = consumableSO.displayName;
+        // 수량 표기
+        // viewData.Response에 대한 null검사 및 예외처리(0)
+        int quantity = viewData.Response?.Quantity ?? 0;
+        if (quantity > 0)
+        {
+            quantityBackground.SetActive(true);
+            quantityText.text = quantity.ToString();
+        }
 
-        backgroundImage.color = viewData.Response.IsEquipped ? equippedColor : normalColor;
+        backgroundImage.color = normalColor;
+    }
+
+    // 장비명 한글 변환 헬퍼
+    private string GetEquipmentTypeName(EquipmentType type) => type switch
+    {
+        EquipmentType.Clothes => "옷",
+        EquipmentType.Shoes => "신발",
+        EquipmentType.Hat => "모자",
+        EquipmentType.Weapon => "무기",
+        _ => string.Empty
+    };
+
+    // 장비 UI 적용
+    private void ApplyEquipmentInfo(EquipmentDataSO equipSO)
+    {
+        // 이름, 레벨, 경험치 텍스트 적용
+        ApplyEquipLevel(equipSO);
+
+        // 부위 표시
+        equipTypeText.gameObject.SetActive(true);
+        equipTypeText.text = GetEquipmentTypeName(equipSO.equipmentType);
+
+        // 착용 여부에 따른 배경색 적용
+        backgroundImage.color = GetDefaultBackgroundColor();
     }
 
     // 장비 아이템 레벨/경험치 정보 적용
@@ -164,9 +177,18 @@ public class ItemSlotUI : MonoBehaviour
         }
     }
 
+    private Color GetDefaultBackgroundColor()
+    {
+        // viewData, viewData.Response의 null 여부 검사 및 예외 처리(false)
+        bool isEquipped = viewData?.Response?.IsEquipped ?? false;
+        return isEquipped ? equippedColor : normalColor;
+    }
+
     // 재료로 선택되면 주황색, 선택 해제되면 원래 회색 배경으로 복구
     public void SetSelected(bool isSelected)
     {
-        backgroundImage.color = isSelected ? selectedColor : normalColor;
+        // 선택 시 주황색, 선택 해제 시 본래 색상(착용 여부 반영)으로 안전하게 복원
+        backgroundImage.color = isSelected ? selectedColor : GetDefaultBackgroundColor();
     }
+
 }
