@@ -341,8 +341,22 @@ public sealed class AuthUIManager : MonoBehaviour
 
     private bool LoadGameplayScene()
     {
+        string currentSceneName = SceneManager.GetActiveScene().name;
+
+        // 현재 실행 중인 씬과 이동하려는 씬이 같거나, gameplaySceneName이 비어있는 경우
+        // (예: JS 작업 씬에 AuthCanvas를 직접 배치하여 테스트하는 경우)
+        // 씬을 다시 로드하면 Start()가 다시 실행되어 무한 재로드 루프에 빠지므로
+        // 씬을 다시 로드하지 않고 AuthCanvas UI를 비활성화
         if (string.IsNullOrWhiteSpace(gameplaySceneName)
-            || !Application.CanStreamedLevelBeLoaded(gameplaySceneName))
+            || string.Equals(currentSceneName, gameplaySceneName, StringComparison.OrdinalIgnoreCase))
+        {
+            Debug.Log($"[Auth] 현재 씬('{currentSceneName}')에서 직접 로그인되었습니다. 씬을 재로드하지 않고 AuthCanvas를 비활성화합니다.", this);
+            gameObject.SetActive(false);
+            return true;
+        }
+
+        // 기존 조건 분기 분리
+        if (!Application.CanStreamedLevelBeLoaded(gameplaySceneName))
         {
             Debug.LogError($"[Auth] Scene '{gameplaySceneName}' is not available in Build Settings.", this);
             ShowStatus("게임 화면을 불러올 수 없습니다. 빌드 설정을 확인해주세요.");
