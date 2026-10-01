@@ -10,7 +10,7 @@ using UnityEngine.SceneManagement;
 
 public class ApiClient : Singleton<ApiClient>
 {
-    private const string BASE_URL = "http://localhost:8080";
+    private const string BASE_URL = "https://habit-pvp-server-production.up.railway.app";
     private const string LOGIN_SCENE_NAME = "LoginScene";
     private static readonly string[] REFRESH_EXCLUDED_PATHS =
     {
