@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public class GachaResultPopupManager : MonoBehaviour
 {
     [Header("UI")]
+    [SerializeField] private GameObject popupRoot;
     [SerializeField] private GameObject dim;
     [SerializeField] private RectTransform popupRect;
     [SerializeField] private RectTransform resultContainer;
@@ -60,7 +61,7 @@ public class GachaResultPopupManager : MonoBehaviour
 
         // 팝업 창과 딤(어두운 배경) 켜기
         if (dim != null) dim.SetActive(true);
-        gameObject.SetActive(true);
+        if (popupRoot != null) popupRoot.SetActive(true);
 
         isAnimationPlaying = true;
 
@@ -156,7 +157,7 @@ public class GachaResultPopupManager : MonoBehaviour
     public void Close()
     {
         CompleteAnimation();
-        gameObject.SetActive(false);
+        if (popupRoot != null) popupRoot.SetActive(false);
         if (dim != null) dim.SetActive(false);
     }
 
