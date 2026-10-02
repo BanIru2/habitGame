@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -16,46 +17,164 @@ public class AchievementSlotUI : MonoBehaviour
     private Button checkRewardButton;
     [SerializeField]
     private Button rewardClaimButton;
+    [SerializeField]
+    private TextMeshProUGUI rewardClaimText;
 
+    private AchievementViewData viewData;
+
+    // ìˆ˜ë ¹ ë²„íŠ¼ ìƒ‰
+    private static readonly Color32 ClaimableColor = new Color32(255, 205, 60, 255);
+    private static readonly Color32 InProgressColor = new Color32(140, 140, 140, 255);
+    private static readonly Color32 ClaimedColor = new Color32(80, 80, 80, 255);
+    // ìˆ˜ë ¹ ë²„íŠ¼ ë¬¸ì ìƒ‰
+    private static readonly Color32 ClaimableTextColor = new Color32(255, 136, 1, 255);
+    private static readonly Color32 InProgressTextColor = new Color32(220, 220, 220, 255); // ì—°íšŒìƒ‰
+    private static readonly Color32 ClaimedTextColor = new Color32(140, 140, 140, 255);   // ì–´ë‘ìš´ íšŒìƒ‰
 
     private Color GetAttributeColor(AttributeType attribute) => attribute switch
     {
-        AttributeType.Fire => new Color32(255, 95, 75, 255),   // ºÒ - ÄÚ¶ö ·¹µå
-        AttributeType.Water => new Color32(50, 160, 255, 255),  // ¹° - ½ºÄ«ÀÌ ºí·ç
-        AttributeType.Grass => new Color32(75, 215, 100, 255),  // Ç® - ¶óÀÌÆ® ±×¸°
-        AttributeType.Aurora => new Color32(190, 95, 255, 255),  // ¿À·Î¶ó - ÆÛÇÃ ÇÎÅ©
-        _ => new Color32(255, 205, 60, 255)   // None (°¡Ã­/°ñµå µî ÀÏ¹İ ¾÷Àû) - °ñµå ¿»·Î¿ì
+        AttributeType.Fire => new Color32(255, 95, 75, 255),   // ë¶ˆ - ì½”ë„ ë ˆë“œ
+        AttributeType.Water => new Color32(50, 160, 255, 255),  // ë¬¼ - ìŠ¤ì¹´ì´ ë¸”ë£¨
+        AttributeType.Grass => new Color32(75, 215, 100, 255),  // í’€ - ë¼ì´íŠ¸ ê·¸ë¦°
+        AttributeType.Aurora => new Color32(190, 95, 255, 255),  // ì˜¤ë¡œë¼ - í¼í”Œ í•‘í¬
+        _ => new Color32(255, 205, 60, 255)   // None (ê°€ì± /ê³¨ë“œ ë“± ì¼ë°˜ ì—…ì ) - ê³¨ë“œ ì˜ë¡œìš°
     };
 
-    // ÇöÀç ÁøÇàµµ(current)¿Í ¸ñÇ¥Ä¡(target)¸¦ ¹Ş¾Æ °ÔÀÌÁö °»½Å
-    public void UpdateProgress(int current, int target)
+    public void LoadData(AchievementViewData vData, Action<AchievementViewData> onClaim, Action<AchievementViewData> onCheckReward)
     {
-        // ÅØ½ºÆ® Ç¥½Ã
+        ResetUI();
+        viewData = vData;
+        if (viewData == null || viewData.AchievementSO == null) return;
+        ApplyContent();
+        ApplyBarColor();
+        ApplyButtons(onClaim, onCheckReward);
+        UpdateProgress(); // â˜… ì—¬ê¸°ì„œ ë°”ë¡œ ì§„í–‰ë„ì™€ ë²„íŠ¼ ìƒíƒœë¥¼ ê°±ì‹ !
+    }
+
+    // ì—…ì  ë‚´ìš© í…ìŠ¤íŠ¸ ë°˜ì˜
+    private void ApplyContent()
+    {
+        if (titleText != null)
+        {
+            titleText.text = viewData.AchievementSO.content;
+        }
+    }
+
+    // ì§„í–‰ë„ ë°” ì±„ìš°ê¸° ìƒ‰ ê²°ì •
+    private void ApplyBarColor()
+    {
+        if (progressBarFill != null)
+        {
+            progressBarFill.color = GetAttributeColor(viewData.AchievementSO.attribute);
+        }
+    }
+
+    // í˜„ì¬ ì§„í–‰ë„(current)ì™€ ëª©í‘œì¹˜(target)ë¥¼ ë°›ì•„ ê²Œì´ì§€ ê°±ì‹ 
+    public void UpdateProgress()
+    {
+        if (viewData == null || viewData.AchievementSO == null) return;
+        int current = viewData.Response != null ? viewData.Response.CurrentCount : 0;
+        int target = viewData.AchievementSO.targetCount;
+        // ì§„í–‰ë„ í…ìŠ¤íŠ¸ í‘œì‹œ
         if (progressText != null)
         {
             progressText.text = $"{current} / {target}";
         }
-        // ºñÀ² °è»ê
-        float ratio = target > 0 ? (float)current / target : 0f;
-        // localScale.x Á¶Àı
+        // ê²Œì´ì§€ ë¹„ìœ¨ ë°˜ì˜
         if (progressBarFill != null)
         {
+            float ratio = target > 0 ? (float)current / target : 0f;
             Vector3 scale = progressBarFill.rectTransform.localScale;
             scale.x = Mathf.Clamp01(ratio);
             progressBarFill.rectTransform.localScale = scale;
         }
+        // ì§„í–‰ë„ì— ë”°ë¼ ë³´ìƒ ë°›ê¸° ë²„íŠ¼ ìƒíƒœ ë™ê¸°í™”
+        UpdateRewardClaimButton();
     }
 
-    public void Setup(AttributeType attribute, int current, int target)
+    // ë²„íŠ¼ ìƒíƒœ ë° í´ë¦­ ì´ë²¤íŠ¸ ë°”ì¸ë”©
+    private void ApplyButtons(Action<AchievementViewData> onClaim, Action<AchievementViewData> onCheckReward)
     {
-        // °ÔÀÌÁö »ö»ó º¯°æ!
-        if (progressBarFill != null)
+        // ë³´ìƒ ë°›ê¸° ë²„íŠ¼: ë‹¬ì„± ì™„ë£Œ & ë¯¸ìˆ˜ë ¹ ìƒíƒœì¼ ë•Œë§Œ í™œì„±í™”
+        if (rewardClaimButton != null)
         {
-            progressBarFill.color = GetAttributeColor(attribute);
+            if (viewData.CanClaim && onClaim != null)
+            {
+                rewardClaimButton.onClick.AddListener(() => onClaim(viewData));
+            }
+        }
+        // ë³´ìƒ í™•ì¸ ë²„íŠ¼
+        if (checkRewardButton != null && onCheckReward != null)
+        {
+            checkRewardButton.onClick.AddListener(() => onCheckReward(viewData));
+        }
+    }
+
+    public void RefreshClaimButton()
+    {
+        UpdateRewardClaimButton();
+    }
+
+    private void UpdateRewardClaimButton()
+    {
+        if (rewardClaimButton == null || viewData == null)
+        {
+            return;
         }
 
-        // ±âÁ¸ ÁøÇàµµ °»½Å
-        UpdateProgress(current, target);
+        bool isClaimed = viewData.Response != null && viewData.Response.IsClaimed;
+
+        if (isClaimed)
+        {
+            rewardClaimButton.interactable = false;
+
+            if (rewardClaimText != null)
+            {
+                rewardClaimText.text = "ìˆ˜ë ¹\nì™„ë£Œ";
+                rewardClaimText.color = ClaimedTextColor;
+            }
+
+            if (rewardClaimButton.image != null)
+            {
+                rewardClaimButton.image.color = ClaimedColor;
+            }
+
+            return;
+        }
+
+        rewardClaimButton.interactable = viewData.CanClaim;
+
+        if (rewardClaimText != null)
+        {
+            rewardClaimText.text = "ë³´ìƒ\nìˆ˜ë ¹";
+            rewardClaimText.color = viewData.CanClaim ? ClaimableTextColor : InProgressTextColor;
+        }
+
+        if (rewardClaimButton.image != null)
+        {
+            rewardClaimButton.image.color = viewData.CanClaim ? ClaimableColor : InProgressColor;
+        }
+    }
+
+    // UI ì´ˆê¸°í™”
+    public void ResetUI()
+    {
+        if (titleText != null) titleText.text = "";
+        if (progressText != null) progressText.text = "";
+        // ê²Œì´ì§€ 0ìœ¼ë¡œ ë¦¬ì…‹
+        if (progressBarFill != null)
+        {
+            Vector3 scale = progressBarFill.rectTransform.localScale;
+            scale.x = 0f;
+            progressBarFill.rectTransform.localScale = scale;
+        }
+        // ë²„íŠ¼ì— ê±¸ë ¤ìˆë˜ ì´ì „ í´ë¦­ ë¦¬ìŠ¤ë„ˆ í•´ì œ
+        if (checkRewardButton != null) checkRewardButton.onClick.RemoveAllListeners();
+        if (rewardClaimButton != null)
+        {
+            rewardClaimButton.onClick.RemoveAllListeners();
+            rewardClaimButton.interactable = false;
+        }
     }
 
 }
