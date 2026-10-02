@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
@@ -22,6 +23,10 @@ public class AchievementManager : MonoBehaviour
     [SerializeField]
     private AchievementDataSO[] registeredAchievements;
 
+    [Header("백엔드 연결")]
+    [SerializeField]
+    private AchievementBackendManager backendManager;
+
     [Header("로컬 테스트")]
     [SerializeField]
     private bool useLocalTestData;
@@ -30,6 +35,8 @@ public class AchievementManager : MonoBehaviour
     private readonly List<AchievementSlotUI> slotPool = new List<AchievementSlotUI>();
     // 실제로 출력 및 처리해야 할 업적 데이터
     private readonly List<AchievementViewData> achievementViewDataList = new List<AchievementViewData>();
+    // 보상 수령 중복 요청 방지 플래그
+    private bool isClaimingReward = false;
 
     private void Awake()
     {
@@ -68,15 +75,49 @@ public class AchievementManager : MonoBehaviour
     }
     // ------------------------------------------------------------------------------------
 
-    public void OpenPopup()
+    public async void OpenPopup()
     {
         achievementPopup.SetActive(true);
-        RefreshAchievementUI(); // 열릴 때 목록 갱신
+
+        // 로컬 테스트 분기
+        if (useLocalTestData)
+        {
+            LoadLocalTestData();
+            RefreshAchievementUI();
+            return;
+        }
+
+        await FetchAchievementsFromServer();
     }
 
     public void ClosePopup()
     {
         achievementPopup.SetActive(false);
+    }
+
+    // 업적 데이터 서버 요청
+    private async Task FetchAchievementsFromServer()
+    {
+        if (backendManager == null)
+        {
+            Debug.LogError("[AchievementManager] BackendManager가 연결되지 않았습니다.");
+            return;
+        }
+        try
+        {
+            List<AchievementResponse> responses = await backendManager.FetchAchievementsAsync();
+            SetAchievementResponses(responses);
+        }
+        catch (ApiException e)
+        {
+            Debug.LogError($"[AchievementManager] 업적 목록 조회 실패 ({e.StatusCode}): {e.Message}");
+            ErrorPopupManager.Instance.ShowApiError(e);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[AchievementManager] 업적 시스템 오류: {e.Message}");
+            ErrorPopupManager.Instance.ShowSystemError();
+        }
     }
 
     // ------------------------------- 목록 렌더링 -----------------------------
@@ -178,21 +219,54 @@ public class AchievementManager : MonoBehaviour
             slotPool[i].gameObject.SetActive(false);
         }
     }
-
-    // 버튼 콜백
-    private void OnClaimReward(AchievementViewData data)
+    // -----------------------------------------------------------------------------------
+    // 보상 수령 콜백 (단일 타겟팅 갱신)
+    private async void OnClaimReward(AchievementViewData data)
     {
-        Debug.Log($"[보상 수령 클릭] 업적 ID: {data.AchievementSO.achievementId}");
-        // TODO: 서버에 보상 수령 요청 보내기 -> data.Response.IsClaimed = true -> UI 갱신
-
-        // 수령 완료 처리
-        if (data.Response != null)
+        if (data == null || data.AchievementSO == null) return;
+        if (isClaimingReward) return; // 연타 방지
+        // 로컬 테스트 분기
+        if (useLocalTestData)
         {
-            data.Response.IsClaimed = true;
+            if (data.Response != null) data.Response.IsClaimed = true;
+            RefreshAchievementUI();
+            return;
         }
-        // 화면 즉시 새로고침 (버튼 UI 갱신 위해)
-        RefreshAchievementUI();
+        // 서버 요청
+        try
+        {
+            isClaimingReward = true;
+            string achId = data.AchievementSO.achievementId;
+            AchievementRewardClaimResponse result = await backendManager.ClaimRewardAsync(achId);
+            if (result != null && result.IsClaimed)
+            {
+                // 대상 업적 상태 갱신
+                if (data.Response != null)
+                {
+                    data.Response.IsClaimed = true;
+                }
+                // UI 갱신
+                RefreshAchievementUI();
+                // 칭호 획득 알림
+                Debug.Log($"[보상 수령 완료] 칭호 ID: {result.RewardTitleId} 획득!");
+            }
+        }
+        catch (ApiException e)
+        {
+            Debug.LogError($"[AchievementManager] 보상 수령 실패 ({e.StatusCode}): {e.Message}");
+            ErrorPopupManager.Instance.ShowApiError(e);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[AchievementManager] 보상 수령 시스템 오류: {e.Message}");
+            ErrorPopupManager.Instance.ShowSystemError();
+        }
+        finally
+        {
+            isClaimingReward = false; // 플래그 해제
+        }
     }
+
     private void OnCheckReward(AchievementViewData data)
     {
         string titleName = data.AchievementSO.rewardTitle != null
