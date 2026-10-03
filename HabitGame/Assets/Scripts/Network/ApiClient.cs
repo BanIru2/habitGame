@@ -12,6 +12,7 @@ public class ApiClient : Singleton<ApiClient>
 {
     private const string BASE_URL = "https://habit-pvp-server-production.up.railway.app";
     private const string LOGIN_SCENE_NAME = "LoginScene";
+    private const int DefaultRequestTimeoutSeconds = 30;
     private static readonly string[] REFRESH_EXCLUDED_PATHS =
     {
         "/auth/login",
@@ -171,6 +172,7 @@ public class ApiClient : Singleton<ApiClient>
         string url = BASE_URL + path;
         // HTTP ��û ��ü ����
         using UnityWebRequest request = CreateRequest(method, url, body);
+        request.timeout = DefaultRequestTimeoutSeconds;
         // ���� ��� ���̱�
         ApplyHeaders(request, accessToken);
 
