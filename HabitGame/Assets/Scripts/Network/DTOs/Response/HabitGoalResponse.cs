@@ -43,6 +43,12 @@ public class HabitGoalResponse
     [JsonProperty("period")]
     public string Period { get; set; }
 
+    [JsonProperty("durationDays")]
+    public int? DurationDays { get; set; }
+
+    [JsonProperty("status")]
+    public string Status { get; set; }
+
     // 오늘 달성 완료 여부
     [JsonProperty("completedToday")]
     public bool CompletedToday { get; set; }

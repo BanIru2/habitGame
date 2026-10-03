@@ -29,4 +29,7 @@ public class CreateHabitGoalRequest
     // 목표 기간 (DAILY, WEEKLY 등)
     [JsonProperty("period")]
     public string Period { get; set; }
+
+    [JsonProperty("durationDays", NullValueHandling = NullValueHandling.Ignore)]
+    public int? DurationDays { get; set; }
 }

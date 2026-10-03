@@ -509,6 +509,12 @@ public class HabitGoalUI : MonoBehaviour
         request.Period =
             selectedPeriod;
 
+        if (selectedPeriod == "long-term")
+        {
+            request.DurationDays =
+                selectedDurationDays;
+        }
+
 
         // =========================================
         // 목표값 결정
@@ -660,77 +666,80 @@ public class HabitGoalUI : MonoBehaviour
 
 
         // =========================================
-        // Long-term
-        //
-        // 현재 백엔드 DTO에 durationDays/startDate/endDate가
-        // 없으므로 서버 요청을 보내지 않고 로컬 테스트만 진행
+        // 서버에 Habit 생성
         // =========================================
-        if (selectedPeriod == "long-term")
+        try
         {
-            Debug.Log(
-                "===== Long-term Local Test =====\n" +
-                "현재 서버 DTO에 장기목표 기간 필드가 없어 " +
-                "API 요청 없이 로컬 목표로 생성합니다.\n" +
-                "Duration : " +
-                selectedDurationDays +
-                " Days"
-            );
+            HabitGoalResponse response =
+                await ServiceRegistry.Instance.Habit
+                    .CreateGoalAsync(request);
 
-            habitToAdd =
-                localHabit;
-        }
-
-        // =========================================
-        // Daily / Weekly
-        // 기존 API 저장 방식 유지
-        // =========================================
-        else
-        {
-            try
+            if (response != null)
             {
-                HabitGoalResponse response =
-                    await ServiceRegistry.Instance.Habit
-                        .CreateGoalAsync(request);
-
-                if (response != null)
-                {
-                    habitToAdd =
-                        response;
-
-                    Debug.Log(
-                        "===== API Success ====="
-                    );
-
-                    Debug.Log(
-                        "Goal ID : " +
-                        response.Id
-                    );
-
-                    Debug.Log(
-                        "Message : " +
-                        response.Message
-                    );
-                }
-                else
+                if (selectedPeriod == "long-term" &&
+                    response.Id <= 0)
                 {
                     Debug.LogWarning(
-                        "API 응답이 비어있어 로컬 데이터로 표시합니다."
+                        "Long-term Habit 응답 ID가 유효하지 않아 목표를 추가하지 않습니다."
                     );
 
-                    habitToAdd =
-                        localHabit;
+                    return;
                 }
+
+                habitToAdd =
+                    response;
+
+                Debug.Log(
+                    "===== API Success ====="
+                );
+
+                Debug.Log(
+                    "Goal ID : " +
+                    response.Id
+                );
+
+                Debug.Log(
+                    "Message : " +
+                    response.Message
+                );
             }
-            catch (System.Exception e)
+            else if (selectedPeriod == "long-term")
             {
                 Debug.LogWarning(
-                    "Habit API 연결 실패 - 로컬 데이터로 추가합니다.\n" +
-                    e.Message
+                    "Long-term Habit API 응답이 비어있어 목표를 추가하지 않습니다."
+                );
+
+                return;
+            }
+            else
+            {
+                Debug.LogWarning(
+                    "API 응답이 비어있어 로컬 데이터로 표시합니다."
                 );
 
                 habitToAdd =
                     localHabit;
             }
+        }
+        catch (System.Exception e)
+        {
+            if (selectedPeriod == "long-term")
+            {
+                Debug.LogWarning(
+                    "Long-term Habit API 생성 실패 - 목표를 추가하지 않습니다.\n" +
+                    e.Message
+                );
+
+                return;
+            }
+
+            Debug.LogWarning(
+                "Habit API 연결 실패 - 로컬 데이터로 추가합니다.\n" +
+                e.Message
+            );
+
+            habitToAdd =
+                localHabit;
         }
 
 
