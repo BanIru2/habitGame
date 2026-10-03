@@ -44,13 +44,12 @@ public class PhotoVerificationManager : MonoBehaviour
     private HabitItem habit;
     private long goalId;
     private byte[] photoBytes;
-    private int achievedAmount;
 
     // 1. 팝업 활성화
     // HabitItem에서 호출하면서 저장하고 있는 각 객체의 데이터 받기
-    public void ActivatePhotoVerificationPopup(HabitItem item, long id, int achieved)
+    public void ActivatePhotoVerificationPopup(HabitItem item, long id)
     {
-        GetHabitData(item, id, achieved);
+        GetHabitData(item, id);
         photoButton.onClick.RemoveAllListeners();
         verifyButton.onClick.RemoveAllListeners();
         cancelButton.onClick.RemoveAllListeners();
@@ -60,11 +59,10 @@ public class PhotoVerificationManager : MonoBehaviour
     }
 
     // 인증 팝업을 열기 위한 버튼 클릭 시 데이터 전달 받기
-    private void GetHabitData(HabitItem item, long id, int achieved)
+    private void GetHabitData(HabitItem item, long id)
     {
         habit = item;
         goalId = id;
-        achievedAmount = achieved;
     }
 
     // 팝업 활성화 시 버튼 리스너 연결 등 초기 세팅 기능
@@ -205,7 +203,7 @@ public class PhotoVerificationManager : MonoBehaviour
         {
             noticePopup.SetActive(true);
             noticeText.text = "인증이 진행중입니다...";
-            HabitVerifyResponse response = await ServiceRegistry.Instance.Habit.VerifyHabitPhotoAsync(goalId, photoBytes, achievedAmount);
+            HabitVerifyResponse response = await ServiceRegistry.Instance.Habit.VerifyHabitPhotoAsync(goalId, photoBytes);
             if(response == null)
             {
                 Debug.LogError("사진 인증 응답이 비어있습니다.");

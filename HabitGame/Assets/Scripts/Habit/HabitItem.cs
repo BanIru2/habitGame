@@ -37,9 +37,6 @@ public class HabitItem : MonoBehaviour
     // 현재는 클라이언트 실행 중에만 유지되는 임시 값
     private int currentAmount = 0;
 
-    // 최근 입력한 달성량 저장
-    private int pendingAchievedAmount = 1;
-
     // API 중복 요청 방지
     private bool isSubmitting = false;
     // 인증 성공 여부 저장
@@ -151,6 +148,13 @@ public class HabitItem : MonoBehaviour
             return;
         }
 
+        // 사진 인증 성공 자체를 목표 전체 완료로 처리
+        if (habitData.VerificationType == "photo")
+        {
+            TryVerifyPhoto();
+            return;
+        }
+
         // =========================================
         // Value 타입
         // 실제 달성량 입력 Overlay 표시
@@ -186,13 +190,6 @@ public class HabitItem : MonoBehaviour
         // 한 번 체크할 때마다 1씩 달성
         // =========================================
 
-        // 사진 인증 목표인 경우
-        if (habitData.VerificationType == "photo")
-        {
-            TryVerifyPhoto(1);
-            return;
-        }
-
         // 로컬 Habit
         if (habitData.Id <= 0)
         {
@@ -227,13 +224,6 @@ public class HabitItem : MonoBehaviour
             );
 
             ResetToggle();
-            return;
-        }
-
-        // 사진 인증 목표인 경우
-        if (habitData.VerificationType == "photo")
-        {
-            TryVerifyPhoto(achievedAmount);
             return;
         }
 
@@ -306,10 +296,8 @@ public class HabitItem : MonoBehaviour
         );
     }
 
-    private void TryVerifyPhoto(int achievedAmount)
+    private void TryVerifyPhoto()
     {
-        pendingAchievedAmount = achievedAmount;
-
         if (photoVerificationManager == null)
         {
             photoVerificationManager = FindObjectOfType<PhotoVerificationManager>();
@@ -320,7 +308,7 @@ public class HabitItem : MonoBehaviour
 
         if (photoVerificationManager != null)
         {
-            photoVerificationManager.ActivatePhotoVerificationPopup(this, habitData.Id, achievedAmount);
+            photoVerificationManager.ActivatePhotoVerificationPopup(this, habitData.Id);
         }
     }
 
@@ -340,7 +328,7 @@ public class HabitItem : MonoBehaviour
             }
 
             RefreshStreakUI();
-            AddProgress(pendingAchievedAmount);
+            AddProgress(GetTargetAmount());
             return;
         }
 
