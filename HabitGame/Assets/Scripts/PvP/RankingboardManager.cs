@@ -3,15 +3,15 @@ using TMPro;
 using UnityEngine;
 using System.Threading.Tasks;
 
-public class RankingboardManager : Singleton<RankingboardManager>
+public class RankingboardManager : SceneSingleton<RankingboardManager>
 {
     [SerializeField]
     private RankingRowUI rowPrefab;
     [SerializeField]
     private Transform contentParent;
-    // ÃÖÃÊ·Î »ı¼ºÇØ µĞ Row ÇÁ¸®ÆÕ ÀÎ½ºÅÏ½º¸¦ ÀúÀåÇØµÎ°í »ç¿ëÇÏ±â À§ÇÑ ¸®½ºÆ®
+    // ìµœì´ˆë¡œ ìƒì„±í•´ ë‘” Row í”„ë¦¬íŒ¹ ì¸ìŠ¤í„´ìŠ¤ë¥¼ ì €ì¥í•´ë‘ê³  ì‚¬ìš©í•˜ê¸° ìœ„í•œ ë¦¬ìŠ¤íŠ¸
     private readonly List<RankingRowUI> cachedRows = new List<RankingRowUI>();
-    // Ç¥½ÃÇÒ Row °³¼ö
+    // í‘œì‹œí•  Row ê°œìˆ˜
     private int rowCount = 20;
 
     [SerializeField]
@@ -32,7 +32,7 @@ public class RankingboardManager : Singleton<RankingboardManager>
         InitializeRows();
     }
 
-    // mock µ¥ÀÌÅÍ¸¦ ÅëÇÑ Å×½ºÆ®¿ë ÇÔ¼ö - ÇÊ¿ä ½Ã StartÇÔ¼ö·Î È£Ãâ
+    // mock ë°ì´í„°ë¥¼ í†µí•œ í…ŒìŠ¤íŠ¸ìš© í•¨ìˆ˜ - í•„ìš” ì‹œ Startí•¨ìˆ˜ë¡œ í˜¸ì¶œ
 /*    private void LoadMockRankingBoard()
     {
         List<RankingEntryResponse> list = new List<RankingEntryResponse>();
@@ -62,8 +62,8 @@ public class RankingboardManager : Singleton<RankingboardManager>
         ShowRankingBoard(response);
     }*/
 
-    //----------------------------- ·©Å· º¸µå »ı¼º -----------------------------------
-    // ÃÖÃÊ·Î ÇÊ¿äÇÑ °³¼öÀÇ Row »ı¼º
+    //----------------------------- ë­í‚¹ ë³´ë“œ ìƒì„± -----------------------------------
+    // ìµœì´ˆë¡œ í•„ìš”í•œ ê°œìˆ˜ì˜ Row ìƒì„±
     private void InitializeRows()
     {
         if (cachedRows.Count > 0) return;
@@ -76,7 +76,7 @@ public class RankingboardManager : Singleton<RankingboardManager>
         }
     }
 
-    // ·©Å· º¸µå µ¥ÀÌÅÍ °»½Å
+    // ë­í‚¹ ë³´ë“œ ë°ì´í„° ê°±ì‹ 
     private void RefreshRows(List<RankingEntryResponse> rankings)
     {
         for (int i = 0; i < cachedRows.Count; i++)
@@ -92,7 +92,7 @@ public class RankingboardManager : Singleton<RankingboardManager>
         }
     }
 
-    // ¹Ş¾Æ¿Â ·©Å· Á¤º¸¸¦ Á¤·É ÈÄ UI¿¡ ¹İ¿µ
+    // ë°›ì•„ì˜¨ ë­í‚¹ ì •ë³´ë¥¼ ì •ë ¹ í›„ UIì— ë°˜ì˜
     private void ShowRankingBoard(List<RankingEntryResponse> rankings)
     {
         rankings ??= new List<RankingEntryResponse>();
@@ -105,8 +105,8 @@ public class RankingboardManager : Singleton<RankingboardManager>
         RefreshMyRankingData();
     }
 
-    // ·©Å· º¸µå Á¤º¸¸¦ °¡Á®¿À±â À§ÇÑ ¿ÜºÎ È£Ãâ¿ë ÇÔ¼ö
-    // PvP ÅÇÀ» ¿­ ¶§ È£Ãâ ÇÊ¿ä
+    // ë­í‚¹ ë³´ë“œ ì •ë³´ë¥¼ ê°€ì ¸ì˜¤ê¸° ìœ„í•œ ì™¸ë¶€ í˜¸ì¶œìš© í•¨ìˆ˜
+    // PvP íƒ­ì„ ì—´ ë•Œ í˜¸ì¶œ í•„ìš”
     public async Task LoadRankingBoard()
     {
         List<RankingEntryResponse> rankings = await ServiceRegistry.Instance.Ranking.GetRankingsAsync();
@@ -118,7 +118,7 @@ public class RankingboardManager : Singleton<RankingboardManager>
         await BattleBackendManager.Instance.GetRemainCount();
     }
 
-    // -------------------------- ³» ·©Å· ¹Ú½º ---------------------------
+    // -------------------------- ë‚´ ë­í‚¹ ë°•ìŠ¤ ---------------------------
     private void RefreshMyRankingData()
     {
         if (myRanking == null)
@@ -132,13 +132,13 @@ public class RankingboardManager : Singleton<RankingboardManager>
         myScoreText.text = myRanking.Score.ToString();
     }
 
-    // ³²Àº È½¼ö 0º¸´Ù Å«Áö ¾Ë·ÁÁÖ±â
+    // ë‚¨ì€ íšŸìˆ˜ 0ë³´ë‹¤ í°ì§€ ì•Œë ¤ì£¼ê¸°
     public bool IsCanMatchPvP()
     {
         return remainCount > 0;
     }
 
-    // ³²Àº È½¼ö ÀÀ´ä °á°ú Àû¿ë
+    // ë‚¨ì€ íšŸìˆ˜ ì‘ë‹µ ê²°ê³¼ ì ìš©
     public void ApplyRemainCount(DailyPvpLimitResponse response)
     {
         remainCount = response.RemainingCount;
@@ -147,6 +147,6 @@ public class RankingboardManager : Singleton<RankingboardManager>
 
     public void ShowRemainCountLoadError()
     {
-        remainCountText.text = "ºÒ·¯¿À±â ½ÇÆĞ";
+        remainCountText.text = "ë¶ˆëŸ¬ì˜¤ê¸° ì‹¤íŒ¨";
     }
 }

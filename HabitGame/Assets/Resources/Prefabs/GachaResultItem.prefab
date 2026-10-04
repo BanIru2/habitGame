@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6184727225448713576}
   - component: {fileID: 3004717030534885242}
   - component: {fileID: 5060296233115171007}
+  - component: {fileID: 8184805414957315401}
   m_Layer: 5
   m_Name: GachaResultItem
   m_TagString: Untagged
@@ -75,3 +76,15 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &8184805414957315401
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5218292020140413325}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28063239a082829449b217ac58ccf33a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

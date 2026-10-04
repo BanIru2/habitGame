@@ -7,7 +7,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ShopUIManager : Singleton<ShopUIManager>
+public class ShopUIManager : SceneSingleton<ShopUIManager>
 {
     [SerializeField]
     private TextMeshProUGUI goldText;
@@ -23,7 +23,7 @@ public class ShopUIManager : Singleton<ShopUIManager>
     [SerializeField]
     private GameObject shopScrollView;
 
-    private readonly List<ShopItemSlotUI> slotPool = new List<ShopItemSlotUI>();    // ¾ÆÀÌÅÛ Á¤º¸¸¦ Ãâ·ÂÇÒ ½½·Ô pool
+    private readonly List<ShopItemSlotUI> slotPool = new List<ShopItemSlotUI>();    // ì•„ì´í…œ ì •ë³´ë¥¼ ì¶œë ¥í•  ìŠ¬ë¡¯ pool
 
     [SerializeField]
     private ShopConfigSO shopConfigSO;
@@ -35,7 +35,7 @@ public class ShopUIManager : Singleton<ShopUIManager>
     private readonly List<ShopItemViewData> equipmentItems = new List<ShopItemViewData>();
     private readonly List<ShopItemViewData> consumableItems = new List<ShopItemViewData>();
 
-    [Header("»ó¼¼ ÆË¾÷")]
+    [Header("ìƒì„¸ íŒì—…")]
     [SerializeField]
     private GameObject itemDetailPopup;
     [SerializeField]
@@ -58,7 +58,7 @@ public class ShopUIManager : Singleton<ShopUIManager>
     private ShopItemViewData selectedItem;
     private bool isPurchasing;
 
-    [Header("±¸¸Å ½ÇÆĞ ÆË¾÷")]
+    [Header("êµ¬ë§¤ ì‹¤íŒ¨ íŒì—…")]
     [SerializeField]
     private GameObject purchaseFailPopup;
     [SerializeField]
@@ -92,7 +92,7 @@ public class ShopUIManager : Singleton<ShopUIManager>
         ShowEquipmentItems();
     }
 
-    // ¾ÆÀÌÅÛ µ¥ÀÌÅÍ ItemSlotÀ¸·Î È­¸é¿¡ »ı¼º
+    // ì•„ì´í…œ ë°ì´í„° ItemSlotìœ¼ë¡œ í™”ë©´ì— ìƒì„±
     private void RenderItems(List<ShopItemViewData> items)
     {
         for (int i = 0; i < items.Count; i++)
@@ -108,7 +108,7 @@ public class ShopUIManager : Singleton<ShopUIManager>
         HideUnusedSlots(items.Count);
     }
 
-    // ½½·ÔÀÌ ³²¾Æ ÀÖ´Ù¸é Àç»ç¿ë, ¾ø´Ù¸é »ı¼º
+    // ìŠ¬ë¡¯ì´ ë‚¨ì•„ ìˆë‹¤ë©´ ì¬ì‚¬ìš©, ì—†ë‹¤ë©´ ìƒì„±
     private ShopItemSlotUI GetSlot(int index)
     {
         if (index < slotPool.Count)
@@ -122,7 +122,7 @@ public class ShopUIManager : Singleton<ShopUIManager>
         return slot;
     }
 
-    // »ç¿ëÇÏÁö ¾Ê´Â ½½·Ô ¼û±â±â
+    // ì‚¬ìš©í•˜ì§€ ì•ŠëŠ” ìŠ¬ë¡¯ ìˆ¨ê¸°ê¸°
     private void HideUnusedSlots(int usedCount)
     {
         for (int i = usedCount; i < slotPool.Count; i++)
@@ -143,7 +143,7 @@ public class ShopUIManager : Singleton<ShopUIManager>
         consumableItems.AddRange(CreateViewDataList(shopConfigSO.consumableItems));
     }
 
-    // ItemDataSO -> ShopItemViewData·Î º¯È¯ÇØÁÖ±â À§ÇÑ °øÅë ÇÔ¼ö
+    // ItemDataSO -> ShopItemViewDataë¡œ ë³€í™˜í•´ì£¼ê¸° ìœ„í•œ ê³µí†µ í•¨ìˆ˜
     private List<ShopItemViewData> CreateViewDataList<T>(List<T> items)
     where T : ItemDataSO
     {
@@ -160,7 +160,7 @@ public class ShopUIManager : Singleton<ShopUIManager>
             ItemResponse response = responses.Find(r => r.Id == item.itemId);
             if (response == null)
             {
-                Debug.LogWarning($"»óÁ¡ ÀÀ´ä¿¡ ¾ÆÀÌÅÛÀÌ ¾ø½À´Ï´Ù: {item.itemId}");
+                Debug.LogWarning($"ìƒì  ì‘ë‹µì— ì•„ì´í…œì´ ì—†ìŠµë‹ˆë‹¤: {item.itemId}");
                 continue;
             }
 
@@ -174,14 +174,14 @@ public class ShopUIManager : Singleton<ShopUIManager>
         return viewDataList;
     }
 
-    // Àåºñ ¾ÆÀÌÅÛ °¡Ã­ Ãâ·Â (Àåºñ ¹öÆ° onClick)
+    // ì¥ë¹„ ì•„ì´í…œ ê°€ì±  ì¶œë ¥ (ì¥ë¹„ ë²„íŠ¼ onClick)
     public void ShowEquipmentItems()
     {
         shopScrollView.SetActive(false);
         gachaManager.OpenGachaPanel();
     }
 
-    // ¼Òºñ ¾ÆÀÌÅÛ Ãâ·Â (¼Òºñ ¹öÆ° onClick)
+    // ì†Œë¹„ ì•„ì´í…œ ì¶œë ¥ (ì†Œë¹„ ë²„íŠ¼ onClick)
     public void ShowConsumableItems()
     {
         gachaManager.CloseGachaPanel();
@@ -189,7 +189,7 @@ public class ShopUIManager : Singleton<ShopUIManager>
         RenderItems(consumableItems);
     }
 
-    // ½½·Ô ¿ÂÅ¬¸¯ ÇÔ¼ö - »ó¼¼ ÆË¾÷ Ãâ·Â
+    // ìŠ¬ë¡¯ ì˜¨í´ë¦­ í•¨ìˆ˜ - ìƒì„¸ íŒì—… ì¶œë ¥
     private void OnItemSlotClicked(ShopItemViewData viewData)
     {
         ClosePopup();
@@ -200,7 +200,7 @@ public class ShopUIManager : Singleton<ShopUIManager>
         OpenItemDetail(viewData);
         selectedItem = viewData;
     }
-    // ------------------------------- »ó¼¼ ÆË¾÷ -----------------------------------------
+    // ------------------------------- ìƒì„¸ íŒì—… -----------------------------------------
     private void ClosePopup()
     {
         itemDetailPopup.SetActive(false);
@@ -219,7 +219,7 @@ public class ShopUIManager : Singleton<ShopUIManager>
         itemDetailPriceText.text = viewData.ItemSO.cost.ToString() + " G";
 
         bool isAvailable = viewData.ItemResponse.PurchaseStatus == "AVAILABLE" ? true : false;
-        buyButtonText.text = isAvailable ? "±¸¸ÅÇÏ±â" : "±¸¸ÅºÒ°¡";
+        buyButtonText.text = isAvailable ? "êµ¬ë§¤í•˜ê¸°" : "êµ¬ë§¤ë¶ˆê°€";
 
         if (!isAvailable)
         {
@@ -246,7 +246,7 @@ public class ShopUIManager : Singleton<ShopUIManager>
         {
             PurchaseItemResponse response;
 
-            // 1. ½ÇÁ¦ ±¸¸Å ¿äÃ»¸¸ º°µµ·Î Ã³¸®
+            // 1. ì‹¤ì œ êµ¬ë§¤ ìš”ì²­ë§Œ ë³„ë„ë¡œ ì²˜ë¦¬
             try
             {
                 response = await shopBackendManager.PurchaseItemAsync(
@@ -255,33 +255,33 @@ public class ShopUIManager : Singleton<ShopUIManager>
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"±¸¸Å ¿äÃ» ½ÇÆĞ: {e}");
-                ShowPurchaseError("±¸¸Å ¿äÃ» Áß ¿À·ù°¡ ¹ß»ıÇß½À´Ï´Ù.");
+                Debug.LogError($"êµ¬ë§¤ ìš”ì²­ ì‹¤íŒ¨: {e}");
+                ShowPurchaseError("êµ¬ë§¤ ìš”ì²­ ì¤‘ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤.");
                 return;
             }
 
-            // 2. ÀÀ´ä ÀÚÃ¼°¡ ¾ø´Â °æ¿ì
+            // 2. ì‘ë‹µ ìì²´ê°€ ì—†ëŠ” ê²½ìš°
             if (response == null)
             {
-                ShowPurchaseError("±¸¸Å ÀÀ´äÀÌ ¾ø½À´Ï´Ù.");
+                ShowPurchaseError("êµ¬ë§¤ ì‘ë‹µì´ ì—†ìŠµë‹ˆë‹¤.");
                 return;
             }
 
-            // 3. ¹é¿£µå°¡ ±¸¸Å ºÒ°¡ ÆÇÁ¤À» ³»¸° °æ¿ì
+            // 3. ë°±ì—”ë“œê°€ êµ¬ë§¤ ë¶ˆê°€ íŒì •ì„ ë‚´ë¦° ê²½ìš°
             if (response.PurchaseStatus != "SUCCESS")
             {
                 HandlePurchaseFailure(response.PurchaseStatus);
                 return;
             }
 
-            // 4. ±¸¸Å´Â ¼º°øÇßÀ¸¹Ç·Î ÀÌÈÄ¿¡´Â ¼º°ø ÈÄ µ¿±âÈ­·Î Ã³¸®
+            // 4. êµ¬ë§¤ëŠ” ì„±ê³µí–ˆìœ¼ë¯€ë¡œ ì´í›„ì—ëŠ” ì„±ê³µ í›„ ë™ê¸°í™”ë¡œ ì²˜ë¦¬
             try
             {
                 await HandlePurchaseSuccess(response);
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"±¸¸Å ÈÄ È­¸é µ¿±âÈ­ ½ÇÆĞ: {e}");
+                Debug.LogError($"êµ¬ë§¤ í›„ í™”ë©´ ë™ê¸°í™” ì‹¤íŒ¨: {e}");
 
                 ShowPurchaseSyncError();
             }
@@ -296,12 +296,12 @@ public class ShopUIManager : Singleton<ShopUIManager>
     private void ShowPurchaseSyncError()
     {
         OpenPurchaseFailPopup(
-            "±¸¸Å´Â ¿Ï·áµÇ¾úÁö¸¸ È­¸é °»½Å¿¡ ½ÇÆĞÇß½À´Ï´Ù.\n" +
-            "»óÁ¡À» ´Ù½Ã ¿­¾î ÃÖ½Å Á¤º¸¸¦ È®ÀÎÇØÁÖ¼¼¿ä."
+            "êµ¬ë§¤ëŠ” ì™„ë£Œë˜ì—ˆì§€ë§Œ í™”ë©´ ê°±ì‹ ì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤.\n" +
+            "ìƒì ì„ ë‹¤ì‹œ ì—´ì–´ ìµœì‹  ì •ë³´ë¥¼ í™•ì¸í•´ì£¼ì„¸ìš”."
         );
     }
 
-    // ±¸¸Å ºÒ°¡ »çÀ¯ ºĞ±â
+    // êµ¬ë§¤ ë¶ˆê°€ ì‚¬ìœ  ë¶„ê¸°
     private string GetPurchaseStatusMessage(string status)
     {
         switch (status)
@@ -310,44 +310,44 @@ public class ShopUIManager : Singleton<ShopUIManager>
                 return string.Empty;
 
             case "OUT_OF_STOCK":
-                return "´õ ÀÌ»ó ±¸¸ÅÇÒ ¼ö ¾ø½À´Ï´Ù.";
+                return "ë” ì´ìƒ êµ¬ë§¤í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤.";
 
             case "REQUIREMENT_NOT_MET":
-                return "¾ÆÀÌÅÛ ±¸¸Å Á¶°ÇÀ» ÃæÁ·ÇØ¾ß ±¸¸ÅÇÒ ¼ö ÀÖ½À´Ï´Ù.";
+                return "ì•„ì´í…œ êµ¬ë§¤ ì¡°ê±´ì„ ì¶©ì¡±í•´ì•¼ êµ¬ë§¤í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.";
 
             case "INSUFFICIENT_GOLD":
-                return "°ñµå°¡ ºÎÁ·ÇÏ¿© ±¸¸ÅÇÒ ¼ö ¾ø½À´Ï´Ù.";
+                return "ê³¨ë“œê°€ ë¶€ì¡±í•˜ì—¬ êµ¬ë§¤í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤.";
 
             case "ITEM_NOT_FOUND":
-                return "ÇØ´ç ¾ÆÀÌÅÛÀ» Ã£À» ¼ö ¾ø½À´Ï´Ù.";
+                return "í•´ë‹¹ ì•„ì´í…œì„ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.";
 
             default:
-                return "ÇöÀç ±¸¸ÅÇÒ ¼ö ¾ø´Â ¾ÆÀÌÅÛÀÔ´Ï´Ù.";
+                return "í˜„ì¬ êµ¬ë§¤í•  ìˆ˜ ì—†ëŠ” ì•„ì´í…œì…ë‹ˆë‹¤.";
         }
     }
     // -----------------------------------------------------------------------------------
-    // ----------------------------- ±¸¸Å Ã³¸® »ó¼¼ --------------------------------------
+    // ----------------------------- êµ¬ë§¤ ì²˜ë¦¬ ìƒì„¸ --------------------------------------
     private async Task HandlePurchaseSuccess(PurchaseItemResponse response)
     {
-        Debug.Log($"±¸¸Å ¼º°ø: {response.ItemName}, " +  $"InventoryId: {response.InventoryId}");
+        Debug.Log($"êµ¬ë§¤ ì„±ê³µ: {response.ItemName}, " +  $"InventoryId: {response.InventoryId}");
 
         if (selectedItem == null || selectedItem.ItemSO == null)
             return;
 
         ItemType purchasedItemType = selectedItem.ItemSO.itemType;
 
-        // ¼­¹ö°¡ ¹İÈ¯ÇÑ ±¸¸Å ÈÄ °ñµå¸¦ »ç¿ë
+        // ì„œë²„ê°€ ë°˜í™˜í•œ êµ¬ë§¤ í›„ ê³¨ë“œë¥¼ ì‚¬ìš©
         goldText.text = $"{response.RemainingGold} G";
 
-        // »õ ¾ÆÀÌÅÛÀ» ÀÎº¥Åä¸®¿¡ ¹İ¿µ
+        // ìƒˆ ì•„ì´í…œì„ ì¸ë²¤í† ë¦¬ì— ë°˜ì˜
         await InventoryManager.Instance.RefreshInventoryAsync();
 
-        // Àç°í ¹× ±¸¸Å °¡´É »óÅÂ °»½Å
+        // ì¬ê³  ë° êµ¬ë§¤ ê°€ëŠ¥ ìƒíƒœ ê°±ì‹ 
         await RefreshShopAsync();
 
         ClosePopup();
 
-        // ÇöÀç ÅÇÀÇ ¾ÆÀÌÅÛ ¸ñ·Ï ´Ù½Ã Ãâ·Â
+        // í˜„ì¬ íƒ­ì˜ ì•„ì´í…œ ëª©ë¡ ë‹¤ì‹œ ì¶œë ¥
         if (purchasedItemType == ItemType.Equipment)
         {
             ShowEquipmentItems();
@@ -360,7 +360,7 @@ public class ShopUIManager : Singleton<ShopUIManager>
 
     private void HandlePurchaseFailure(string code)
     {
-        Debug.LogWarning($"±¸¸Å ½ÇÆĞ: {code}");
+        Debug.LogWarning($"êµ¬ë§¤ ì‹¤íŒ¨: {code}");
 
         string message = GetPurchaseStatusMessage(code);
 
@@ -371,7 +371,7 @@ public class ShopUIManager : Singleton<ShopUIManager>
     {
         purchaseFailPurchaseStatusText.text = message;
 
-        // ±âÁ¸ ¾ÆÀÌÅÛ »ó¼¼ ÆË¾÷Àº ¼û±è
+        // ê¸°ì¡´ ì•„ì´í…œ ìƒì„¸ íŒì—…ì€ ìˆ¨ê¹€
         itemDetailPopup.SetActive(false);
 
         purchaseFailPopup.SetActive(true);
@@ -406,7 +406,7 @@ public class ShopUIManager : Singleton<ShopUIManager>
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"±¸¸Å ½ÇÆĞ ÈÄ »óÁ¡ °»½Å ½ÇÆĞ: {e}");
+            Debug.LogError($"êµ¬ë§¤ ì‹¤íŒ¨ í›„ ìƒì  ê°±ì‹  ì‹¤íŒ¨: {e}");
         }
     }
 
@@ -416,7 +416,7 @@ public class ShopUIManager : Singleton<ShopUIManager>
     }
     // -----------------------------------------------------------------------------------
 
-    // °¡Ã­½Ã½ºÅÛÀ¸·Î ¸®½ºÆ® Àü´Ş
+    // ê°€ì± ì‹œìŠ¤í…œìœ¼ë¡œ ë¦¬ìŠ¤íŠ¸ ì „ë‹¬
     public List<EquipmentDataSO> GetUnlockedEquipmnetList()
     {
         List<EquipmentDataSO> unlockedList = new List<EquipmentDataSO>();
@@ -437,7 +437,7 @@ public class ShopUIManager : Singleton<ShopUIManager>
         return unlockedList;
     }
 
-    // °¡Ã­ ÈÄ °ñµå UI °»½Å
+    // ê°€ì±  í›„ ê³¨ë“œ UI ê°±ì‹ 
     public void UpdateGoldUI(int curGold)
     {
         var charData = CharacterManager.Instance.characterStatusData;

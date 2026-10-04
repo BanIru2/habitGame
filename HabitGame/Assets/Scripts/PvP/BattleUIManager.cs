@@ -11,7 +11,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 
-public class BattleUIManager : Singleton<BattleUIManager>
+public class BattleUIManager : SceneSingleton<BattleUIManager>
 {
     [SerializeField]
     private PhotonManager photonManager;

@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 
-public class HabitUIManager : Singleton<HabitUIManager>
+public class HabitUIManager : SceneSingleton<HabitUIManager>
 {
     [Header("Top Tab")]
     [SerializeField] private GameObject topTab;
