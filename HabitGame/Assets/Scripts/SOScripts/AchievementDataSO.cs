@@ -19,7 +19,7 @@ public enum AchievementType
     PvpWinCount         // PvP ½Â¸® È½¼ö
 }
 
-[CreateAssetMenu(menuName = "AchievementData", fileName = "AchievementData")]
+[CreateAssetMenu(menuName = "Character/AchievementData", fileName = "AchievementData")]
 public class AchievementDataSO : ScriptableObject
 {
     [Header("±âº» Á¤º¸")]
