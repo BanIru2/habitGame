@@ -6,9 +6,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Threading.Tasks;
-using Unity.VisualScripting.Dependencies.Sqlite;
 using System.Text;
-using Photon.Pun.Demo.Cockpit;
 
 
 public class InventoryManager : SceneSingleton<InventoryManager>
