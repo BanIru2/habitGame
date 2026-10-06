@@ -22,6 +22,7 @@ public class PhotonManager : MonoBehaviourPunCallbacks
     private const string PropAuroraLv = "AuroraLv";
     private const string PropHp = "Hp";
     private const string PropIsReady = "IsReady";
+    private const string PropTitleId = "TitleId";
 
     // BattleUnit 생성을 위한 정보 등록 용 PhotonKeys
     private const string PropBattleMaxHp = "BattleMaxHp";
@@ -36,6 +37,13 @@ public class PhotonManager : MonoBehaviourPunCallbacks
     private bool isPreparingBattleUnit;
     private bool isBattleStartRequested;
     private int roomFlowVersion;
+
+    private TitleManager titleManager;
+
+    private void Awake()
+    {
+        titleManager = FindAnyObjectByType<TitleManager>();
+    }
 
     private void Start()
     {
@@ -113,6 +121,8 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         long userId = data != null ? data.UserId : PhotonNetwork.LocalPlayer.ActorNumber;
         string playerName = GetLocalPlayerName(userId);
 
+        string myTitleId = titleManager != null ? titleManager.EquippedTitleId : "";
+
         Hashtable myProps = new Hashtable();
         myProps.Add(PropUserId, userId);
         myProps.Add(PropPlayerName, playerName);
@@ -122,6 +132,7 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         myProps.Add(PropAuroraLv, data != null ? data.AuroraLv : 0);
         myProps.Add(PropHp, data != null ? (int)data.Hp : 0);
         myProps.Add(PropIsReady, false);
+        myProps.Add(PropTitleId, myTitleId ?? "");
 
         PhotonNetwork.LocalPlayer.SetCustomProperties(myProps);
         Debug.Log("Local player properties registered.");
@@ -365,6 +376,10 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         string name = props.TryGetValue(PropPlayerName, out object value) ? value.ToString() : GetLocalPlayerName(PhotonNetwork.LocalPlayer.ActorNumber);
 
         BattleUIManager.Instance.SetMyInfoUI(name);
+
+        // 칭호 추가
+        Sprite myTitleSprite = titleManager != null ? titleManager.GetEquippedTitleSprite() : null;
+        BattleUIManager.Instance.SetTitle(true, myTitleSprite);
     }
 
     private void RefreshOpponentInfoUI()
@@ -384,6 +399,12 @@ public class PhotonManager : MonoBehaviourPunCallbacks
             int aurora = cp.TryGetValue(PropAuroraLv, out object a) ? (int)a : 0;
 
             BattleUIManager.Instance.SetOpponentInfoUI(name, fire, water, grass, aurora);
+
+            // 칭호 추가
+            string oppTitleId = cp.TryGetValue(PropTitleId, out object t) ? (string)t : null;
+            Sprite oppTitleSprite = (titleManager != null && !string.IsNullOrEmpty(oppTitleId)) ? titleManager.GetTitleSprite(oppTitleId) : null;
+            BattleUIManager.Instance.SetTitle(false, oppTitleSprite);
+
             return;
         }
     }

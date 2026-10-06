@@ -8,6 +8,8 @@ using UnityEngine.UI;
 
 public class CharacterUIManager : SceneSingleton<CharacterUIManager>
 {
+    [SerializeField] 
+    private Image equippedTitleImage;
     [SerializeField]
     private TextMeshProUGUI nameText;
     [SerializeField]
@@ -46,6 +48,9 @@ public class CharacterUIManager : SceneSingleton<CharacterUIManager>
     private TextMeshProUGUI auroraLevelText;
     [SerializeField]
     private TextMeshProUGUI auroraEXPText;
+
+    [SerializeField]
+    private TitleManager titleManager;
 
     protected override void Awake()
     {
@@ -91,7 +96,26 @@ public class CharacterUIManager : SceneSingleton<CharacterUIManager>
         ApplyStatus(response);
         ApplyAttrLevel(response);
         ApplyAttrExp(response);
+
+        SetEquippedTitle(titleManager.GetEquippedTitleSprite());
+
     }
+
+    public void SetEquippedTitle(Sprite titleSprite)
+    {
+        if (equippedTitleImage == null) return;
+
+        if (titleSprite != null)
+        {
+            equippedTitleImage.sprite = titleSprite;
+            equippedTitleImage.gameObject.SetActive(true);
+        }
+        else
+        {
+            equippedTitleImage.gameObject.SetActive(false);
+        }
+    }
+
     private void ApplyName(string name)
     {
         nameText.text = name;

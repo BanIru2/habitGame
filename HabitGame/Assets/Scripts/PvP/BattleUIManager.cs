@@ -131,6 +131,10 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
     [SerializeField]
     private TextMeshProUGUI oppName;
     [SerializeField]
+    private Image myBattleTitleImage;
+    [SerializeField]
+    private Image oppBattleTitleImage;
+    [SerializeField]
     private TextMeshProUGUI timerText;
     [SerializeField]
     private Image myHpBar;
@@ -775,6 +779,7 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
     {
         oppNameText.text = oppNameTextDefaultText;
         oppName.text = oppBattleNameDefaultText;
+        SetTitle(false, null);
 
         for (int i = 0; i < oppAttrText.Length; i++)
         {
@@ -897,6 +902,16 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
         }
     }
 
+    // 칭호 세팅
+    public void SetTitle(bool isMine, Sprite sprite)
+    {
+        Image targetImage = isMine ? myBattleTitleImage : oppBattleTitleImage;
+        if (targetImage == null) return;
+
+        targetImage.sprite = sprite;
+        targetImage.gameObject.SetActive(sprite != null);
+    }
+
     // ------------------------- Battle Finish ----------------------------
     public void FinishBattle(BattleResultResponse response)
     {
@@ -940,6 +955,7 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
         UpdatePlayerCount(0);
         ResetReadyUI();
         ClearOpponentInfoUI();
+        SetTitle(true, null);
 
         matchStartButton.interactable = false;
         try

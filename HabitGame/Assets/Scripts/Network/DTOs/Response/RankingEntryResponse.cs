@@ -13,6 +13,10 @@ public class RankingEntryResponse
     [JsonProperty("nickname")]
     public string Name { get; set; }
 
+    // 유저 착용 칭호
+    [JsonProperty("titleId")]
+    public string TitleId { get; set; }
+
     // 현재 시즌 획득 점수
     [JsonProperty("rating")]
     public int Score { get; set; }

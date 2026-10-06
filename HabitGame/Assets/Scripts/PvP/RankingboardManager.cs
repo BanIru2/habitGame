@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 public class RankingboardManager : SceneSingleton<RankingboardManager>
 {
     [SerializeField]
+    private TitleManager titleManager;
+
+    [SerializeField]
     private RankingRowUI rowPrefab;
     [SerializeField]
     private Transform contentParent;
@@ -36,30 +39,20 @@ public class RankingboardManager : SceneSingleton<RankingboardManager>
 /*    private void LoadMockRankingBoard()
     {
         List<RankingEntryResponse> list = new List<RankingEntryResponse>();
-        for(int i = 0; i < 20; i++)
+        for (int i = 0; i < 20; i++)
         {
             RankingEntryResponse data = new RankingEntryResponse
             {
-                RankingId = i,
                 UserId = i + 1,
-                Name = i + " name",
-                Score = (i + 1) * 1000,
-                Wins = i + 100,
-                Losses = i + 10,
+                Name = $"Player_{i + 1}",
+                // 짝수 등수(1등, 3등, 5등...) 유저에게 불10 칭호 부여
+                TitleId = (i % 2 == 0) ? "FIRE_10" : "",
+                Score = (20 - i) * 100,
                 Rank = i + 1
             };
-
             list.Add(data);
         }
-        RankingListResponse response = new RankingListResponse
-        {
-            Season = 1,
-            Rankings = list,
-            MyRanking = list[10],
-            UpdatedAt = ""
-        };
-
-        ShowRankingBoard(response);
+        ShowRankingBoard(list);
     }*/
 
     //----------------------------- 랭킹 보드 생성 -----------------------------------
@@ -83,7 +76,10 @@ public class RankingboardManager : SceneSingleton<RankingboardManager>
         {
             if (i < rankings.Count)
             {
-                cachedRows[i].SetData(rankings[i]);
+                RankingEntryResponse entry = rankings[i];
+                Sprite titleSprite = (titleManager != null && !string.IsNullOrEmpty(entry.TitleId)) ? titleManager.GetTitleSprite(entry.TitleId) : null;
+
+                cachedRows[i].SetData(entry, titleSprite);
             }
             else
             {

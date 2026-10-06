@@ -23,6 +23,8 @@ public class TitleManager : MonoBehaviour
     [Header("장착 상태 로컬 테스트용 Id")]
     [SerializeField]
     private string equippedTitleId = ""; // 현재 장착 중인 칭호 ID
+    public string EquippedTitleId => equippedTitleId;
+
 
     // 슬롯 풀
     private readonly List<TitleSlotUI> slotPool = new List<TitleSlotUI>();
@@ -102,8 +104,11 @@ public class TitleManager : MonoBehaviour
         RefreshTitleUI();
 
         // TODO: CharacterUIManager 등에 실시간 장착 이미지 반영
+        // 캐릭터탭 반영 (장착 해제 상태면 null 전달)
+        Sprite targetSprite = string.IsNullOrEmpty(equippedTitleId) ? null : data.displaySprite;
+        CharacterUIManager.Instance.SetEquippedTitle(targetSprite);
     }
-
+    // --------------------------------------- 풀링 ----------------------------------------
     private TitleSlotUI GetSlot(int index)
     {
         if (index < slotPool.Count)
@@ -122,5 +127,25 @@ public class TitleManager : MonoBehaviour
         {
             slotPool[i].gameObject.SetActive(false);
         }
+    }
+    // -------------------------------------------------------------------------------------
+    // ------------------------------------- 조회 ------------------------------------------
+    // id 받아 SO 조회
+    private TitleDataSO GetTitleData(string titleId)
+    {
+        if (string.IsNullOrEmpty(titleId) || registeredTitles == null) return null;
+        return registeredTitles.Find(t => t != null && t.titleId == titleId);
+    }
+
+    // id 받아 Sprite 조회
+    public Sprite GetTitleSprite(string titleId)
+    {
+        TitleDataSO data = GetTitleData(titleId);
+        return data != null ? data.displaySprite : null;
+    }
+
+    public Sprite GetEquippedTitleSprite()
+    {
+        return GetTitleSprite(equippedTitleId);
     }
 }
