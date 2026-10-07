@@ -16995,6 +16995,17 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 907755886}
   m_CullTransparentMesh: 1
+--- !u!114 &909170956 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4817069367303148071, guid: 545caedeb10c82c40bb4f0cfefc436ff, type: 3}
+  m_PrefabInstance: {fileID: 4729249235596113407}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &909187077 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2339174169784442728, guid: 545caedeb10c82c40bb4f0cfefc436ff, type: 3}
@@ -26780,6 +26791,22 @@ RectTransform:
   m_AnchoredPosition: {x: 840.429, y: -35}
   m_SizeDelta: {x: 316.1716, y: 70}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1404065938 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7288453890096804440, guid: 545caedeb10c82c40bb4f0cfefc436ff, type: 3}
+  m_PrefabInstance: {fileID: 4729249235596113407}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4715c8daba5b16458abf23de0f17a77, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!1 &1404065939 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6824041933395537019, guid: 545caedeb10c82c40bb4f0cfefc436ff, type: 3}
+  m_PrefabInstance: {fileID: 4729249235596113407}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1408202457
 GameObject:
   m_ObjectHideFlags: 0
@@ -36838,6 +36865,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8861ab259d02d1e4a9b2285d3e3739ef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  titleManager: {fileID: 2019406967}
   achievementButton: {fileID: 1129755807}
   closeButton: {fileID: 4729249235596113413}
   achievementPopup: {fileID: 4729249235596113414}
@@ -39082,11 +39110,14 @@ MonoBehaviour:
   closeButton: {fileID: 872065969}
   titlePopup: {fileID: 1255014142}
   slotParent: {fileID: 10158831}
+  previewPopup: {fileID: 1404065939}
+  previewTitleImage: {fileID: 909170956}
+  previewDimCloser: {fileID: 1404065938}
   slotPrefab: {fileID: 5455036929620854891, guid: 0410089586fc39f4993cd0803d32ec43, type: 3}
   registeredTitles:
   - {fileID: 11400000, guid: d26dd6363414dd84cb919dd52cf13291, type: 2}
   backendManager: {fileID: 596811455}
-  useLocalTestData: 0
+  useLocalTestData: 1
   equippedTitleId: 
 --- !u!4 &2019406968
 Transform:
@@ -42900,6 +42931,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6411887975752851333, guid: 545caedeb10c82c40bb4f0cfefc436ff, type: 3}
       propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6824041933395537019, guid: 545caedeb10c82c40bb4f0cfefc436ff, type: 3}
+      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6831414166976811193, guid: 545caedeb10c82c40bb4f0cfefc436ff, type: 3}

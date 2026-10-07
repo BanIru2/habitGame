@@ -15,6 +15,14 @@ public class TitleManager : MonoBehaviour
     [SerializeField]
     private Transform slotParent;        // 슬롯을 소환할 Content transform
 
+    [Header("보상 미리보기")]
+    [SerializeField]
+    private GameObject previewPopup;
+    [SerializeField]
+    private Image previewTitleImage;
+    [SerializeField]
+    private DimCloser previewDimCloser;
+
     [Header("프리팹 & 데이터")]
     [SerializeField]
     private TitleSlotUI slotPrefab;      // TitleSlot.prefab
@@ -52,6 +60,11 @@ public class TitleManager : MonoBehaviour
         if (closeButton != null)
         {
             closeButton.onClick.AddListener(ClosePopup);
+        }
+
+        if (previewDimCloser != null)
+        {
+            previewDimCloser.AddListener(ClosePreview);
         }
     }
 
@@ -291,5 +304,27 @@ public class TitleManager : MonoBehaviour
     public Sprite GetEquippedTitleSprite()
     {
         return GetTitleSprite(equippedTitleId);
+    }
+
+    // ---------------------------------- 미리 보기 ---------------------------------------
+    public void ShowPreview(Sprite titleSprite)
+    {
+        if (titleSprite == null) return;
+        if (previewTitleImage != null)
+        {
+            previewTitleImage.sprite = titleSprite;
+        }
+        if (previewPopup != null)
+        {
+            previewPopup.SetActive(true);
+        }
+    }
+
+    public void ClosePreview()
+    {
+        if (previewPopup != null)
+        {
+            previewPopup.SetActive(false);
+        }
     }
 }

@@ -7,6 +7,8 @@ using UnityEngine.UI;
 
 public class AchievementManager : MonoBehaviour
 {
+    [SerializeField]
+    private TitleManager titleManager;
     [Header("UI 연결")]
     [SerializeField]
     private Button achievementButton;
@@ -269,6 +271,11 @@ public class AchievementManager : MonoBehaviour
 
     private void OnCheckReward(AchievementViewData data)
     {
-        
+        if (data.AchievementSO.rewardTitle.displaySprite == null) return;
+
+        if (titleManager != null)
+        {
+            titleManager.ShowPreview(data.AchievementSO.rewardTitle.displaySprite);
+        }
     }
 }
