@@ -1,14 +1,11 @@
-using Newtonsoft.Json;
+ï»¿using Newtonsoft.Json;
 
 public class AchievementRewardClaimResponse
 {
     [JsonProperty("achievementId")]
     public string AchievementId { get; set; }
 
-    [JsonProperty("isClaimed")]
-    public bool IsClaimed { get; set; }
-
-    // ¸ŞÀÎ º¸»ó: È¹µæÇÑ ÄªÈ£ ID
+    // ë©”ì¸ ë³´ìƒ: íšë“í•œ ì¹­í˜¸ ID (ì—†ì„ ê²½ìš° null)
     [JsonProperty("rewardTitleId")]
     public string RewardTitleId { get; set; }
 }

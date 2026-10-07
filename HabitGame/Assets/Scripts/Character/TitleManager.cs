@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -18,16 +19,29 @@ public class TitleManager : MonoBehaviour
     [SerializeField]
     private TitleSlotUI slotPrefab;      // TitleSlot.prefab
     [SerializeField]
-    private List<TitleDataSO> registeredTitles; // 보유 칭호 목록
+    private List<TitleDataSO> registeredTitles; // 전체 마스터 칭호 카탈로그
 
-    [Header("장착 상태 로컬 테스트용 Id")]
+    [Header("백엔드 연결")]
     [SerializeField]
-    private string equippedTitleId = ""; // 현재 장착 중인 칭호 ID
+    private TitleBackendManager backendManager;
+
+    [Header("로컬 테스트")]
+    [SerializeField]
+    private bool useLocalTestData = false;
+
+    [Header("장착 상태")]
+    [SerializeField]
+    private string equippedTitleId = null; // 현재 장착 중인 칭호 ID (미장착 시 null)
     public string EquippedTitleId => equippedTitleId;
 
+    // 백엔드로부터 동기화된 유저 보유 칭호 ID 집합
+    private readonly HashSet<string> ownedTitleIds = new HashSet<string>();
 
     // 슬롯 풀
     private readonly List<TitleSlotUI> slotPool = new List<TitleSlotUI>();
+
+    // 장착 / 해제 요청이 끝날 때까지 추가 클릭으로 인한 중복 요청 방지
+    private bool isEquippingTitle;
 
     private void Awake()
     {
@@ -41,12 +55,51 @@ public class TitleManager : MonoBehaviour
         }
     }
 
-    public void OpenPopup()
+    private async void Start()
+    {
+        if (useLocalTestData)
+        {
+            LoadLocalTestData();
+        }
+        else
+        {
+            await FetchTitlesFromServer();
+        }
+
+        // 로그인 시 이미 장착 중인 칭호가 있다면 캐릭터 탭에 반영
+        UpdateCharacterEquippedTitle();
+    }
+
+    // 로컬 테스트용 더미 데이터 세팅
+    private void LoadLocalTestData()
+    {
+        ownedTitleIds.Clear();
+        if (registeredTitles != null)
+        {
+            foreach (var title in registeredTitles)
+            {
+                if (title != null && !string.IsNullOrEmpty(title.titleId))
+                {
+                    ownedTitleIds.Add(title.titleId);
+                }
+            }
+        }
+    }
+
+    public async void OpenPopup()
     {
         if (titlePopup != null)
         {
             titlePopup.SetActive(true);
         }
+
+        if (useLocalTestData)
+        {
+            RefreshTitleUI();
+            return;
+        }
+
+        await FetchTitlesFromServer();
         RefreshTitleUI();
     }
 
@@ -58,6 +111,52 @@ public class TitleManager : MonoBehaviour
         }
     }
 
+    // 서버로부터 내 칭호 목록 및 장착 칭호 조회
+    public async Task FetchTitlesFromServer()
+    {
+        if (backendManager == null)
+        {
+            Debug.LogError("[TitleManager] TitleBackendManager가 연결되지 않았습니다.");
+            return;
+        }
+
+        try
+        {
+            UserTitlesResponse response = await backendManager.FetchTitlesAsync();
+            if (response != null)
+            {
+                ownedTitleIds.Clear();
+                if (response.OwnedTitleIds != null)
+                {
+                    foreach (var id in response.OwnedTitleIds)
+                    {
+                        if (!string.IsNullOrEmpty(id))
+                            ownedTitleIds.Add(id);
+                    }
+                }
+
+                equippedTitleId = response.EquippedTitleId;
+                UpdateCharacterEquippedTitle();
+            }
+        }
+        catch (ApiException e)
+        {
+            Debug.LogError($"[TitleManager] 칭호 목록 조회 실패 ({e.StatusCode}): {e.Message}");
+            if (ErrorPopupManager.Instance != null)
+            {
+                ErrorPopupManager.Instance.ShowApiError(e);
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[TitleManager] 칭호 시스템 오류: {e.Message}");
+            if (ErrorPopupManager.Instance != null)
+            {
+                ErrorPopupManager.Instance.ShowSystemError();
+            }
+        }
+    }
+
     public void RefreshTitleUI()
     {
         if (registeredTitles == null || registeredTitles.Count == 0)
@@ -66,9 +165,14 @@ public class TitleManager : MonoBehaviour
             return;
         }
 
-        for (int i = 0; i < registeredTitles.Count; i++)
+        // 전체 마스터 칭호 중 유저가 실제로 보유한 칭호만 필터링
+        List<TitleDataSO> ownedList = registeredTitles.FindAll(
+            t => t != null && ownedTitleIds.Contains(t.titleId)
+        );
+
+        for (int i = 0; i < ownedList.Count; i++)
         {
-            TitleDataSO titleSO = registeredTitles[i];
+            TitleDataSO titleSO = ownedList[i];
             TitleSlotUI slot = GetSlot(i);
             slot.gameObject.SetActive(true);
 
@@ -79,35 +183,75 @@ public class TitleManager : MonoBehaviour
             slot.LoadData(titleSO, isEquipped, OnClickTitleSlot);
         }
 
-        HideUnusedSlots(registeredTitles.Count);
+        HideUnusedSlots(ownedList.Count);
     }
 
-    // 슬롯 클릭 콜백 (즉시 장착 / 해제 토글)
-    private void OnClickTitleSlot(TitleDataSO data)
+    // 슬롯 클릭 콜백 (장착 / 해제 토글)
+    private async void OnClickTitleSlot(TitleDataSO data)
     {
         if (data == null || string.IsNullOrEmpty(data.titleId)) return;
+        if (isEquippingTitle) return;
 
-        if (equippedTitleId == data.titleId)
+        // 이미 장착 중인 것을 누르면 장착 해제(null), 아니면 새로 장착
+        string targetTitleId = (equippedTitleId == data.titleId) ? null : data.titleId;
+
+        // 로컬 테스트 분기
+        if (useLocalTestData)
         {
-            // 이미 장착 중인 걸 누르면 장착 해제
-            equippedTitleId = "";
-            Debug.Log($"[TitleManager] 칭호 장착 해제: {data.titleId}");
+            equippedTitleId = targetTitleId;
+            Debug.Log($"[TitleManager] (로컬) 칭호 변경: '{equippedTitleId ?? "미장착"}'");
+            RefreshTitleUI();
+            UpdateCharacterEquippedTitle();
+            return;
         }
-        else
+
+        if (backendManager == null)
         {
-            // 새로 장착
-            equippedTitleId = data.titleId;
-            Debug.Log($"[TitleManager] 칭호 장착 완료: {data.titleId}");
+            Debug.LogError("[TitleManager] TitleBackendManager가 연결되지 않았습니다.");
+            return;
         }
 
-        // 목록 슬롯들의 테두리 하이라이트 즉시 갱신 (선택한 것만 노란색)
-        RefreshTitleUI();
+        try
+        {
+            isEquippingTitle = true;
+            EquipTitleResponse response = await backendManager.EquipTitleAsync(targetTitleId);
+            equippedTitleId = response != null ? response.EquippedTitleId : targetTitleId;
+            Debug.Log($"[TitleManager] (서버) 칭호 장착/해제 완료: '{equippedTitleId ?? "미장착"}'");
 
-        // TODO: CharacterUIManager 등에 실시간 장착 이미지 반영
-        // 캐릭터탭 반영 (장착 해제 상태면 null 전달)
-        Sprite targetSprite = string.IsNullOrEmpty(equippedTitleId) ? null : data.displaySprite;
-        CharacterUIManager.Instance.SetEquippedTitle(targetSprite);
+            RefreshTitleUI();
+            UpdateCharacterEquippedTitle();
+        }
+        catch (ApiException e)
+        {
+            Debug.LogError($"[TitleManager] 칭호 장착 실패 ({e.StatusCode}): {e.Message}");
+            if (ErrorPopupManager.Instance != null)
+            {
+                ErrorPopupManager.Instance.ShowApiError(e);
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[TitleManager] 칭호 장착 시스템 오류: {e.Message}");
+            if (ErrorPopupManager.Instance != null)
+            {
+                ErrorPopupManager.Instance.ShowSystemError();
+            }
+        }
+        finally
+        {
+            isEquippingTitle = false;
+        }
     }
+
+    private void UpdateCharacterEquippedTitle()
+    {
+        Sprite targetSprite = GetEquippedTitleSprite();
+        if (CharacterUIManager.Instance != null)
+        {
+            CharacterUIManager.Instance.SetEquippedTitle(targetSprite);
+        }
+    }
+
     // --------------------------------------- 풀링 ----------------------------------------
     private TitleSlotUI GetSlot(int index)
     {

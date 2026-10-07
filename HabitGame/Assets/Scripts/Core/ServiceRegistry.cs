@@ -17,6 +17,7 @@ public class ServiceRegistry : Singleton<ServiceRegistry>
     public BattleService Battle { get; private set; }
     public RankingService Ranking { get; private set; }
     public AchievementService Achievement { get; private set; }
+    public TitleService Title { get; private set; }
 
     protected override void Awake()
     {
@@ -40,5 +41,6 @@ public class ServiceRegistry : Singleton<ServiceRegistry>
         Battle = new BattleService(apiClient);
         Ranking = new RankingService(apiClient);
         Achievement = new AchievementService(apiClient);
+        Title = new TitleService(apiClient);
     }
 }
