@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class GachaManager : MonoBehaviour
 {
@@ -21,6 +22,20 @@ public class GachaManager : MonoBehaviour
     [SerializeField]
     private GachaResultPopupManager resultPopupManager;
 
+    [Header("확률 팝업 UI")]
+    [SerializeField]
+    private GameObject probabilityPopup;
+    [SerializeField]
+    private Button probabilityCloseButton;
+    [SerializeField]
+    private TextMeshProUGUI tier1Text;
+    [SerializeField]
+    private TextMeshProUGUI tier2Text;
+    [SerializeField]
+    private TextMeshProUGUI tier3Text;
+    [SerializeField]
+    private TextMeshProUGUI tier4Text;
+
     // 비용 임시값(G)
     // 1회 뽑기 비용
     private const int gachaCost = 500;
@@ -37,6 +52,10 @@ public class GachaManager : MonoBehaviour
         oneGachaButton.onClick.AddListener(() => DoGacha(1));
         tenGachaButton.onClick.AddListener(() => DoGacha(10));
         shopBackendManager = FindObjectOfType<ShopBackendManager>();
+
+        probabilityButton.onClick.AddListener(OpenProbabilityPopup);
+        probabilityCloseButton.onClick.AddListener(CloseProbabilityPopup);
+
     }
 
     // 가챠탭(상점)이 열릴 때 호출
@@ -174,5 +193,63 @@ public class GachaManager : MonoBehaviour
     private void ShowGachaResult(List<EquipmentDataSO> results)
     {
         resultPopupManager.Show(results);
+    }
+
+    // --------------------------- 확률 팝업 --------------------------------
+    public void OpenProbabilityPopup()
+    {
+        UpdateProbabilityTexts();
+
+        probabilityPopup.SetActive(true);
+    }
+
+    public void CloseProbabilityPopup()
+    {
+        probabilityPopup.SetActive(false);
+    }
+
+    private void UpdateProbabilityTexts()
+    {
+        // 최신 해금 장비 목록 및 총 가중치 갱신
+        GetList();
+        CalcWeight();
+
+        if (totalWeight <= 0)
+        {
+            tier1Text.SetText("1티어 (기본)  : 0.00%");
+            tier2Text.SetText("2티어 (Lv.1+) : 0.00%");
+            tier3Text.SetText("3티어 (Lv.4+) : 0.00%");
+            tier4Text.SetText("4티어 (Lv.7+) : 0.00%");
+            return;
+        }
+
+        // 현재 풀(canGetList)에 있는 각 티어별 가중치 합산
+        int tier1Weight = 0;
+        int tier2Weight = 0;
+        int tier3Weight = 0;
+        int tier4Weight = 0;
+
+        foreach (var item in canGetList)
+        {
+            if (item == null) continue;
+            int reqLevel = item.unlockCondition.requiredAttributeLevel;
+
+            if (reqLevel >= 7) tier4Weight += 5;
+            else if (reqLevel >= 4) tier3Weight += 20;
+            else if (reqLevel >= 1) tier2Weight += 50;
+            else tier1Weight += 100;
+        }
+
+        // 각 티어별 총 확률(%) 계산
+        float tier4Rate = (float)tier4Weight / totalWeight * 100f;
+        float tier3Rate = (float)tier3Weight / totalWeight * 100f;
+        float tier2Rate = (float)tier2Weight / totalWeight * 100f;
+        float tier1Rate = (float)tier1Weight / totalWeight * 100f;
+
+        // 텍스트 반영 ({0:2}는 소수점 둘째 자리까지 표기)
+        tier4Text.SetText("4티어 (Lv.7+) : {0:2}%", tier4Rate);
+        tier3Text.SetText("3티어 (Lv.4+) : {0:2}%", tier3Rate);
+        tier2Text.SetText("2티어 (Lv.1+) : {0:2}%", tier2Rate);
+        tier1Text.SetText("1티어 (기본)  : {0:2}%", tier1Rate);
     }
 }
