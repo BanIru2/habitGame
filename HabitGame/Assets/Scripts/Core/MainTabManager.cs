@@ -73,6 +73,7 @@ public class MainTabManager : SceneSingleton<MainTabManager>
         if (isChangingTap) return;
 
         isChangingTap = true;
+        SetTabButtonsInteractable(false);
 
         try
         {
@@ -95,6 +96,7 @@ public class MainTabManager : SceneSingleton<MainTabManager>
         finally
         {
             isChangingTap = false;
+            SetTabButtonsInteractable(true);
         }
     }
 
@@ -103,6 +105,7 @@ public class MainTabManager : SceneSingleton<MainTabManager>
         if (isChangingTap) return;
 
         isChangingTap = true;
+        SetTabButtonsInteractable(false);
 
         try
         {
@@ -123,6 +126,7 @@ public class MainTabManager : SceneSingleton<MainTabManager>
         finally
         {
             isChangingTap = false;
+            SetTabButtonsInteractable(true);
         }
     }
 
@@ -131,6 +135,7 @@ public class MainTabManager : SceneSingleton<MainTabManager>
         if (isChangingTap) return;
 
         isChangingTap = true;
+        SetTabButtonsInteractable(false);
 
         try
         {
@@ -151,6 +156,7 @@ public class MainTabManager : SceneSingleton<MainTabManager>
         finally
         {
             isChangingTap = false;
+            SetTabButtonsInteractable(true);
         }
     }
 
@@ -159,6 +165,7 @@ public class MainTabManager : SceneSingleton<MainTabManager>
         if (isChangingTap) return;
 
         isChangingTap = true;
+        SetTabButtonsInteractable(false);
 
         try
         {
@@ -179,6 +186,7 @@ public class MainTabManager : SceneSingleton<MainTabManager>
         finally
         {
             isChangingTap = false;
+            SetTabButtonsInteractable(true);
         }
     }
 
@@ -187,6 +195,7 @@ public class MainTabManager : SceneSingleton<MainTabManager>
         if (isChangingTap) return;
 
         isChangingTap = true;
+        SetTabButtonsInteractable(false);
 
         try
         {
@@ -209,6 +218,16 @@ public class MainTabManager : SceneSingleton<MainTabManager>
         finally
         {
             isChangingTap = false;
+            SetTabButtonsInteractable(true);
         }
+    }
+
+    private void SetTabButtonsInteractable(bool interactable)
+    {
+        if (habitTapButton != null) habitTapButton.interactable = interactable;
+        if (characterTapButton != null) characterTapButton.interactable = interactable;
+        if (inventoryTapButton != null) inventoryTapButton.interactable = interactable;
+        if (shopTapButton != null) shopTapButton.interactable = interactable;
+        if (battleTapButton != null) battleTapButton.interactable = interactable;
     }
 }
