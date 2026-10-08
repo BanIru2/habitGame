@@ -6,7 +6,7 @@ using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
-
+using Cysharp.Threading.Tasks;
 public class ShopUIManager : SceneSingleton<ShopUIManager>
 {
     [SerializeField]
@@ -85,10 +85,45 @@ public class ShopUIManager : SceneSingleton<ShopUIManager>
 
     public async Task OpenShop()
     {
-        CharacterResponse character = await CharacterManager.Instance.RefreshCharacterAsync();
-        goldText.text = $"{character.Gold} G";
+        var charTask = CharacterManager.Instance.RefreshCharacterAsync().AsUniTask();
+        var shopTask = RefreshShopAsync().AsUniTask();
 
-        await RefreshShopAsync();
+        // 발생한 에러들을 담아둘 리스트
+        List<Exception> errors = null;
+        CharacterResponse character = null;
+
+        // 캐릭터 요청 결과 확인
+        try
+        {
+            character = await charTask;
+        }
+        catch (Exception ex)
+        {
+            errors ??= new List<Exception>();
+            errors.Add(ex);
+        }
+
+        // 상점 아이템 요청 결과 확인
+        try
+        {
+            await shopTask;
+        }
+        catch (Exception ex)
+        {
+            errors ??= new List<Exception>();
+            errors.Add(ex);
+        }
+
+        if (errors != null && errors.Count > 0)
+        {
+            throw new AggregateException(errors);
+        }
+
+        if (character != null)
+        {
+            goldText.SetText("{0} G", character.Gold);
+        }
+
         ShowEquipmentItems();
     }
 
