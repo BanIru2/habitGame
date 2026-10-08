@@ -7,6 +7,7 @@ using System.Threading.Tasks;   // Task ���� ���� �ʿ�
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
+using Cysharp.Threading.Tasks;
 
 public class ApiClient : Singleton<ApiClient>
 {
@@ -176,11 +177,7 @@ public class ApiClient : Singleton<ApiClient>
         // ���� ��� ���̱�
         ApplyHeaders(request, accessToken);
 
-        // ��û �߻�
-        UnityWebRequestAsyncOperation operation = request.SendWebRequest();
-        // ��û �� ���
-        while (!operation.isDone)
-            await Task.Yield();
+        await request.SendWebRequest();
 
         // ��û�� ���� ���� ������ (null�̸� �� ���ڿ�)
         string responseText = request.downloadHandler != null
@@ -261,9 +258,7 @@ public class ApiClient : Singleton<ApiClient>
         if (!string.IsNullOrEmpty(accessToken))
             request.SetRequestHeader("Authorization", "Bearer " + accessToken);
 
-        UnityWebRequestAsyncOperation operation = request.SendWebRequest();
-        while (!operation.isDone)
-            await Task.Yield();
+        await request.SendWebRequest();
 
         string responseText = request.downloadHandler != null
             ? request.downloadHandler.text : string.Empty;
