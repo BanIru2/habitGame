@@ -26,6 +26,8 @@ public class GachaManager : MonoBehaviour
     [SerializeField]
     private GameObject probabilityPopup;
     [SerializeField]
+    private GameObject dim;
+    [SerializeField]
     private Button probabilityCloseButton;
     [SerializeField]
     private TextMeshProUGUI tier1Text;
@@ -201,11 +203,13 @@ public class GachaManager : MonoBehaviour
         UpdateProbabilityTexts();
 
         probabilityPopup.SetActive(true);
+        dim.SetActive(true);
     }
 
     public void CloseProbabilityPopup()
     {
         probabilityPopup.SetActive(false);
+        dim.SetActive(false);
     }
 
     private void UpdateProbabilityTexts()
