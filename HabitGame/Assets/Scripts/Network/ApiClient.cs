@@ -177,8 +177,27 @@ public class ApiClient : Singleton<ApiClient>
         // ���� ��� ���̱�
         ApplyHeaders(request, accessToken);
 
-        await request.SendWebRequest();
+        try
+        {
+            await request.SendWebRequest();
+        }
+        catch (UnityWebRequestException)
+        {
+            string errorText = request.downloadHandler != null
+                ? request.downloadHandler.text
+                : string.Empty;
 
+            Debug.LogError(
+                $"[ApiClient] {method} {url} failed\n" +
+                $"Status: {request.responseCode}\nBody: {errorText}"
+            );
+
+            throw ApiException.FromResponse(
+                request.responseCode,
+                request.error,
+                errorText
+            );
+        }
         // ��û�� ���� ���� ������ (null�̸� �� ���ڿ�)
         string responseText = request.downloadHandler != null
             ? request.downloadHandler.text : string.Empty;
@@ -258,8 +277,27 @@ public class ApiClient : Singleton<ApiClient>
         if (!string.IsNullOrEmpty(accessToken))
             request.SetRequestHeader("Authorization", "Bearer " + accessToken);
 
-        await request.SendWebRequest();
+        try
+        {
+            await request.SendWebRequest();
+        }
+        catch (UnityWebRequestException)
+        {
+            string errorText = request.downloadHandler != null
+                ? request.downloadHandler.text
+                : string.Empty;
 
+            Debug.LogError(
+                $"[ApiClient] POST (Multipart) {url} failed\n" +
+                $"Status: {request.responseCode}\nBody: {errorText}"
+            );
+
+            throw ApiException.FromResponse(
+                request.responseCode,
+                request.error,
+                errorText
+            );
+        }
         string responseText = request.downloadHandler != null
             ? request.downloadHandler.text : string.Empty;
 
