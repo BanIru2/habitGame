@@ -62,6 +62,23 @@ public class HabitService
         );
     }
 
+    // 생활 습관 Streak 마일스톤 보상 수령
+    // Daily: 10일마다 / Weekly: 2주마다 특성 탐색권 1개 지급
+    public Task<StreakRewardResponse> ClaimStreakRewardAsync(
+        ClaimStreakRewardRequest request)
+    {
+        if (request == null)
+            throw new ArgumentNullException(nameof(request));
+
+        // 사용자 ID는 서버에서 JWT 인증 정보로 확인
+        GetCurrentUserId();
+
+        return apiClient.PostAsync<ClaimStreakRewardRequest, StreakRewardResponse>(
+            "/rewards/streak/claim",
+            request
+        );
+    }
+
     // 생활 습관 사진 인증 요청
     public Task<HabitVerifyResponse> VerifyHabitPhotoAsync(long goalId, byte[] photoBytes)
     {

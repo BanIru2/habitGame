@@ -25,6 +25,9 @@ public class HabitItem : MonoBehaviour
     // 영구적인 중복 지급 방지는 서버에서 처리해야 함.
     private int lastProcessedStreakMilestone = -1;
 
+    // Streak 보상 API 요청이 진행 중인지 확인
+    private bool isClaimingStreakReward = false;
+
     private HabitSummaryManager summaryManager;
     private HabitDetailManager detailManager;
     private PhotoVerificationManager photoVerificationManager;
@@ -472,25 +475,40 @@ public class HabitItem : MonoBehaviour
                 achievedAmount
             );
 
+
             // =========================================
-            // 이미 보상을 받은 Record라면
-            // 중복 Claim 요청하지 않음
+            // Habit 목표 완료 보상 처리
             // =========================================
+
+            // 1. 서버에서 이미 보상이 지급되었다고 응답한 경우
+            //    → 중복으로 보상을 요청하지 않음
             if (recordResponse.RewardClaimed)
             {
                 Debug.Log(
                     "이미 보상이 지급된 Habit Record입니다."
                 );
             }
-            else
+            // 2. 아직 보상을 받지 않았고, 목표 달성량을 모두 채운 경우
+            //    → 보상 API를 호출하여 자동으로 보상 수령
+            else if (IsGoalCompleted())
             {
-                // =========================================
-                // Habit Reward 자동 수령
-                // =========================================
+                Debug.Log(
+                    "Habit 목표 달성 완료 → 보상 수령 요청"
+                );
+
                 await ClaimReward(
                     recordResponse.Id
                 );
             }
+            // 3. 목표 달성량이 부족한 경우
+            //    → 기록과 진행도만 저장하고 보상은 요청하지 않음
+            else
+            {
+                Debug.Log(
+                    "목표 미달성 상태이므로 보상 요청하지 않음."
+                );
+            }
+
         }
         catch (System.Exception e)
         {
@@ -766,15 +784,18 @@ public class HabitItem : MonoBehaviour
         if (!isRewardMilestone)
             return;
 
-        // 현재 실행 중 같은 HabitItem에서 동일 마일스톤 중복 처리 방지
-        if (lastProcessedStreakMilestone == streakCount)
+        // 동일 마일스톤을 이미 처리했거나,
+        // 현재 서버에 보상 요청 중이라면 중복 실행 방지
+        if (isClaimingStreakReward ||
+            lastProcessedStreakMilestone == streakCount)
         {
             Debug.Log(
-                $"[Streak Reward] 이미 처리한 마일스톤입니다. " +
+                $"[Streak Reward] 이미 처리 중이거나 처리한 마일스톤입니다. " +
                 $"Goal={habitData.GoalName}, Streak={streakCount}"
             );
             return;
         }
+
 
         lastProcessedStreakMilestone = streakCount;
 
@@ -785,14 +806,23 @@ public class HabitItem : MonoBehaviour
         );
     }
 
+
     // =========================================
     // Streak 보상 처리
     // =========================================
-    private void HandleStreakReward(
+    private async void HandleStreakReward(
         int streakCount,
         bool isDaily,
         bool isWeekly)
     {
+        if (habitData == null)
+            return;
+
+        if (isClaimingStreakReward)
+            return;
+
+        isClaimingStreakReward = true;
+
         Debug.Log("===== Habit Streak Reward =====");
         Debug.Log($"Goal ID : {habitData.Id}");
         Debug.Log($"Goal Name : {habitData.GoalName}");
@@ -800,26 +830,83 @@ public class HabitItem : MonoBehaviour
         Debug.Log($"Streak : {streakCount}");
         Debug.Log("Reward : Trait Ticket x1");
 
-        /*
-         * TODO - Backend 연동
-         *
-         * 현재 InventoryService에는 탐색권을 '지급'하는 API가 없음.
-         * 현재 단계에서는 Streak 마일스톤 감지,
-         * 클라이언트 중복 실행 방지, 보상 팝업 표시까지만 처리함.
-         *
-         * 추후 서버 지급 API가 추가되면 이 위치에서 호출하고,
-         * 실제 지급 성공 응답을 받은 뒤 팝업을 표시하도록 변경하면 됨.
-         *
-         * 영구 중복 지급 방지는
-         * userId + goalId + milestone 기준으로 서버에서 처리 필요.
-         */
+        try
+        {
+            // =========================================
+            // Streak 보상 서버 API 호출
+            // =========================================
 
-        ShowStreakRewardPopup(
-            streakCount,
-            isDaily,
-            isWeekly
-        );
+            ClaimStreakRewardRequest request =
+                new ClaimStreakRewardRequest
+                {
+                    GoalId = habitData.Id
+                };
+
+            StreakRewardResponse response =
+                await ServiceRegistry.Instance.Habit
+                    .ClaimStreakRewardAsync(request);
+
+            if (response == null)
+            {
+                Debug.LogWarning(
+                    "[Streak Reward] 서버 응답이 없습니다."
+                );
+                return;
+            }
+
+            // =========================================
+            // 이번 요청으로 실제 보상이 지급된 경우
+            // =========================================
+            if (response.Claimed)
+            {
+                Debug.Log(
+                    $"[Streak Reward] 지급 성공! " +
+                    $"Item ID={response.ItemId}, " +
+                    $"Quantity={response.Quantity}"
+                );
+
+                // 서버에서 실제 지급 성공한 경우에만 팝업 표시
+                ShowStreakRewardPopup(
+                    streakCount,
+                    isDaily,
+                    isWeekly
+                );
+            }
+            // =========================================
+            // 이미 수령한 마일스톤 보상인 경우
+            // =========================================
+            else if (response.AlreadyClaimed)
+            {
+                Debug.Log(
+                    $"[Streak Reward] 이미 수령한 보상입니다. " +
+                    $"Goal={habitData.GoalName}, " +
+                    $"Milestone={response.Milestone}"
+                );
+            }
+            else
+            {
+                Debug.LogWarning(
+                    "[Streak Reward] 보상이 지급되지 않았습니다."
+                );
+            }
+        }
+        catch (System.Exception e)
+        {
+            // API 오류가 발생해도 보상 지급 성공 팝업은 표시하지 않음
+            Debug.LogWarning(
+                "[Streak Reward] 보상 요청 실패\n" +
+                e.Message
+            );
+
+            // 요청 실패 시 동일 마일스톤 재시도가 가능하도록 초기화
+            lastProcessedStreakMilestone = -1;
+        }
+        finally
+        {
+            isClaimingStreakReward = false;
+        }
     }
+
 
     // =========================================
     // Streak 보상 팝업 표시
