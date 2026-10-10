@@ -67,14 +67,32 @@ public class SpendBudgetManager : MonoBehaviour
                 return;
             }
 
-            BudgetId =
-                response.BudgetId;
+            // =========================================
+            // 지난주 미수령 정산 데이터 확인 (임시 테스트 로그)
+            // =========================================
+            if (response.PendingSettlement != null)
+            {
+                Debug.Log(
+                    "[Pending Settlement] " +
+                    $"Budget ID={response.PendingSettlement.BudgetId}, " +
+                    $"Expected Gold={response.PendingSettlement.ExpectedGold}, " +
+                    $"Streak={response.PendingSettlement.StreakCount}"
+                );
+            }
+            else
+            {
+                Debug.Log(
+                    "[Pending Settlement] 미수령 정산 없음"
+                );
+            }
 
-            weeklyBudget =
-                response.BudgetAmount;
 
-            usedMoney =
-                response.CurrentSpent;
+            // 이번 주 예산이 없으면 0으로 초기화
+            // 지난주 정산 정보는 PendingSettlement로 별도 전달됨
+            BudgetId = response.BudgetId ?? 0;
+            weeklyBudget = response.BudgetAmount ?? 0;
+
+            usedMoney = response.CurrentSpent;
 
             // =========================================
             // 서버에서 받은 소비 Streak 반영

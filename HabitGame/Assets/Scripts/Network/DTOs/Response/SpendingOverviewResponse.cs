@@ -3,11 +3,12 @@ using Newtonsoft.Json;
 
 public class SpendingOverviewResponse
 {
+    // 이번 주 예산이 없는 경우 서버에서 null을 반환할 수 있음
     [JsonProperty("budgetId")]
-    public long BudgetId { get; set; }
+    public long? BudgetId { get; set; }
 
     [JsonProperty("budgetAmount")]
-    public int BudgetAmount { get; set; }
+    public int? BudgetAmount { get; set; }
 
     [JsonProperty("currentSpent")]
     public int CurrentSpent { get; set; }
@@ -29,6 +30,12 @@ public class SpendingOverviewResponse
     [JsonProperty("rewardClaimed")]
     public bool RewardClaimed { get; set; }
 
+    // 지난주 미수령 정산 정보
+    // 미수령 정산이 없으면 서버에서 null 반환
+    [JsonProperty("pendingSettlement")]
+    public SpendingPendingSettlementResponse PendingSettlement { get; set; }
+
+
     [JsonProperty("goals")]
     public List<SpendingSpecialGoalResponse> Goals { get; set; }
 
@@ -43,4 +50,5 @@ public class SpendingOverviewResponse
     // 마지막 동기화 시기
     [JsonProperty("lastSyncedAt")]
     public string LastSyncedAt { get; set; }
+
 }

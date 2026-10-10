@@ -47,6 +47,11 @@ public class SpendRewardManager : MonoBehaviour
     // 현재 예산 보상 수령 여부
     private bool rewardClaimed = false;
 
+    // 서버에서 조회한 지난주 미수령 정산 데이터
+    // 이번 주 예산과 구분하여 보상 수령에 사용
+    private SpendingPendingSettlementResponse pendingSettlement;
+
+
     // 최종 획득 가능 골드
     public int TotalGold =>
         baseGold +
@@ -92,6 +97,35 @@ public class SpendRewardManager : MonoBehaviour
             $"서버 소비 Streak 반영 : " +
             $"{response.StreakCount}주"
         );
+
+        // =========================================
+        // 지난주 미수령 정산 데이터 저장
+        // =========================================
+        pendingSettlement = response.PendingSettlement;
+
+        // 지난주 미수령 정산이 있는지 확인
+        if (pendingSettlement != null)
+        {
+            rewardClaimed = pendingSettlement.RewardClaimed;
+
+            Debug.Log(
+                $"[Spend Reward] 지난주 정산 확인 : " +
+                $"Budget ID={pendingSettlement.BudgetId}, " +
+                $"Gold={pendingSettlement.ExpectedGold}"
+            );
+        }
+        else
+        {
+            rewardClaimed = false;
+
+            Debug.Log(
+                "[Spend Reward] 지난주 미수령 정산 없음"
+            );
+        }
+
+        // 지난주 정산 정보를 반영한 화면 갱신
+        UpdateUI();
+
     }
 
     // =========================================================
@@ -122,8 +156,21 @@ public class SpendRewardManager : MonoBehaviour
             return;
         }
 
+        // =========================================
+        // 지난주 미수령 정산의 Budget ID 사용
+        // 이번 주 예산 ID와 혼동하지 않도록 분리
+        // =========================================
+        if (pendingSettlement == null)
+        {
+            Debug.LogWarning(
+                "수령 가능한 지난주 소비 정산이 없습니다."
+            );
+            return;
+        }
+
         long budgetId =
-            SpendBudgetManager.Instance.BudgetId;
+            pendingSettlement.BudgetId;
+
 
         if (budgetId <= 0)
         {
@@ -198,13 +245,42 @@ public class SpendRewardManager : MonoBehaviour
                 response.RewardClaimed
             );
 
+
             if (response.RewardClaimed)
             {
                 Debug.Log(
                     $"소비 보상 수령 완료 : " +
                     $"+{response.EarnedGold} Gold"
                 );
+
+                // =========================================
+                // 지난주 보상 수령 완료 처리
+                // =========================================
+
+                // 이미 수령한 정산을 다시 요청하지 않도록 상태 저장
+                rewardClaimed = true;
+
+                // 지난주 미수령 정산 정보 제거
+                pendingSettlement = null;
+
+                // 이번 주 예산을 기준으로 예상 보상 표시
+                // (이번 주 예산이 없으면 0 Gold)
+                if (SpendBudgetManager.Instance != null)
+                {
+                    CalculateReward(
+                        SpendBudgetManager.Instance.WeeklyBudget,
+                        SpendBudgetManager.Instance.UsedMoney
+                    );
+                }
+
+                // 보상 수령 완료 후 화면 갱신
+                UpdateUI();
+
+                Debug.Log(
+                    "[Spend Reward] 지난주 정산 수령 완료 및 화면 갱신"
+                );
             }
+
         }
         catch (System.Exception e)
         {
@@ -213,16 +289,17 @@ public class SpendRewardManager : MonoBehaviour
                 e.Message
             );
         }
+
         finally
         {
+            // 보상 수령 요청 처리 종료
             isClaimingReward = false;
 
-            if (claimRewardButton != null)
-            {
-                claimRewardButton.interactable =
-                    !rewardClaimed;
-            }
+            // 서버 정산 상태를 기준으로 버튼 및 보상 UI 갱신
+            // 지난주 미수령 정산이 없으면 버튼은 비활성화
+            UpdateUI();
         }
+
     }
 
     // =========================================================
@@ -469,6 +546,60 @@ public class SpendRewardManager : MonoBehaviour
                 $"Streak Bonus : " +
                 $"+{streakBonusGold:N0}";
         }
+
+        // =========================================
+        // 지난주 미수령 정산 정보 표시
+        // =========================================
+        if (pendingSettlement != null && !rewardClaimed)
+        {
+            // 지난주에 확정된 실제 지급 예정 금액
+            if (totalGoldText != null)
+            {
+                totalGoldText.text =
+                    $"{pendingSettlement.ExpectedGold:N0} Gold";
+            }
+
+            // 지난주 확정 기본 보상
+            if (baseGoldText != null)
+            {
+                baseGoldText.text =
+                    $"기본 보상 : {pendingSettlement.BaseReward:N0} Gold";
+            }
+
+            // 지난주 특수 목표 보상
+            if (bonusGoldText != null)
+            {
+                bonusGoldText.text =
+                    $"특수 목표 보상 : +{pendingSettlement.SpecialGoalReward:N0} Gold";
+            }
+
+            // 지난주 연속 달성 횟수
+            if (streakText != null)
+            {
+                streakText.text =
+                    $"주간 연속 달성 : {pendingSettlement.StreakCount}주";
+            }
+
+            // 지난주 연속 달성 추가 보상
+            if (streakBonusText != null)
+            {
+                streakBonusText.text =
+                    $"연속 달성 보너스 : +{pendingSettlement.StreakBonus:N0} Gold";
+            }
+        }
+
+        // =========================================
+        // 지난주 미수령 정산이 있을 때만
+        // 보상 수령 버튼 활성화
+        // =========================================
+        if (claimRewardButton != null)
+        {
+            claimRewardButton.interactable =
+                pendingSettlement != null &&
+                !rewardClaimed &&
+                !isClaimingReward;
+        }
+
     }
 
 #if UNITY_EDITOR
