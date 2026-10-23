@@ -6,7 +6,7 @@ using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
-using Cysharp.Threading.Tasks;
+
 public class ShopUIManager : SceneSingleton<ShopUIManager>
 {
     [SerializeField]
@@ -85,8 +85,9 @@ public class ShopUIManager : SceneSingleton<ShopUIManager>
 
     public async Task OpenShop()
     {
-        var charTask = CharacterManager.Instance.RefreshCharacterAsync().AsUniTask();
-        var shopTask = RefreshShopAsync().AsUniTask();
+        // 캐릭터 정보와 상점 상품 목록을 병렬로 요청 (I/O 대기 시간 단축)
+        var charTask = CharacterManager.Instance.RefreshCharacterAsync();
+        var shopTask = RefreshShopAsync();
 
         // 발생한 에러들을 담아둘 리스트
         List<Exception> errors = null;

@@ -23,6 +23,9 @@ public class HabitGoalUI : MonoBehaviour
 
     private string selectedCategory = "";
 
+    [Header("Expected Reward")]
+    [SerializeField] private TextMeshProUGUI expectedRewardText;
+
     [Header("Record Type")]
     public Button completeButton;
     public Button valueButton;
@@ -270,6 +273,41 @@ public class HabitGoalUI : MonoBehaviour
                     growthButton.image.color =
                         new Color(0.95f, 0.9f, 1f);
                 }
+                break;
+
+        }
+
+        UpdateExpectedReward();
+    }
+
+    // =========================================
+    // 선택한 특성의 예상 보상 표시
+    // =========================================
+    private void UpdateExpectedReward()
+    {
+        if (expectedRewardText == null)
+            return;
+
+        switch (selectedCategory)
+        {
+            case "physical":
+                expectedRewardText.text = "FIRE EXP +5~15";
+                break;
+
+            case "rhythm":
+                expectedRewardText.text = "WATER EXP +5~15";
+                break;
+
+            case "eco":
+                expectedRewardText.text = "GRASS EXP +5~15";
+                break;
+
+            case "growth":
+                expectedRewardText.text = "AURORA EXP +5~15";
+                break;
+
+            default:
+                expectedRewardText.text = "성장 특성을 선택해 주세요";
                 break;
         }
     }
@@ -764,10 +802,7 @@ public class HabitGoalUI : MonoBehaviour
         {
             if (selectedPeriod == "long-term")
             {
-                Debug.LogWarning(
-                    "Long-term Habit API 생성 실패 - 목표를 추가하지 않습니다.\n" +
-                    e.Message
-                );
+                Debug.LogError("Long-term Habit API 생성 실패\n" + e.ToString());
 
                 return;
             }
@@ -809,6 +844,32 @@ public class HabitGoalUI : MonoBehaviour
         // =========================================
         HabitUIManager uiManager =
             FindObjectOfType<HabitUIManager>();
+
+        // 실제 생성된 목표의 주기로 홈 탭 이동
+        if (habitToAdd != null && listManager != null)
+        {
+            string savedPeriod =
+                (habitToAdd.Period ?? request.Period)
+                .Trim()
+                .ToUpperInvariant();
+
+            switch (savedPeriod)
+            {
+                case "DAILY":
+                    listManager.ShowDaily();
+                    break;
+
+                case "WEEKLY":
+                    listManager.ShowWeekly();
+                    break;
+
+                case "LONG-TERM":
+                case "LONG_TERM":
+                case "LONGTERM":
+                    listManager.ShowLongTerm();
+                    break;
+            }
+        }
 
         if (uiManager != null)
         {

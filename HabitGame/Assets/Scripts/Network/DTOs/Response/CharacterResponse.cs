@@ -65,8 +65,6 @@ public class CharacterResponse
     [JsonProperty("auroraExp")]
     public int AuroraExp { get; set; }
 
-    // ----------------- 아래 필드명 임시. 백엔드 작업 후 통일 필요 -----------------------
-
     // 불(신체) 속성 경험치 (퍼센트)
     [JsonProperty("fireExpPercentage")]
     public int FireExpPercentage { get; set; }
@@ -98,4 +96,8 @@ public class CharacterResponse
     // 오로라(자기개발) 속성 경험치 현재 레벨 요구치
     [JsonProperty("maxAuroraExp")]
     public int MaxAuroraExp { get; set; }
+
+    // 현재 장착 중인 칭호 ID
+    [JsonProperty("equippedTitleId")]
+    public string EquippedTitleId { get; set; }
 }

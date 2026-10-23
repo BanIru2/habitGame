@@ -42,19 +42,30 @@ public class SORegistry : Singleton<SORegistry>
             }
         }
 
-        if (items != null)
+        RegisterItems(items);
+
+        if (shopConfig != null)
         {
-            foreach (var item in items)
+            RegisterItems(shopConfig.equipmentItems);
+            RegisterItems(shopConfig.consumableItems);
+        }
+    }
+
+    private void RegisterItems(IEnumerable<ItemDataSO> source)
+    {
+        if (source == null) return;
+
+        foreach (var item in source)
+        {
+            if (item == null || string.IsNullOrEmpty(item.itemId)) continue;
+            // itemId 중복 방지
+            if (itemMap.TryGetValue(item.itemId, out var existing))
             {
-                if (item == null || string.IsNullOrEmpty(item.itemId)) continue;
-                // itemId 중복 방지
-                if (itemMap.ContainsKey(item.itemId))
-                {
-                    Debug.LogWarning($"[SORegistsry] Duplicate itemId found: {item.itemId}", this);
-                    continue;
-                }
-                itemMap[item.itemId] = item;
+                if (existing != item)
+                    Debug.LogWarning($"[SORegistry] Duplicate itemId found: {item.itemId}", this);
+                continue;
             }
+            itemMap[item.itemId] = item;
         }
     }
 

@@ -1,3 +1,4 @@
+
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,6 +11,18 @@ public class HabitSummaryManager : MonoBehaviour
 
     [Header("Habit List")]
     [SerializeField] private Transform content;
+
+    // 현재 선택한 목표 Section
+    private Transform selectedSection;
+
+    // =========================================
+    // 현재 선택한 Section 설정
+    // =========================================
+    public void SetSelectedSection(Transform section)
+    {
+        selectedSection = section;
+        RefreshSummary();
+    }
 
     // =========================================
     // Summary 갱신
@@ -27,21 +40,35 @@ public class HabitSummaryManager : MonoBehaviour
             return;
         }
 
+        // 현재 선택한 Section 연결 확인
+        if (selectedSection == null)
+        {
+            SetEmptySummary();
+            return;
+        }
+
         int total = 0;
         int completed = 0;
 
         // =========================================
-        // Habit Item의 Toggle 상태 확인
+        // 선택한 Section의 Habit Item Toggle 상태 확인
         // =========================================
-        for (int i = 0; i < content.childCount; i++)
+        for (int i = 0; i < selectedSection.childCount; i++)
         {
-            Transform child = content.GetChild(i);
+            Transform child = selectedSection.GetChild(i);
 
             if (child == null)
                 continue;
 
+            // 실제 Habit Item만 계산
+            HabitItem habitItem =
+                child.GetComponent<HabitItem>();
+
+            if (habitItem == null)
+                continue;
+
             Toggle toggle =
-                child.GetComponentInChildren<Toggle>();
+                child.GetComponentInChildren<Toggle>(true);
 
             // Toggle이 있는 실제 Habit Item만
             // 전체 Habit 개수에 포함

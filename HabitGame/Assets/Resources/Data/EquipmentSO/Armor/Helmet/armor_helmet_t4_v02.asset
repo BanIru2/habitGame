@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fde2df7f89627df438c5a16248a68d02, type: 3}
+  m_Name: armor_helmet_t4_v02
+  m_EditorClassIdentifier: 
+  itemType: 0
+  itemId: armor_helmet_t4_v02
+  displayName: "\uC9C4\uD64D \uC218\uD638 \uD22C\uAD6C"
+  description: "\uD68C\uC0C9\uACFC \uC9C4\uD64D\uC0C9 \uC7A5\uC2DD\uC774 \uB3CB\uBCF4\uC774\uB294
+    \uC704\uC5C4 \uC788\uB294 \uC218\uD638\uC790\uC758 \uD22C\uAD6C."
+  cost: 0
+  icon: {fileID: 21300000, guid: 48f63920d58df4063a0a8814323e9827, type: 3}
+  unlockCondition:
+    requiredAttributeLevel: 0
+    requiredAttribute: 0
+    requiredDailyStreak: 0
+    requiredWeeklyStreak: 0
+  equipmentType: 3
+  statBonuses:
+  - statType: 3
+    value: 100
+  tier: 4
+  partsType: 2
+  partsIndex: 75

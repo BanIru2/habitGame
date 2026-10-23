@@ -9,6 +9,10 @@ public class CharacterManager : Singleton<CharacterManager>
     // 외부에서 직접적으로 참조할 일이 없다면 private으로 잠구는게 낫긴 함
     public CharacterResponse characterStatusData { get; private set; }
 
+    [Header("로컬 테스트")]
+    [SerializeField]
+    private bool useLocalTestData = false;
+
     protected override void Awake()
     {
         base.Awake();
@@ -18,6 +22,16 @@ public class CharacterManager : Singleton<CharacterManager>
     // CharacterREsponse를 요청하는 비동기함수
     public async Task<CharacterResponse> RefreshCharacterAsync()
     {
+        // 로컬 테스트 시 더미 데이터 반환
+        if (useLocalTestData)
+        {
+            if (characterStatusData == null)
+            {
+                characterStatusData = CreateDummyCharacterResponse();
+            }
+            return characterStatusData;
+        }
+
         CharacterResponse response = await ServiceRegistry.Instance.Character.GetMyCharacterAsync();
 
         if (response == null)
@@ -113,5 +127,36 @@ public class CharacterManager : Singleton<CharacterManager>
     public BattleUnit CreateBattleUnit(BattleSetupData setup)
     {
         return CreateBattleUnit(setup, characterStatusData);
+    }
+
+    // 로컬 테스트용 임시 캐릭터 데이터 생성
+    private CharacterResponse CreateDummyCharacterResponse()
+    {
+        return new CharacterResponse
+        {
+            UserId = 1,
+            Gold = 1000,
+            Hp = 1000.0f,
+            Atk = 100.0f,
+            Def = 100.0f,
+            Spd = 10.0f,
+            Crit = 10.0f,
+            FireLv = 7,
+            WaterLv = 8,
+            GrassLv = 5,
+            AuroraLv = 9,
+            FireExp = 700,
+            WaterExp = 80,
+            GrassExp = 50,
+            AuroraExp = 1,
+            FireExpPercentage = 70,
+            WaterExpPercentage = 60,
+            GrassExpPercentage = 9,
+            AuroraExpPercentage = 26,
+            MaxFireExp = 1000,
+            MaxWaterExp = 2000,
+            MaxGrassExp = 500,
+            MaxAuroraExp = 30
+        };
     }
 }

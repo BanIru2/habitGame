@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Threading.Tasks;
 
 /// <summary>
 /// 탭 이동을 관장하는 매니저 클래스
@@ -209,6 +210,43 @@ public class MainTabManager : SceneSingleton<MainTabManager>
         }
     }
 
+    private async Task LoadBattleTapDataAsync()
+    {
+        Task inventoryTask = InventoryManager.Instance.RefreshInventoryAsync();
+
+        Task rankingTask = rankingboardManager.LoadRankingBoard();
+
+        Task remainingCountTask = rankingboardManager.LoadRemainingCount();
+
+        try
+        {
+            await Task.WhenAll(
+                inventoryTask,
+                rankingTask,
+                remainingCountTask
+            );
+        }
+        catch
+        {
+            LogTaskFailure("인벤토리", inventoryTask);
+            LogTaskFailure("랭킹", rankingTask);
+            LogTaskFailure("PvP 잔여 횟수", remainingCountTask);
+
+            throw;
+        }
+    }
+
+    private static void LogTaskFailure(string requestName, Task task)
+    {
+        if (!task.IsFaulted || task.Exception == null)
+            return;
+
+        foreach (Exception exception in task.Exception.Flatten().InnerExceptions)
+        {
+            Debug.LogError($"PvP 탭 {requestName} 요청 실패: {exception.Message}");
+        }
+    }
+
     private async void OnClickBattleTap()
     {
         if (isChangingTap) return;
@@ -218,21 +256,18 @@ public class MainTabManager : SceneSingleton<MainTabManager>
 
         try
         {
-            await rankingboardManager.LoadRankingBoard();
-            await rankingboardManager.LoadRemainingCount();
+            await LoadBattleTapDataAsync();
             BattleUIManager.Instance.SetMatchStartButtonInteractable(true);
             CloseAllTaps();
             battleTap.SetActive(true);
         }
         catch (ApiException exception)
         {
-            Debug.LogError(
-                $"랭킹 정보 요청 실패 ({exception.StatusCode}): " + exception.Message
-            );
+            Debug.LogError($"PvP 탭 데이터 요청 실패 ({exception.StatusCode}): {exception.Message}");
         }
         catch (Exception exception)
         {
-            Debug.LogError($"랭킹 보드 조회 실패: {exception.Message}");
+            Debug.LogError($"PvP 탭 데이터 조회 실패: {exception.Message}");
         }
         finally
         {

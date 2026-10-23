@@ -91,12 +91,14 @@ public class GachaManager : MonoBehaviour
     {
         if (item == null) return 0;
 
-        int reqLevel = item.unlockCondition.requiredAttributeLevel;
         // 요구 레벨이 높을수록 가중치를 낮게 하여 확률 낮추기
-        if (reqLevel >= 7) return 5;
-        if (reqLevel >= 4) return 20;
-        if (reqLevel >= 1) return 50;
-        return 100;
+        return item.Tier switch
+        {
+            4 => 5,
+            3 => 20,
+            2 => 50,
+            _ => 100
+        };
     }
 
     private EquipmentDataSO PickOneItem()
@@ -220,10 +222,10 @@ public class GachaManager : MonoBehaviour
 
         if (totalWeight <= 0)
         {
-            tier1Text.SetText("1티어 (기본)  : 0.00%");
-            tier2Text.SetText("2티어 (Lv.1+) : 0.00%");
-            tier3Text.SetText("3티어 (Lv.4+) : 0.00%");
-            tier4Text.SetText("4티어 (Lv.7+) : 0.00%");
+            tier1Text.SetText("1티어 : 0.00%");
+            tier2Text.SetText("2티어 : 0.00%");
+            tier3Text.SetText("3티어 : 0.00%");
+            tier4Text.SetText("4티어 : 0.00%");
             return;
         }
 
@@ -236,12 +238,14 @@ public class GachaManager : MonoBehaviour
         foreach (var item in canGetList)
         {
             if (item == null) continue;
-            int reqLevel = item.unlockCondition.requiredAttributeLevel;
-
-            if (reqLevel >= 7) tier4Weight += 5;
-            else if (reqLevel >= 4) tier3Weight += 20;
-            else if (reqLevel >= 1) tier2Weight += 50;
-            else tier1Weight += 100;
+            int weight = GetItemWeight(item);
+            switch (item.Tier)
+            {
+                case 4: tier4Weight += weight; break;
+                case 3: tier3Weight += weight; break;
+                case 2: tier2Weight += weight; break;
+                default: tier1Weight += weight; break;
+            }
         }
 
         // 각 티어별 총 확률(%) 계산
@@ -251,9 +255,9 @@ public class GachaManager : MonoBehaviour
         float tier1Rate = (float)tier1Weight / totalWeight * 100f;
 
         // 텍스트 반영 ({0:2}는 소수점 둘째 자리까지 표기)
-        tier4Text.SetText("4티어 (Lv.7+) : {0:2}%", tier4Rate);
-        tier3Text.SetText("3티어 (Lv.4+) : {0:2}%", tier3Rate);
-        tier2Text.SetText("2티어 (Lv.1+) : {0:2}%", tier2Rate);
-        tier1Text.SetText("1티어 (기본)  : {0:2}%", tier1Rate);
+        tier4Text.SetText("4티어 : {0:2}%", tier4Rate);
+        tier3Text.SetText("3티어 : {0:2}%", tier3Rate);
+        tier2Text.SetText("2티어 : {0:2}%", tier2Rate);
+        tier1Text.SetText("1티어 : {0:2}%", tier1Rate);
     }
 }

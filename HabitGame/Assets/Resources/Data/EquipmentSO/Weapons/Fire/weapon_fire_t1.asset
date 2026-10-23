@@ -10,20 +10,24 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fde2df7f89627df438c5a16248a68d02, type: 3}
-  m_Name: tmpClothe
+  m_Name: weapon_fire_t1
   m_EditorClassIdentifier: 
   itemType: 0
-  itemId: 5
-  displayName: "\uC784\uC2DC2"
-  description: "\uC598\uB3C4 \uC784\uC2DC\uC784"
-  cost: 200
-  icon: {fileID: 0}
+  itemId: weapon_fire_t1
+  displayName: "\uC218\uB828\uC6A9 \uB098\uBB34\uAC80"
+  description: "\uB098\uBB34\uB97C \uAE4E\uC544 \uB9CC\uB4E0 \uAC00\uBCBC\uC6B4 \uC218\uB828\uC6A9
+    \uAC80."
+  cost: 0
+  icon: {fileID: 21300000, guid: 345fde3e5d29646d3a28963ad14f9d9d, type: 3}
   unlockCondition:
     requiredAttributeLevel: 0
-    requiredAttribute: 0
+    requiredAttribute: 1
     requiredDailyStreak: 0
     requiredWeeklyStreak: 0
-  equipmentType: 1
+  equipmentType: 0
   statBonuses:
-  - statType: 2
-    value: 10
+  - statType: 1
+    value: 5
+  tier: 1
+  partsType: 5
+  partsIndex: 5

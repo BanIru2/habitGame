@@ -123,6 +123,16 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
 
     private InventoryItemViewData selectedEquipItem;    // 현재 선택된 장비 아이템 저장
 
+    [Header("Battle Result Waiting")]
+    [SerializeField] private GameObject resultWaitingPanel;
+    [SerializeField] private TextMeshProUGUI resultWaitingText;
+    [SerializeField] private UnityEngine.UI.Button resultWaitingCloseButton;
+
+    private string activeBattleId;
+    private BattleResultResponse savedResultResponse;
+    private bool replayFinished;
+    private bool resultDisplayed;
+    private bool resultRequestFailed;
 
     // Battle Panel
     [Header("Battle Panel")]
@@ -135,8 +145,6 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
     [SerializeField]
     private Image oppBattleTitleImage;
     [SerializeField]
-    private TextMeshProUGUI timerText;
-    [SerializeField]
     private Image myHpBar;
     [SerializeField]
     private Image oppHpBar;
@@ -145,9 +153,9 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
     [SerializeField]
     private TextMeshProUGUI oppHpText;
     [SerializeField]
-    private Image myCharacterImage;
+    private RawImage myCharacterImage;
     [SerializeField]
-    private Image oppCharacterImage;
+    private RawImage oppCharacterImage;
     [SerializeField]
     private TextMeshProUGUI turnCountText;
 
@@ -166,11 +174,6 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
     private TextMeshProUGUI resultRankingPointText;
     [SerializeField]
     private Button checkButton;
-
-    private bool isBattle = false;    // UI 타이머 표시 진행을 위한 플래그
-    private float remainTime;
-    private int remainTimeForDisplay;
-    private double battleEndTime;
 
     [SerializeField]
     private RankingboardManager rankingboardManager;
@@ -210,28 +213,16 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
 
         equipActionButton.onClick.AddListener(OnEquipButtonClicked);
         equipDetailCloseButton.onClick.AddListener(CloseEquipDetailPopup);
+
+        resultWaitingCloseButton.onClick.AddListener(OnClickCheckButton);
+
+        ResetBattleResultState();
     }
 
     private void Update()
     {
-        // 매칭 중 중앙 스피너 돌리기
         if (isMatching)
-        {
             loadingSpinner.Rotate(0, 0, -spinSpeed * Time.deltaTime);
-        }
-
-        // 타이머 작동
-        if (isBattle)
-        {
-            remainTime = Mathf.Max(0f, (float)(battleEndTime - PhotonNetwork.Time));
-            UpdateTimerText();
-
-            if (remainTime <= 0f)
-            {
-                isBattle = false;
-                TimeOver();
-            }
-        }
     }
 
     // -----------------------------Lobby Panel-----------------------------------
@@ -304,11 +295,11 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
 
     //-------------------------------Ready Panel-----------------------------------
     // 준비 단계 완료 시(양 측 다 준비 완료 or 준비 시간 끝) 화면 전환
-    public void ReadyComplete(double endTime)
+    public void ReadyComplete(string receivedBattleId)
     {
         readyPanel.SetActive(false);
         battlePanel.SetActive(true);
-        InitBattleUI(endTime);
+        InitBattleUI(receivedBattleId);
     }
 
     private void ResetReadyUI()
@@ -399,7 +390,8 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
     }
 
     // 사용할 소비 아이템 선택 버튼 클릭 시 동작
-    private void OnClickConsumableItemButton(Button clickedButton)
+    private void OnClickConsumableItemButton(
+    UnityEngine.UI.Button clickedButton)
     {
         if (isReady)
         {
@@ -415,6 +407,19 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
             return;
         }
 
+        // 이미 선택한 포션을 다시 누르면 선택 해제
+        if (selectedConsumableItem != null && selectedConsumableItem.ItemSO == buttonInfo.itemData)
+        {
+            ClearSelectedConsumableItem();
+            return;
+        }
+
+        if (InventoryManager.Instance == null)
+        {
+            Debug.LogWarning("InventoryManager가 없습니다.");
+            return;
+        }
+
         List<InventoryItemViewData> consumableItems = InventoryManager.Instance.GetBattlePreparationConsumableItems();
 
         InventoryItemViewData matchedItem = consumableItems.Find(item => item.ItemSO == buttonInfo.itemData);
@@ -422,24 +427,59 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
         if (matchedItem == null)
         {
             Debug.LogWarning("보유 중인 전투 준비 소비 아이템이 아니거나 수량이 없습니다.");
+
+            RefreshConsumableItemUI();
             return;
         }
 
-        foreach (var btn in consumableItemButtons)
-        {
-            btn.image.color = (btn == clickedButton) ? new Color(1f, 0.56f, 0f, 0.2f) : Color.white;
-        }
-
+        // 다른 포션을 선택하면 이전 선택을 교체
         selectedConsumableItem = matchedItem;
+
+        RefreshConsumableItemUI();
     }
 
-    private void ClearSelectedConsumableItem()
+    private void RefreshConsumableItemUI()
     {
-        selectedConsumableItem = null;
+        // 이미 받아둔 인벤토리를 읽는 동작
+        List<InventoryItemViewData> items = InventoryManager.Instance != null ? InventoryManager.Instance.GetBattlePreparationConsumableItems() : new List<InventoryItemViewData>();
 
-        foreach (var btn in consumableItemButtons)
+        foreach (var button in consumableItemButtons)
         {
-            btn.image.color = Color.white;
+            if (button == null)
+                continue;
+
+            ConsumableButtonInfo info = button.GetComponent<ConsumableButtonInfo>();
+
+            if (info == null || info.itemData == null)
+            {
+                if (info != null)
+                    info.SetCount(0);
+
+                button.interactable = false;
+                continue;
+            }
+
+            int ownedCount = 0;
+
+            foreach (var item in items)
+            {
+                if (item.ItemSO == info.itemData)
+                {
+                    ownedCount += Mathf.Max(0, item.Response.Quantity);
+                }
+            }
+
+            bool isSelected = selectedConsumableItem != null && selectedConsumableItem.ItemSO == info.itemData;
+
+            // 실제 인벤토리는 변경하지 않고 표시만 1개 차감
+            int displayCount = Mathf.Max(0, ownedCount - (isSelected ? 1 : 0));
+
+            info.SetCount(displayCount);
+
+            button.image.color = isSelected ? new Color(1f, 0.56f, 0f, 0.2f) : Color.white;
+
+            // 1개 보유 → 선택 후 표시가 0이어도 다시 눌러 해제 가능
+            button.interactable = !isReady && (ownedCount > 0 || isSelected);
         }
     }
 
@@ -472,6 +512,12 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
 
         selectedConsumableItem = latestItem;
         return true;
+    }
+
+    private void ClearSelectedConsumableItem()
+    {
+        selectedConsumableItem = null;
+        RefreshConsumableItemUI();
     }
 
     // 장비 아이템 장착--------------------------------------------
@@ -651,6 +697,8 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
         {
             equipActionButton.interactable = true;
             readyButton.interactable = true;
+
+            RefreshConsumableItemUI();
         }
     }
 
@@ -754,6 +802,9 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
             isMeReadyText.text = "WAITING";
             isMeReadyText.color = Color.black;
         }
+
+        RefreshConsumableItemUI();
+
         // RPC 송신 (상대방 READY 글자 실시간 변경)
         BattleManager.Instance.SendReadyState(isReady);
         // 포톤 서버에 준비 상태 등록 (방장의 전투 시작 체크)
@@ -812,26 +863,23 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
     //------------------------------Battle Panel-------------------------------
     // UI 초기화에 필요한 기능 추가할 것
     // 전투 시작 전 호출되어야 함
-    public void InitBattleUI(double endTime)
+    public void InitBattleUI(string receivedBattleId)
     {
-        battleEndTime = endTime;
-        isBattle = true;
-        remainTime = Mathf.Max(0f, (float)(battleEndTime - PhotonNetwork.Time));
-        remainTimeForDisplay = -1;
+        ResetBattleResultState();
+        activeBattleId = receivedBattleId;
+
         InitCharacterHp();
-        UpdateTimerText();
         InitResultImage();
         InitRankingPointText();
+        UpdateTurnText(1);
     }
 
     // 각 플레이어 이름 정보 받아와서 출력하기
     // 각 플레이어 유닛 정보를 앞전에 미리 받아온다면 private으로 받고 InitBattleUI에서 호출 가능
     public void UpdateTurnText(int turn)
     {
-        if(turnCountText != null)
-        {
-            turnCountText.text = turn.ToString();
-        }
+        if (turnCountText != null)
+            turnCountText.text = $"{turn}턴";
     }
 
     public void GetName(string myNameSTr, string oppNameStr)
@@ -889,19 +937,6 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
         InitCharacterHp();
     }
 
-    private void UpdateTimerText()
-    {
-        int currentSecond = Mathf.CeilToInt(remainTime);
-
-        if(currentSecond != remainTimeForDisplay)
-        {
-            timerText.text = $"{currentSecond}";
-            remainTimeForDisplay = currentSecond;
-
-            timerText.color = (currentSecond <= 10) ? Color.red : Color.black;
-        }
-    }
-
     // 칭호 세팅
     public void SetTitle(bool isMine, Sprite sprite)
     {
@@ -915,17 +950,82 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
     // ------------------------- Battle Finish ----------------------------
     public void FinishBattle(BattleResultResponse response)
     {
-        isBattle = false;
+        if (response == null || response.Status != "CONFIRMED") return;
+        if (activeBattleId == null || response.BattleId != activeBattleId) return;
+
+        savedResultResponse = response;
+        resultRequestFailed = false;
+        TryShowBattleResult();
+    }
+
+    public void OnReplayFinished(string finishedBattleId)
+    {
+        if (activeBattleId == null || finishedBattleId != activeBattleId) return;
+
+        replayFinished = true;
+
+        if (savedResultResponse == null)
+            ShowResultWaiting();
+
+        TryShowBattleResult();
+    }
+
+    private void TryShowBattleResult()
+    {
+        if (!replayFinished || savedResultResponse == null || resultDisplayed)
+            return;
+
+        resultDisplayed = true;
+        HideResultWaiting();
 
         InitResultImage();
-        PrintResultImage(response.Result);
-        SetRankingPointText(response);
+        PrintResultImage(savedResultResponse.Result);
+        SetRankingPointText(savedResultResponse);
         resultPanel.SetActive(true);
     }
 
-    private void TimeOver()
+    private void ShowResultWaiting()
     {
-        BattleManager.Instance.TreatTimeOver();
+        if (resultWaitingText != null)
+        {
+            resultWaitingText.text = resultRequestFailed ? "전투 결과를 확인하지 못했습니다. 로비로 돌아가 주세요." : "전투 결과 확인 중…";
+        }
+
+        if (resultWaitingCloseButton != null)
+            resultWaitingCloseButton.gameObject.SetActive(resultRequestFailed);
+
+        if (resultWaitingPanel != null)
+        {
+            resultWaitingPanel.transform.SetAsLastSibling();
+            resultWaitingPanel.SetActive(true);
+        }
+    }
+
+    private void HideResultWaiting()
+    {
+        if (resultWaitingPanel != null)
+            resultWaitingPanel.SetActive(false);
+    }
+
+    public void NotifyBattleResultRequestFailed(string failedBattleId)
+    {
+        if (activeBattleId == null || failedBattleId != activeBattleId) return;
+        if (savedResultResponse != null || resultDisplayed) return;
+
+        resultRequestFailed = true;
+
+        if (replayFinished)
+            ShowResultWaiting();
+    }
+
+    private void ResetBattleResultState()
+    {
+        activeBattleId = null;
+        savedResultResponse = null;
+        replayFinished = false;
+        resultDisplayed = false;
+        resultRequestFailed = false;
+        HideResultWaiting();
     }
 
     private void OnClickCheckButton()
@@ -943,6 +1043,10 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
     // 전투 종료 후 / 매칭 캔슬
     public async void ReturnToLobby()
     {
+        BattleManager.Instance.CancelBattle();
+
+        ResetBattleResultState();
+
         battlePanel.SetActive(false);
         readyPanel.SetActive(false);
         loadingPanel.SetActive(false);
@@ -950,7 +1054,6 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
         tapBar.SetActive(true);
 
         isMatching = false;
-        isBattle = false;
 
         UpdatePlayerCount(0);
         ResetReadyUI();
@@ -988,12 +1091,7 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
         InitRankingPointText();
         InitCharacterHp();
 
-        turnCountText.text = "0";
-        timerText.text = "60";
-        timerText.color = Color.black;
-
-        remainTime = 0f;
-        remainTimeForDisplay = -1;
+        UpdateTurnText(0);
     }
 
     private void PrintResultImage(string result)

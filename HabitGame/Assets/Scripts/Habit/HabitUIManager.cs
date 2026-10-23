@@ -24,6 +24,7 @@ public class HabitUIManager : SceneSingleton<HabitUIManager>
 
     [Header("Habit")]
     [SerializeField] private HabitListManager habitListManager;
+    [SerializeField] private HabitGoalUI habitGoalUI;
 
     private void Start()
     {
@@ -134,6 +135,14 @@ public class HabitUIManager : SceneSingleton<HabitUIManager>
         SetActive(spendHistoryPanel, false);
 
         SetActive(weeklyReportPanel, false);
+
+        // 현재 선택한 목표 주기로 추가 화면 초기화
+        if (habitGoalUI != null && habitListManager != null)
+        {
+            habitGoalUI.SelectPeriod(
+                habitListManager.SelectedPeriod.ToLowerInvariant()
+            );
+        }
     }
 
     // =========================================

@@ -68,21 +68,6 @@ public class TitleManager : MonoBehaviour
         }
     }
 
-    private async void Start()
-    {
-        if (useLocalTestData)
-        {
-            LoadLocalTestData();
-        }
-        else
-        {
-            await FetchTitlesFromServer();
-        }
-
-        // 로그인 시 이미 장착 중인 칭호가 있다면 캐릭터 탭에 반영
-        UpdateCharacterEquippedTitle();
-    }
-
     // 로컬 테스트용 더미 데이터 세팅
     private void LoadLocalTestData()
     {
@@ -108,6 +93,7 @@ public class TitleManager : MonoBehaviour
 
         if (useLocalTestData)
         {
+            LoadLocalTestData();
             RefreshTitleUI();
             return;
         }

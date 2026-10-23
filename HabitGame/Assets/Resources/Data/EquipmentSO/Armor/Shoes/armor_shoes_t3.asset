@@ -10,20 +10,23 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fde2df7f89627df438c5a16248a68d02, type: 3}
-  m_Name: tmpWeapon 2
-  m_EditorClassIdentifier: 
+  m_Name: armor_shoes_t3
+  m_EditorClassIdentifier:
   itemType: 0
-  itemId: 6
-  displayName: "\uC784\uC2DC3"
-  description: "\uBB34\uAE30\uC784\uC2DC2"
-  cost: 50000
+  itemId: armor_shoes_t3
+  displayName: "질풍의 장화"
+  description: "바람처럼 빠른 발걸음을 돕는 장화."
+  cost: 0
   icon: {fileID: 0}
   unlockCondition:
     requiredAttributeLevel: 0
     requiredAttribute: 0
     requiredDailyStreak: 0
     requiredWeeklyStreak: 0
-  equipmentType: 0
+  equipmentType: 2
   statBonuses:
-  - statType: 1
-    value: 10
+  - statType: 4
+    value: 6
+  tier: 3
+  partsType: 0
+  partsIndex: -1

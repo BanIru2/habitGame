@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fde2df7f89627df438c5a16248a68d02, type: 3}
+  m_Name: armor_shoes_t2
+  m_EditorClassIdentifier:
+  itemType: 0
+  itemId: armor_shoes_t2
+  displayName: "정찰자의 신발"
+  description: "민첩한 움직임을 돕는 정찰용 신발."
+  cost: 0
+  icon: {fileID: 0}
+  unlockCondition:
+    requiredAttributeLevel: 0
+    requiredAttribute: 0
+    requiredDailyStreak: 0
+    requiredWeeklyStreak: 0
+  equipmentType: 2
+  statBonuses:
+  - statType: 4
+    value: 4
+  tier: 2
+  partsType: 0
+  partsIndex: -1

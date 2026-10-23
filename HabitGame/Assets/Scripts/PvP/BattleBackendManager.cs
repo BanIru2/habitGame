@@ -120,6 +120,9 @@ public class BattleBackendManager : Singleton<BattleBackendManager>
         finally
         {
             isHandlingBattleResult = false;
+
+            if (!battleFinishHandled)
+                BattleUIManager.Instance.NotifyBattleResultRequestFailed(battleId);
         }
     }
 

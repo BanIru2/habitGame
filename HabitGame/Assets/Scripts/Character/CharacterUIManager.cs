@@ -97,8 +97,7 @@ public class CharacterUIManager : SceneSingleton<CharacterUIManager>
         ApplyAttrLevel(response);
         ApplyAttrExp(response);
 
-        SetEquippedTitle(titleManager.GetEquippedTitleSprite());
-
+        SetEquippedTitle(titleManager.GetTitleSprite(response.EquippedTitleId));
     }
 
     public void SetEquippedTitle(Sprite titleSprite)
