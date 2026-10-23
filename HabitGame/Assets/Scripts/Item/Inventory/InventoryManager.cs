@@ -372,7 +372,7 @@ public class InventoryManager : SceneSingleton<InventoryManager>
 
     // ---------------------------------- detail popup ---------------------------------
     // 상세 팝업 모두 비활성화
-    private void ClosePopup()
+    public void ClosePopup()
     {
         popupDim.SetActive(false);
         equipDetail.SetActive(false);
