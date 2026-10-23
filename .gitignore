@@ -107,3 +107,8 @@ InitTestScene*.unity*
 
 # Paid Assets
 **/Assets/Layer Lab*
+
+# Free Casual GUI - Unity Asset Store
+# Excluded from public repository due to asset licensing.
+/HabitGame/Assets/Skyden_Games/
+/HabitGame/Assets/Skyden_Games.meta
