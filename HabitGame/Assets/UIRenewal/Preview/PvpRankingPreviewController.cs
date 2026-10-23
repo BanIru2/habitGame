@@ -54,12 +54,23 @@ public sealed class PvpRankingPreviewController : MonoBehaviour
     [SerializeField] private Button hpTestButton;
     [SerializeField] private Button turnTestButton;
     [SerializeField] private Button timerTestButton;
+    [SerializeField] private Button resultTestButton;
     [SerializeField] private Image myBattleHpBar;
     [SerializeField] private Image opponentBattleHpBar;
     [SerializeField] private TMP_Text myBattleHpText;
     [SerializeField] private TMP_Text opponentBattleHpText;
     [SerializeField] private TMP_Text battleTurnText;
     [SerializeField] private TMP_Text battleTimerText;
+    [SerializeField] private GameObject resultPanel;
+    [SerializeField] private Image resultBannerImage;
+    [SerializeField] private TMP_Text resultTitleText;
+    [SerializeField] private TMP_Text currentScoreText;
+    [SerializeField] private TMP_Text scoreDeltaText;
+    [SerializeField] private TMP_Text finalScoreText;
+    [SerializeField] private Button winResultButton;
+    [SerializeField] private Button loseResultButton;
+    [SerializeField] private Button drawResultButton;
+    [SerializeField] private Button resultConfirmButton;
     [SerializeField] private Behaviour[] isolatedBehaviours;
     [SerializeField] private bool[] isolatedBehaviourEnabledStates;
     [SerializeField] private GameObject[] isolatedGameObjects;
@@ -72,6 +83,10 @@ public sealed class PvpRankingPreviewController : MonoBehaviour
     private static readonly Color SelectedColor = new Color32(0xFF, 0xD8, 0x79, 0xFF);
     private static readonly Color NormalSlotColor = new Color32(0xFF, 0xF9, 0xEA, 0xFF);
     private static readonly Color DisabledColor = new Color32(0xC9, 0xBE, 0xAA, 0xFF);
+    private static readonly Color WinColor = new Color32(0xFF, 0xE2, 0x8A, 0xFF);
+    private static readonly Color LoseColor = new Color32(0xE8, 0xB0, 0xA7, 0xFF);
+    private static readonly Color DrawColor = new Color32(0xD8, 0xC7, 0xB4, 0xFF);
+    private static readonly Color ScoreUpColor = new Color32(0x3F, 0x8B, 0x55, 0xFF);
 
     private int remainingCount = 3;
     private int participantCount = 1;
@@ -123,6 +138,11 @@ public sealed class PvpRankingPreviewController : MonoBehaviour
         Add(hpTestButton, ChangeBattleHp);
         Add(turnTestButton, ChangeBattleTurn);
         Add(timerTestButton, ChangeBattleTimer);
+        Add(resultTestButton, ShowWinResult);
+        Add(winResultButton, ShowWinResult);
+        Add(loseResultButton, ShowLoseResult);
+        Add(drawResultButton, ShowDrawResult);
+        Add(resultConfirmButton, ShowLobby);
     }
 
     private void Start()
@@ -204,6 +224,7 @@ public sealed class PvpRankingPreviewController : MonoBehaviour
         SetActive(loadingPanel, false);
         SetActive(readyPanel, false);
         SetActive(battlePanel, false);
+        SetActive(resultPanel, false);
         CloseEquipmentSelect();
         SetObjectsActive(lobbyObjects, true);
         CloseLimitPopup();
@@ -216,6 +237,7 @@ public sealed class PvpRankingPreviewController : MonoBehaviour
         SetObjectsActive(lobbyObjects, false);
         SetActive(readyPanel, true);
         SetActive(battlePanel, false);
+        SetActive(resultPanel, false);
         CloseEquipmentSelect();
         selectedAttribute = -1;
         System.Array.Clear(selectedConsumables, 0, selectedConsumables.Length);
@@ -333,6 +355,7 @@ public sealed class PvpRankingPreviewController : MonoBehaviour
         SetActive(loadingPanel, false);
         SetActive(readyPanel, false);
         SetActive(battlePanel, true);
+        SetActive(resultPanel, false);
         battleHpStep = 0;
         previewTurn = 1;
         previewSeconds = 60;
@@ -369,6 +392,44 @@ public sealed class PvpRankingPreviewController : MonoBehaviour
         SetText(opponentBattleHpText, opponentHp[battleHpStep] + " / 1080");
         SetText(battleTurnText, "TURN " + previewTurn);
         SetText(battleTimerText, previewSeconds.ToString("00"));
+    }
+
+    private void ShowWinResult()
+    {
+        ShowResult(0);
+    }
+
+    private void ShowLoseResult()
+    {
+        ShowResult(1);
+    }
+
+    private void ShowDrawResult()
+    {
+        ShowResult(2);
+    }
+
+    private void ShowResult(int resultIndex)
+    {
+        const int currentScore = 1840;
+        int[] scoreDeltas = { 32, -24, 0 };
+        string[] resultTitles = { "승리 · WIN", "패배 · LOSE", "무승부 · DRAW" };
+        Color[] resultColors = { WinColor, LoseColor, DrawColor };
+
+        int index = Mathf.Clamp(resultIndex, 0, resultTitles.Length - 1);
+        int delta = scoreDeltas[index];
+        SetActive(battlePanel, false);
+        SetActive(resultPanel, true);
+        SetText(resultTitleText, resultTitles[index]);
+        SetText(currentScoreText, currentScore.ToString());
+        SetText(scoreDeltaText, delta >= 0 ? "+" + delta : delta.ToString());
+        SetText(finalScoreText, (currentScore + delta).ToString());
+        if (resultBannerImage != null) resultBannerImage.color = resultColors[index];
+        if (scoreDeltaText != null)
+            scoreDeltaText.color = delta > 0 ? ScoreUpColor : delta < 0 ? EmptyRemainColor : NormalRemainColor;
+        SetButtonColor(winResultButton, index == 0 ? WinColor : NormalSlotColor);
+        SetButtonColor(loseResultButton, index == 1 ? LoseColor : NormalSlotColor);
+        SetButtonColor(drawResultButton, index == 2 ? DrawColor : NormalSlotColor);
     }
 
     private static void SetHpFill(Image hpBar, int currentHp, int maxHp)

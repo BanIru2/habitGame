@@ -149,6 +149,7 @@ public static class CharacterMainUiRenewalEditor
     [MenuItem(PreviewMenu, false, 2072)]
     private static void ActivatePreview()
     {
+        SpendingReportUiRenewalEditor.RestoreSpendingPreviewState();
         PvpRankingUiRenewalEditor.RestorePvpPreviewState();
         ShopGachaUiRenewalEditor.RestoreShopPreviewState();
         InventoryMainUiRenewalEditor.RestoreInventoryPreviewState();

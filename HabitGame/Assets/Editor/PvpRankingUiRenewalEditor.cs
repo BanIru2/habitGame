@@ -60,7 +60,7 @@ public static class PvpRankingUiRenewalEditor
         List<string> errors = ValidateAppliedLayout(context, true);
         if (errors.Count == 0)
         {
-            Debug.Log("[HabitPVP PvP] 검증 성공. UITestScene PvP Lobby/Ranking/Loading/Ready/Battle HUD와 " +
+            Debug.Log("[HabitPVP PvP] 검증 성공. UITestScene PvP Lobby/Ranking/Loading/Ready/Battle HUD/Result와 " +
                       "장비 선택/상세 팝업 스타일, I Preview 로컬 흐름이 정상입니다.", context.Lobby);
             return;
         }
@@ -90,6 +90,7 @@ public static class PvpRankingUiRenewalEditor
             ApplyReadyStyle(context);
             ApplyEquipmentPopupStyle(context);
             ApplyBattleStyle(context);
+            ApplyResultStyle(context);
             EnsurePreviewRoot(context);
             AssertProtectedManagersUnchanged(protectedState);
 
@@ -106,7 +107,7 @@ public static class PvpRankingUiRenewalEditor
                 throw new InvalidOperationException("UITestScene 저장에 실패했습니다.");
             }
 
-            Debug.Log("[HabitPVP PvP] 적용 성공. UITestScene PvPTap/Lobby/Loading/Ready/Battle HUD Override와 " +
+            Debug.Log("[HabitPVP PvP] 적용 성공. UITestScene PvPTap/Lobby/Loading/Ready/Battle HUD/Result Override와 " +
                       "I Preview Root만 저장했습니다. Canvas.prefab, MainScene, RankingRow.prefab 및 " +
                       "PvP 런타임 로직은 변경하지 않았습니다.", context.Lobby);
         }
@@ -143,7 +144,7 @@ public static class PvpRankingUiRenewalEditor
         Selection.activeGameObject = root;
         EditorSceneManager.MarkSceneDirty(context.Scene);
         Debug.Log("[HabitPVP PvP] I 모드: 가상 랭킹 20명, 잔여 횟수 0, 제한 팝업과 " +
-                  "로컬 Lobby→Loading→Ready→장비 목록→상세→Battle HUD/HP/턴/타이머 흐름을 표시합니다. " +
+                  "로컬 Lobby→Loading→Ready→장비 목록→상세→Battle HUD→Win/Lose/Draw 결과 흐름을 표시합니다. " +
                   "Photon/PvP Manager/API는 호출하지 않습니다.", root);
     }
 
@@ -267,6 +268,16 @@ public static class PvpRankingUiRenewalEditor
                 context.MyCharacterImage = GetReference<Image>(battleSerialized, "myCharacterImage");
                 context.OpponentCharacterImage = GetReference<Image>(battleSerialized, "oppCharacterImage");
                 context.TurnCountText = GetReference<TMP_Text>(battleSerialized, "turnCountText");
+                context.ResultPanel = GetReference<GameObject>(battleSerialized, "resultPanel");
+                context.WinImage = GetReference<GameObject>(battleSerialized, "winImage");
+                context.LoseImage = GetReference<GameObject>(battleSerialized, "loseImage");
+                context.DrawImage = GetReference<GameObject>(battleSerialized, "drawImage");
+                context.CurrentRankingPointText = GetReference<TMP_Text>(battleSerialized,
+                    "currentRankingPointText");
+                context.OperatorText = GetReference<TMP_Text>(battleSerialized, "operatorText");
+                context.ResultRankingPointText = GetReference<TMP_Text>(battleSerialized,
+                    "resultRankingPointText");
+                context.CheckButton = GetReference<Button>(battleSerialized, "checkButton");
             }
             if (context.Lobby == null) context.Errors.Add("Canvas/PvPTap/Lobby를 찾을 수 없습니다.");
             if (context.RankingContent == null) context.Errors.Add("RankingList Content를 찾을 수 없습니다.");
@@ -303,6 +314,11 @@ public static class PvpRankingUiRenewalEditor
                 context.MyCharacterImage == null || context.OpponentCharacterImage == null ||
                 context.TurnCountText == null)
                 context.Errors.Add("Battle HUD의 기존 이름/캐릭터/HP/턴/타이머 참조가 완전하지 않습니다.");
+            if (context.ResultPanel == null || context.WinImage == null || context.LoseImage == null ||
+                context.DrawImage == null || context.CurrentRankingPointText == null ||
+                context.OperatorText == null || context.ResultRankingPointText == null ||
+                context.CheckButton == null)
+                context.Errors.Add("ResultPanel의 기존 결과/랭킹 점수/CheckButton 직렬화 참조가 완전하지 않습니다.");
         }
 
         if (logErrors)
@@ -705,6 +721,52 @@ public static class PvpRankingUiRenewalEditor
         PrefabUtility.RecordPrefabInstancePropertyModifications(image);
     }
 
+    private static void ApplyResultStyle(Context context)
+    {
+        Image panel = GetOrAdd<Image>(context.ResultPanel);
+        StyleImage(panel, context.CardSprite, Color.white, Image.Type.Sliced);
+        SetCentered(panel.rectTransform, new Vector2(900f, 1020f), Vector2.zero);
+
+        Outline outline = GetOrAdd<Outline>(context.ResultPanel);
+        Record(outline, "Style PvP result panel outline");
+        outline.effectColor = Gold;
+        outline.effectDistance = new Vector2(6f, -6f);
+        Dirty(outline);
+
+        StyleResultImage(context.WinImage, new Color32(0xD6, 0xA5, 0x2E, 0xFF));
+        StyleResultImage(context.LoseImage, new Color32(0xB9, 0x59, 0x4F, 0xFF));
+        StyleResultImage(context.DrawImage, MutedBrown);
+
+        StyleText(context.CurrentRankingPointText, null, context.Font, 42f, Brown, FontStyles.Bold);
+        StyleText(context.OperatorText, null, context.Font, 46f, Gold, FontStyles.Bold);
+        StyleText(context.ResultRankingPointText, null, context.Font, 42f, Brown, FontStyles.Bold);
+        context.CurrentRankingPointText.alignment = TextAlignmentOptions.Center;
+        context.OperatorText.alignment = TextAlignmentOptions.Center;
+        context.ResultRankingPointText.alignment = TextAlignmentOptions.Center;
+        SetCentered(context.CurrentRankingPointText.rectTransform,
+            new Vector2(260f, 100f), new Vector2(-245f, -105f));
+        SetCentered(context.OperatorText.rectTransform,
+            new Vector2(100f, 100f), new Vector2(0f, -105f));
+        SetCentered(context.ResultRankingPointText.rectTransform,
+            new Vector2(260f, 100f), new Vector2(245f, -105f));
+
+        StyleButton(context.CheckButton, "결과 확인", context.GoldButtonSprite, context.Font, 34f);
+        SetBottom(context.CheckButton.GetComponent<RectTransform>(),
+            new Vector2(520f, 116f), new Vector2(0f, 75f));
+    }
+
+    private static void StyleResultImage(GameObject resultObject, Color color)
+    {
+        Image image = resultObject != null ? resultObject.GetComponent<Image>() : null;
+        if (image == null) return;
+        Record(image, "Style PvP result image");
+        image.color = color;
+        image.preserveAspect = true;
+        SetTop(image.rectTransform, new Vector2(620f, 300f), new Vector2(0f, -110f));
+        Dirty(image);
+        PrefabUtility.RecordPrefabInstancePropertyModifications(image);
+    }
+
     private static void EnsurePreviewRoot(Context context)
     {
         GameObject existing = FindRoot(context.Scene, PreviewRootName);
@@ -1082,9 +1144,56 @@ public static class PvpRankingUiRenewalEditor
             context.CreamButtonSprite, context.Font, Vector2.zero, new Vector2(250f, 100f));
         SetBottom(timerTest.GetComponent<RectTransform>(), new Vector2(250f, 100f), new Vector2(205f, 130f));
         Button battleReturnLobby = CreateButton(battlePanel.transform, "ReturnLobbyTestButton", "로비 복귀",
-            context.GoldButtonSprite, context.Font, Vector2.zero, new Vector2(760f, 104f));
-        SetBottom(battleReturnLobby.GetComponent<RectTransform>(), new Vector2(760f, 104f), new Vector2(0f, 35f));
+            context.CreamButtonSprite, context.Font, Vector2.zero, new Vector2(300f, 104f));
+        SetBottom(battleReturnLobby.GetComponent<RectTransform>(), new Vector2(300f, 104f), new Vector2(245f, 35f));
+        Button resultTest = CreateButton(battlePanel.transform, "ResultTestButton", "전투 결과 테스트",
+            context.GoldButtonSprite, context.Font, Vector2.zero, new Vector2(430f, 104f));
+        SetBottom(resultTest.GetComponent<RectTransform>(), new Vector2(430f, 104f), new Vector2(-235f, 35f));
         battlePanel.gameObject.SetActive(false);
+
+        Image resultPanel = CreateImage(background.transform, "ResultPanel", null, Cream);
+        SetStretch(resultPanel.rectTransform, Vector2.zero, Vector2.zero);
+        TMP_Text resultHeading = CreateText(resultPanel.transform, "PreviewHeading",
+            "I. PvP RESULT · LOCAL PREVIEW", context.Font, 27f, MutedBrown, FontStyles.Bold);
+        SetTop(resultHeading.rectTransform, new Vector2(980f, 54f), new Vector2(0f, -22f));
+        Image resultCard = CreateImage(resultPanel.transform, "ResultCard", context.CardSprite, Color.white);
+        SetCentered(resultCard.rectTransform, new Vector2(900f, 1180f), new Vector2(0f, -10f));
+        Image resultBanner = CreateImage(resultCard.transform, "ResultBanner", context.CardSprite,
+            new Color32(0xFF, 0xE2, 0x8A, 0xFF));
+        SetTop(resultBanner.rectTransform, new Vector2(700f, 230f), new Vector2(0f, -75f));
+        TMP_Text resultTitle = CreateText(resultBanner.transform, "ResultTitle", "승리 · WIN",
+            context.Font, 62f, Brown, FontStyles.Bold);
+        SetStretch(resultTitle.rectTransform, new Vector2(30f, 20f), new Vector2(-30f, -20f));
+
+        Image scoreCard = CreateImage(resultCard.transform, "ScoreCard", context.CreamButtonSprite, Color.white);
+        SetTop(scoreCard.rectTransform, new Vector2(760f, 350f), new Vector2(0f, -345f));
+        TMP_Text scoreCaption = CreateText(scoreCard.transform, "Caption", "랭킹 점수",
+            context.Font, 31f, MutedBrown, FontStyles.Bold);
+        SetTop(scoreCaption.rectTransform, new Vector2(680f, 55f), new Vector2(0f, -28f));
+        TMP_Text currentScore = CreateResultScoreColumn(scoreCard.transform, "CurrentScore",
+            "기존 점수", "1840", -240f, context);
+        TMP_Text scoreDelta = CreateResultScoreColumn(scoreCard.transform, "ScoreDelta",
+            "점수 변동", "+32", 0f, context);
+        TMP_Text finalScore = CreateResultScoreColumn(scoreCard.transform, "FinalScore",
+            "최종 점수", "1872", 240f, context);
+
+        TMP_Text resultGuide = CreateText(resultCard.transform, "Guide",
+            "Preview 가상 결과 · 실제 결과 처리/랭킹 갱신/API 미호출",
+            context.Font, 24f, MutedBrown, FontStyles.Bold);
+        SetTop(resultGuide.rectTransform, new Vector2(760f, 56f), new Vector2(0f, -735f));
+        Button winResult = CreateButton(resultCard.transform, "WinResultButton", "승리",
+            context.GoldButtonSprite, context.Font, Vector2.zero, new Vector2(220f, 100f));
+        SetTop(winResult.GetComponent<RectTransform>(), new Vector2(220f, 100f), new Vector2(-245f, -825f));
+        Button loseResult = CreateButton(resultCard.transform, "LoseResultButton", "패배",
+            context.CreamButtonSprite, context.Font, Vector2.zero, new Vector2(220f, 100f));
+        SetTop(loseResult.GetComponent<RectTransform>(), new Vector2(220f, 100f), new Vector2(0f, -825f));
+        Button drawResult = CreateButton(resultCard.transform, "DrawResultButton", "무승부",
+            context.CreamButtonSprite, context.Font, Vector2.zero, new Vector2(220f, 100f));
+        SetTop(drawResult.GetComponent<RectTransform>(), new Vector2(220f, 100f), new Vector2(245f, -825f));
+        Button resultConfirm = CreateButton(resultCard.transform, "CheckButton", "결과 확인 · 로비 복귀",
+            context.GoldButtonSprite, context.Font, Vector2.zero, new Vector2(650f, 112f));
+        SetBottom(resultConfirm.GetComponent<RectTransform>(), new Vector2(650f, 112f), new Vector2(0f, 65f));
+        resultPanel.gameObject.SetActive(false);
 
         Image dim = CreateImage(background.transform, "DailyLimitPopupDim", null, Dim);
         SetStretch(dim.rectTransform, Vector2.zero, Vector2.zero);
@@ -1153,6 +1262,7 @@ public static class PvpRankingUiRenewalEditor
         SetReference(serialized, "readyGuideText", readyGuide);
         SetReference(serialized, "battlePanel", battlePanel.gameObject);
         SetReference(serialized, "battleReturnLobbyButton", battleReturnLobby);
+        SetReference(serialized, "resultTestButton", resultTest);
         SetReference(serialized, "hpTestButton", hpTest);
         SetReference(serialized, "turnTestButton", turnTest);
         SetReference(serialized, "timerTestButton", timerTest);
@@ -1162,6 +1272,16 @@ public static class PvpRankingUiRenewalEditor
         SetReference(serialized, "opponentBattleHpText", opponentBattleHpText);
         SetReference(serialized, "battleTurnText", battleTurn);
         SetReference(serialized, "battleTimerText", battleTimer);
+        SetReference(serialized, "resultPanel", resultPanel.gameObject);
+        SetReference(serialized, "resultBannerImage", resultBanner);
+        SetReference(serialized, "resultTitleText", resultTitle);
+        SetReference(serialized, "currentScoreText", currentScore);
+        SetReference(serialized, "scoreDeltaText", scoreDelta);
+        SetReference(serialized, "finalScoreText", finalScore);
+        SetReference(serialized, "winResultButton", winResult);
+        SetReference(serialized, "loseResultButton", loseResult);
+        SetReference(serialized, "drawResultButton", drawResult);
+        SetReference(serialized, "resultConfirmButton", resultConfirm);
         serialized.ApplyModifiedPropertiesWithoutUndo();
 
         Canvas.ForceUpdateCanvases();
@@ -1241,6 +1361,18 @@ public static class PvpRankingUiRenewalEditor
             context.Font, 27f, CreamLight, FontStyles.Bold);
         SetStretch(hpText.rectTransform, new Vector2(18f, 8f), new Vector2(-18f, -8f));
         return card;
+    }
+
+    private static TMP_Text CreateResultScoreColumn(Transform parent, string name,
+        string label, string value, float x, Context context)
+    {
+        TMP_Text labelText = CreateText(parent, name + "Label", label,
+            context.Font, 24f, MutedBrown, FontStyles.Bold);
+        SetCentered(labelText.rectTransform, new Vector2(210f, 48f), new Vector2(x, 35f));
+        TMP_Text valueText = CreateText(parent, name, value,
+            context.Font, 42f, Brown, FontStyles.Bold);
+        SetCentered(valueText.rectTransform, new Vector2(210f, 72f), new Vector2(x, -35f));
+        return valueText;
     }
 
     private static RectTransform CreatePreviewButtonRow(Transform parent, string name,
@@ -1331,6 +1463,12 @@ public static class PvpRankingUiRenewalEditor
             context.TimerText.font != context.Font || context.TurnCountText.font != context.Font ||
             context.MyHpText.font != context.Font || context.OpponentHpText.font != context.Font)
             errors.Add("Battle HUD 크림 배경 또는 NotoSansKR 텍스트 스타일이 적용되지 않았습니다.");
+        if (context.ResultPanel.GetComponent<Image>() == null ||
+            context.ResultPanel.GetComponent<Outline>() == null ||
+            context.CurrentRankingPointText.font != context.Font ||
+            context.OperatorText.font != context.Font || context.ResultRankingPointText.font != context.Font ||
+            context.CheckButton.GetComponentInChildren<TMP_Text>(true)?.font != context.Font)
+            errors.Add("ResultPanel 크림/골드 RPG 카드, NotoSansKR 점수 또는 결과 확인 버튼 스타일이 적용되지 않았습니다.");
 
         GameObject preview = FindRoot(context.Scene, PreviewRootName);
         PvpRankingPreviewController controller = preview != null
@@ -1395,6 +1533,15 @@ public static class PvpRankingUiRenewalEditor
                 if (!IsValidPreviewHpFill(myPreviewHp) || !IsValidPreviewHpFill(opponentPreviewHp))
                     errors.Add("I Preview HP Fill은 Sprite가 있는 Horizontal Filled Image여야 합니다.");
             }
+            Transform result = Find(preview.transform, "PreviewBackground/ResultPanel/ResultCard");
+            if (result == null || result.Find("ResultBanner/ResultTitle") == null ||
+                result.Find("ScoreCard/CurrentScore") == null ||
+                result.Find("ScoreCard/ScoreDelta") == null ||
+                result.Find("ScoreCard/FinalScore") == null ||
+                result.Find("WinResultButton") == null || result.Find("LoseResultButton") == null ||
+                result.Find("DrawResultButton") == null || result.Find("CheckButton") == null ||
+                battle == null || battle.Find("ResultTestButton") == null)
+                errors.Add("I Preview Win/Lose/Draw 결과/점수 계산/확인 버튼 테스트 구조가 없습니다.");
             Transform equipmentSelect = Find(preview.transform,
                 "PreviewBackground/EquipmentSelectDim/EquipmentSelectPanel");
             Transform equipmentListContent = Find(equipmentSelect,
@@ -1536,6 +1683,7 @@ public static class PvpRankingUiRenewalEditor
 
     private static void RestoreOtherPreviewStates()
     {
+        SpendingReportUiRenewalEditor.RestoreSpendingPreviewState();
         ShopGachaUiRenewalEditor.RestoreShopPreviewState();
         InventoryMainUiRenewalEditor.RestoreInventoryPreviewState();
         CharacterMainUiRenewalEditor.RestoreCharacterPreviewState();
@@ -1921,6 +2069,14 @@ public static class PvpRankingUiRenewalEditor
         public Image MyCharacterImage;
         public Image OpponentCharacterImage;
         public TMP_Text TurnCountText;
+        public GameObject ResultPanel;
+        public GameObject WinImage;
+        public GameObject LoseImage;
+        public GameObject DrawImage;
+        public TMP_Text CurrentRankingPointText;
+        public TMP_Text OperatorText;
+        public TMP_Text ResultRankingPointText;
+        public Button CheckButton;
         public readonly List<string> Errors = new List<string>();
         public bool IsValid => Errors.Count == 0;
     }

@@ -97,6 +97,7 @@ public static class HabitItemPreviewSetupEditor
     [MenuItem(HabitItemModeMenu, false, 2030)]
     private static void ActivateHabitItemMode()
     {
+        SpendingReportUiRenewalEditor.RestoreSpendingPreviewState();
         PvpRankingUiRenewalEditor.RestorePvpPreviewState();
         ShopGachaUiRenewalEditor.RestoreShopPreviewState();
         InventoryMainUiRenewalEditor.RestoreInventoryPreviewState();
@@ -129,6 +130,7 @@ public static class HabitItemPreviewSetupEditor
     [MenuItem(HabitMainModeMenu, false, 2031)]
     private static void ActivateHabitMainMode()
     {
+        SpendingReportUiRenewalEditor.RestoreSpendingPreviewState();
         PvpRankingUiRenewalEditor.RestorePvpPreviewState();
         ShopGachaUiRenewalEditor.RestoreShopPreviewState();
         InventoryMainUiRenewalEditor.RestoreInventoryPreviewState();
