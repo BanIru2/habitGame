@@ -85,6 +85,7 @@ public class HabitUIManager : SceneSingleton<HabitUIManager>
     // =========================================
     public void OpenLife()
     {
+        SetTapBarActive(true);
         SetActive(topTab, true);
 
         SetActive(lifePanel, true);
@@ -123,6 +124,7 @@ public class HabitUIManager : SceneSingleton<HabitUIManager>
     // =========================================
     public void OpenLifeAddPanel()
     {
+        SetTapBarActive(false);
         SetActive(topTab, false);
 
         SetActive(lifePanel, false);
@@ -262,6 +264,20 @@ public class HabitUIManager : SceneSingleton<HabitUIManager>
         if (target != null)
         {
             target.SetActive(active);
+        }
+    }
+
+    private void SetTapBarActive(bool active)
+    {
+        Transform tapBar = transform.root.Find("TapBar");
+
+        if (tapBar != null)
+        {
+            tapBar.gameObject.SetActive(active);
+        }
+        else
+        {
+            Debug.LogError("Canvas/TapBar를 찾을 수 없습니다.");
         }
     }
 }

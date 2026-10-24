@@ -17,10 +17,15 @@ public class AchievedAmountOverlay : MonoBehaviour
 
     private Action<int> onConfirm;
     private Action onCancel;
+    private Image backdropImage;
+    private GameObject tapBar;
+    private bool restoreTapBar;
+    private bool hasTapBarState;
 
     private void Awake()
     {
         Instance = this;
+        backdropImage = GetComponent<Image>();
 
         if (cancelButton != null)
             cancelButton.onClick.AddListener(Cancel);
@@ -50,8 +55,13 @@ public class AchievedAmountOverlay : MonoBehaviour
 
         if (goalText != null)
         {
+            string unit = string.IsNullOrWhiteSpace(habit.Unit)
+                ? string.Empty
+                : " " + habit.Unit;
+
             goalText.text =
-                habit.GoalName;
+                habit.GoalName + "\n" +
+                habit.CurrentAmount + " / " + habit.TargetAmount + unit;
         }
 
         if (unitText != null)
@@ -65,10 +75,14 @@ public class AchievedAmountOverlay : MonoBehaviour
             amountInput.text = "";
         }
 
+        SetBackdropActive(true);
+
         if (popup != null)
         {
             popup.SetActive(true);
         }
+
+        SetTapBarForPopup(true);
 
         if (amountInput != null)
         {
@@ -141,6 +155,62 @@ public class AchievedAmountOverlay : MonoBehaviour
         {
             popup.SetActive(false);
         }
+
+        SetBackdropActive(false);
+        SetTapBarForPopup(false);
+    }
+
+    private void SetBackdropActive(bool active)
+    {
+        if (backdropImage == null)
+        {
+            backdropImage = GetComponent<Image>();
+        }
+
+        if (backdropImage != null)
+        {
+            backdropImage.enabled = active;
+        }
+    }
+
+    private void SetTapBarForPopup(bool popupOpen)
+    {
+        if (popupOpen)
+        {
+            if (!hasTapBarState)
+            {
+                Transform tapBarTransform = transform.root.Find("TapBar");
+                tapBar = tapBarTransform != null
+                    ? tapBarTransform.gameObject
+                    : null;
+
+                if (tapBar == null)
+                {
+                    Debug.LogWarning("Canvas/TapBar를 찾을 수 없습니다.");
+                    return;
+                }
+
+                restoreTapBar = tapBar.activeSelf;
+                hasTapBarState = true;
+            }
+
+            tapBar.SetActive(false);
+            return;
+        }
+
+        if (!hasTapBarState)
+        {
+            return;
+        }
+
+        if (tapBar != null)
+        {
+            tapBar.SetActive(restoreTapBar);
+        }
+
+        tapBar = null;
+        restoreTapBar = false;
+        hasTapBarState = false;
     }
 
     private void OnDestroy()
