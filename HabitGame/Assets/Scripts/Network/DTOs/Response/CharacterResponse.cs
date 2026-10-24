@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 /// <summary>
 /// 캐릭터의 정보 및 능력치를 담은 응답 DTO
@@ -100,4 +101,8 @@ public class CharacterResponse
     // 현재 장착 중인 칭호 ID
     [JsonProperty("equippedTitleId")]
     public string EquippedTitleId { get; set; }
+
+    // 장착한 장비 아이템 정보(단순 종류만을 판별하여 외형 적용만 하도록 id 반환)
+    [JsonProperty("equippedItems")]
+    public List<string> EquippedItems { get; set; }
 }
