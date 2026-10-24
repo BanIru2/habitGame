@@ -53,7 +53,7 @@ public class HabitItem : MonoBehaviour
         detailManager =
             FindObjectOfType<HabitDetailManager>();
 
-        photoVerificationManager = FindObjectOfType<PhotoVerificationManager>();
+        photoVerificationManager = FindObjectOfType<PhotoVerificationManager>(true);
 
         if (streakRewardPopup == null)
         {
@@ -303,7 +303,7 @@ public class HabitItem : MonoBehaviour
     {
         if (photoVerificationManager == null)
         {
-            photoVerificationManager = FindObjectOfType<PhotoVerificationManager>();
+            photoVerificationManager = FindObjectOfType<PhotoVerificationManager>(true);
         }
 
         // 체크박스 끄기
@@ -550,6 +550,11 @@ public class HabitItem : MonoBehaviour
         if (currentAmount > targetAmount)
         {
             currentAmount = targetAmount;
+        }
+
+        if (habitData != null)
+        {
+            habitData.CurrentAmount = currentAmount;
         }
 
         Debug.Log(

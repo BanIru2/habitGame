@@ -6,6 +6,8 @@ using UnityEngine.UI;
 
 public class PhotoVerificationManager : MonoBehaviour
 {
+    private const string HabitNameTextName = "RenewalHabitName";
+
     [Header("사진 인증 팝업")]
     [SerializeField]
     private GameObject photoVerificationPopup;
@@ -44,6 +46,15 @@ public class PhotoVerificationManager : MonoBehaviour
     private HabitItem habit;
     private long goalId;
     private byte[] photoBytes;
+    private Image backdropImage;
+    private GameObject tapBar;
+    private bool restoreTapBar;
+    private bool hasTapBarState;
+
+    private void Awake()
+    {
+        backdropImage = GetComponent<Image>();
+    }
 
     // 1. 팝업 활성화
     // HabitItem에서 호출하면서 저장하고 있는 각 객체의 데이터 받기
@@ -54,6 +65,10 @@ public class PhotoVerificationManager : MonoBehaviour
         verifyButton.onClick.RemoveAllListeners();
         cancelButton.onClick.RemoveAllListeners();
         verifyButton.interactable = false;
+        gameObject.SetActive(true);
+        SetBackdropActive(true);
+        SetTapBarForPopup(true);
+        UpdateHabitName();
         photoVerificationPopup.SetActive(true);
         InitPopup();
     }
@@ -233,9 +248,82 @@ public class PhotoVerificationManager : MonoBehaviour
     private void ExitPopup()
     {
         photoVerificationPopup.SetActive(false);
+        noticePopup.SetActive(false);
+        resultPopup.SetActive(false);
+        SetBackdropActive(false);
+        SetTapBarForPopup(false);
         goalId = -1;
         photoBytes = null;
         photoView.texture = null;
+    }
+
+    private void UpdateHabitName()
+    {
+        Transform habitNameTransform = photoVerificationPopup.transform.Find(HabitNameTextName);
+        TextMeshProUGUI habitNameText = habitNameTransform != null
+            ? habitNameTransform.GetComponent<TextMeshProUGUI>()
+            : null;
+        if (habitNameText == null)
+        {
+            return;
+        }
+
+        string goalName = habit != null && habit.HabitData != null
+            ? habit.HabitData.GoalName
+            : string.Empty;
+        habitNameText.text = string.IsNullOrWhiteSpace(goalName)
+            ? "인증할 습관"
+            : goalName;
+    }
+
+    private void SetBackdropActive(bool active)
+    {
+        if (backdropImage == null)
+        {
+            backdropImage = GetComponent<Image>();
+        }
+
+        if (backdropImage != null)
+        {
+            backdropImage.enabled = active;
+        }
+    }
+
+    private void SetTapBarForPopup(bool popupOpen)
+    {
+        if (popupOpen)
+        {
+            if (!hasTapBarState)
+            {
+                Transform tapBarTransform = transform.root.Find("TapBar");
+                tapBar = tapBarTransform != null ? tapBarTransform.gameObject : null;
+                if (tapBar == null)
+                {
+                    Debug.LogWarning("Canvas/TapBar를 찾을 수 없습니다.");
+                    return;
+                }
+
+                restoreTapBar = tapBar.activeSelf;
+                hasTapBarState = true;
+            }
+
+            tapBar.SetActive(false);
+            return;
+        }
+
+        if (!hasTapBarState)
+        {
+            return;
+        }
+
+        if (tapBar != null)
+        {
+            tapBar.SetActive(restoreTapBar);
+        }
+
+        tapBar = null;
+        restoreTapBar = false;
+        hasTapBarState = false;
     }
 
 }
