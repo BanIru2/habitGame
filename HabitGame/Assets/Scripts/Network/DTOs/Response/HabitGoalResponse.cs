@@ -57,6 +57,22 @@ public class HabitGoalResponse
     [JsonProperty("streakCount")]
     public int StreakCount { get; set; }
 
+    // 확정된 일일 연속 달성 횟수
+    [JsonProperty("finalizedDailyStreak")]
+    public int? FinalizedDailyStreak { get; set; }
+
+    // 확정된 주간 연속 달성 횟수
+    [JsonProperty("finalizedWeeklyStreak")]
+    public int? FinalizedWeeklyStreak { get; set; }
+
+    // 오늘의 모든 일일 목표 완료 여부
+    [JsonProperty("todayAllCompleted")]
+    public bool TodayAllCompleted { get; set; }
+
+    // 이번 주 모든 주간 목표 완료 여부
+    [JsonProperty("thisWeekAllCompleted")]
+    public bool ThisWeekAllCompleted { get; set; }
+
     // 현재 활성화 여부
     [JsonProperty("isActive")]
     public bool IsActive { get; set; }
