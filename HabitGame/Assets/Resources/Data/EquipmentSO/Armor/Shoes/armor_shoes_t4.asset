@@ -11,15 +11,16 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fde2df7f89627df438c5a16248a68d02, type: 3}
   m_Name: armor_shoes_t4
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   itemType: 0
   itemId: armor_shoes_t4
-  displayName: "비상의 장화"
-  description: "거침없이 달릴 수 있도록 몸을 받쳐주는 장화."
+  displayName: "\uBE44\uC0C1\uC758 \uC7A5\uD654"
+  description: "\uAC70\uCE68\uC5C6\uC774 \uB2EC\uB9B4 \uC218 \uC788\uB3C4\uB85D \uBAB8\uC744
+    \uBC1B\uCCD0\uC8FC\uB294 \uC7A5\uD654."
   cost: 0
   icon: {fileID: 0}
   unlockCondition:
-    requiredAttributeLevel: 0
+    requiredAttributeLevel: 7
     requiredAttribute: 0
     requiredDailyStreak: 0
     requiredWeeklyStreak: 0

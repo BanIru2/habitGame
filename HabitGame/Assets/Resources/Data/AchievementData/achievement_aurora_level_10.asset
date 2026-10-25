@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7d34af461f0f3c949a8727f56ac8169f, type: 3}
-  m_Name: AchievementData
+  m_Name: achievement_aurora_level_10
   m_EditorClassIdentifier: 
-  achievementId: ach_1
-  content: "\uBD88 \uD2B9\uC131 \uB808\uBCA8 10 \uB2EC\uC131"
+  achievementId: ACH_AURORA_LEVEL_10
+  content: "\uC624\uB85C\uB77C \uC18D\uC131 10\uB808\uBCA8 \uB2EC\uC131"
   category: 1
-  attribute: 1
+  attribute: 4
   trackingType: 1
   targetCount: 10
-  rewardTitle: {fileID: 11400000, guid: d26dd6363414dd84cb919dd52cf13291, type: 2}
+  rewardTitle: {fileID: 0}

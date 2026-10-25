@@ -20,7 +20,7 @@ MonoBehaviour:
   cost: 0
   icon: {fileID: 21300000, guid: d6dce60f8f0a24242b2ec1a5877375ec, type: 3}
   unlockCondition:
-    requiredAttributeLevel: 0
+    requiredAttributeLevel: 4
     requiredAttribute: 0
     requiredDailyStreak: 0
     requiredWeeklyStreak: 0

@@ -56,17 +56,17 @@ public class AchievementManager : MonoBehaviour
     {
         List<AchievementResponse> dummyResponses = new List<AchievementResponse>
         {
-            // 진행 중인 상태
+            // 진행 중인 상태 테스트
             new AchievementResponse
             {
-                AchievementId = "ach_1",
+                AchievementId = "ACH_FIRE_LEVEL_10",
                 CurrentCount = 5,
                 IsClaimed = false
             },
-            // 달성 완료되어 보상 수령 가능한 상태
+            // 달성 완료되어 보상 수령 가능한 상태 테스트
             new AchievementResponse
             {
-                AchievementId = "ach_2",
+                AchievementId = "ACH_FIRE_LEVEL_5",
                 CurrentCount = 7,
                 IsClaimed = false
             }
