@@ -151,8 +151,8 @@ public class HabitListManager : MonoBehaviour
             if (habit == null)
                 continue;
 
-            dailyStreak = habit.FinalizedDailyStreak;
-            weeklyStreak = habit.FinalizedWeeklyStreak;
+            dailyStreak = habit.FinalizedDailyStreak ?? 0;
+            weeklyStreak = habit.FinalizedWeeklyStreak ?? 0;
             break;
         }
 
