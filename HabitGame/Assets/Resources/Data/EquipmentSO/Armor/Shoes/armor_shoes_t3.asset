@@ -11,15 +11,16 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fde2df7f89627df438c5a16248a68d02, type: 3}
   m_Name: armor_shoes_t3
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   itemType: 0
   itemId: armor_shoes_t3
-  displayName: "질풍의 장화"
-  description: "바람처럼 빠른 발걸음을 돕는 장화."
+  displayName: "\uC9C8\uD48D\uC758 \uC7A5\uD654"
+  description: "\uBC14\uB78C\uCC98\uB7FC \uBE60\uB978 \uBC1C\uAC78\uC74C\uC744 \uB3D5\uB294
+    \uC7A5\uD654."
   cost: 0
   icon: {fileID: 0}
   unlockCondition:
-    requiredAttributeLevel: 0
+    requiredAttributeLevel: 4
     requiredAttribute: 0
     requiredDailyStreak: 0
     requiredWeeklyStreak: 0
