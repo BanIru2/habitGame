@@ -28,10 +28,15 @@ public class RankingboardManager : SceneSingleton<RankingboardManager>
 
     private int remainCount;
     private RankingEntryResponse myRanking;
+    private TMP_Text emptyRankingText;
 
     protected override void Awake()
     {
         base.Awake();
+        Transform rankingList = contentParent != null && contentParent.parent != null
+            ? contentParent.parent.parent : null;
+        emptyRankingText = rankingList != null
+            ? rankingList.Find("EmptyRankingText")?.GetComponent<TMP_Text>() : null;
         InitializeRows();
     }
 
@@ -72,6 +77,9 @@ public class RankingboardManager : SceneSingleton<RankingboardManager>
     // 랭킹 보드 데이터 갱신
     private void RefreshRows(List<RankingEntryResponse> rankings)
     {
+        if (emptyRankingText != null)
+            emptyRankingText.gameObject.SetActive(rankings.Count == 0);
+
         for (int i = 0; i < cachedRows.Count; i++)
         {
             if (i < rankings.Count)
