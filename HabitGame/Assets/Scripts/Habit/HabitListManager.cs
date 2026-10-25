@@ -63,6 +63,8 @@ public class HabitListManager : MonoBehaviour
         new Color32(244, 244, 244, 255); // #F4F4F4
 
     private string selectedPeriod = "DAILY";
+    private int dailyStreak;
+    private int weeklyStreak;
 
     public string SelectedPeriod => selectedPeriod;
 
@@ -139,6 +141,21 @@ public class HabitListManager : MonoBehaviour
             return;
         }
 
+        // 서버에서 받은 사용자 전체 Streak 저장
+        // 목표가 없는 경우 이전 사용자의 값이 남지 않도록 초기화
+        dailyStreak = 0;
+        weeklyStreak = 0;
+
+        foreach (HabitGoalResponse habit in habits)
+        {
+            if (habit == null)
+                continue;
+
+            dailyStreak = habit.FinalizedDailyStreak;
+            weeklyStreak = habit.FinalizedWeeklyStreak;
+            break;
+        }
+
         foreach (HabitGoalResponse habit in habits)
         {
             if (habit == null)
@@ -148,6 +165,7 @@ public class HabitListManager : MonoBehaviour
         }
 
         RefreshSummary();
+        UpdateSummaryDisplay();
     }
 
     // =========================================
@@ -378,11 +396,13 @@ public class HabitListManager : MonoBehaviour
         {
             if (selectedPeriod == "DAILY")
             {
-                summaryStreakText.text = "일일 연속 달성";
+                summaryStreakText.text =
+                    $"{dailyStreak}일 연속 달성";
             }
             else if (selectedPeriod == "WEEKLY")
             {
-                summaryStreakText.text = "주간 연속 달성";
+                summaryStreakText.text =
+                    $"{weeklyStreak}주 연속 달성";
             }
         }
 

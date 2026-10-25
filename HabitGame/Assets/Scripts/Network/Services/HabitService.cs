@@ -34,6 +34,33 @@ public class HabitService
             $"/habit-goals?userId={userId}"
         );
     }
+    // 지난주 주간 목표 목록 조회
+    public Task<List<HabitGoalResponse>> GetPreviousWeeklyGoalsAsync()
+    {
+        // 로그인 여부 확인 (사용자 ID는 서버 JWT에서 확인)
+        GetCurrentUserId();
+
+        return apiClient.GetAsync<List<HabitGoalResponse>>(
+            "/habit-goals/weekly/previous"
+        );
+    }
+
+    // 선택한 지난주 주간 목표를 이번 주 목표로 가져오기
+    public Task<List<HabitGoalResponse>> ImportPreviousWeeklyGoalsAsync(
+        ImportWeeklyGoalsRequest request)
+    {
+        if (request == null)
+            throw new ArgumentNullException(nameof(request));
+
+        // 사용자 ID는 서버 JWT 인증 정보로 확인
+        GetCurrentUserId();
+
+        return apiClient.PostAsync<ImportWeeklyGoalsRequest, List<HabitGoalResponse>>(
+            "/habit-goals/weekly/import",
+            request
+        );
+    }
+
     // 생활 습관 기록 제출 (인증)
     public Task<HabitRecordResponse> CreateRecordAsync(CreateHabitRecordRequest request)
     {
