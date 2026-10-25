@@ -41039,6 +41039,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8693998105434320124}
   - component: {fileID: 2847976870010214193}
+  - component: {fileID: 6174426344589746974}
   m_Layer: 5
   m_Name: InventoryTap
   m_TagString: Untagged
@@ -41088,6 +41089,18 @@ MonoBehaviour:
   ConformX: 1
   ConformY: 1
   Logging: 0
+--- !u!114 &6174426344589746974
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4694668847859237962}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9866ca5d7c70b64898bec8b494e6437, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &4694813869789831366
 GameObject:
   m_ObjectHideFlags: 0
@@ -45208,7 +45221,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.21698111, g: 0.21698111, b: 0.21698111, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -55463,7 +55476,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.21698111, g: 0.21698111, b: 0.21698111, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -61960,6 +61973,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   importWeeklyPopup: {fileID: 3444790821645007174}
+  goalContent: {fileID: 0}
+  importGoalItemPrefab: {fileID: 0}
+  emptyGoalText: {fileID: 0}
+  descriptionText: {fileID: 0}
+  importButton: {fileID: 0}
 --- !u!1 &7346353930247281889
 GameObject:
   m_ObjectHideFlags: 0
@@ -74957,7 +74975,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.21698111, g: 0.21698111, b: 0.21698111, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

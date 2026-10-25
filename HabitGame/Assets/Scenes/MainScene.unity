@@ -1841,6 +1841,7 @@ MonoBehaviour:
   auroraLevelText: {fileID: 934301199}
   auroraEXPText: {fileID: 934301198}
   titleManager: {fileID: 2073622215}
+  characterPartsManager: {fileID: 1638004749}
 --- !u!4 &817609514
 Transform:
   m_ObjectHideFlags: 0
@@ -3127,11 +3128,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 51435335639799370, guid: 545caedeb10c82c40bb4f0cfefc436ff, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 1063
+      value: 1016.9707
       objectReference: {fileID: 0}
     - target: {fileID: 51435335639799370, guid: 545caedeb10c82c40bb4f0cfefc436ff, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 531.5
+      value: 508.48535
       objectReference: {fileID: 0}
     - target: {fileID: 62412346191817524, guid: 545caedeb10c82c40bb4f0cfefc436ff, type: 3}
       propertyPath: m_fontSize
@@ -13900,7 +13901,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6919b447bec516f4a9379cf7746c4211, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  titleManager: {fileID: 0}
+  titleManager: {fileID: 2073622215}
   rowPrefab: {fileID: 2439406585135329756, guid: 6b4f4937da6e46d46852aefbefd52ca4, type: 3}
   contentParent: {fileID: 1015642047}
   myRankingText: {fileID: 1015642046}
