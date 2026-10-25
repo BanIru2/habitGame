@@ -17,6 +17,7 @@ public class RankingRowUI : MonoBehaviour
 
     public void SetData(RankingEntryResponse data, Sprite titleSprite = null)
     {
+        gameObject.SetActive(true);
         rankText.text = data.Rank.ToString();
         nameText.text = data.Name.ToString();
         scoreText.text = data.Score.ToString();
@@ -30,6 +31,7 @@ public class RankingRowUI : MonoBehaviour
         scoreText.text = "";
         titleImage.sprite = null;
         titleImage.gameObject.SetActive(false);
+        gameObject.SetActive(false);
     }
 
     private void BindTitleImage(Sprite titleSprite)
