@@ -271,11 +271,12 @@ public class AchievementManager : MonoBehaviour
 
     private void OnCheckReward(AchievementViewData data)
     {
-        if (data.AchievementSO.rewardTitle.displaySprite == null) return;
+        if (data?.AchievementSO?.rewardTitle == null ||
+            data.AchievementSO.rewardTitle.displaySprite == null) return;
 
         if (titleManager != null)
         {
-            titleManager.ShowPreview(data.AchievementSO.rewardTitle.displaySprite);
+            titleManager.ShowPreview(data.AchievementSO.rewardTitle);
         }
     }
 }

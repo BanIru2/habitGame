@@ -7,6 +7,7 @@ using UnityEngine.UI;
 public class TitleDataSO : ScriptableObject
 {
     public string titleId;
+    public string displayName;
     public Sprite displaySprite;
     public string acquisitionRoute;    // È¹µæ °æ·Î : ¾÷Àû ³»¿ë
 }
