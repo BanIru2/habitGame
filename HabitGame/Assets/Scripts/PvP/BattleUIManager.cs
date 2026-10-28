@@ -90,6 +90,20 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
     private string oppBattleNameDefaultText;
     private string[] oppAttrTextDefaultTexts;
     private float[] oppAttrTextDefaultAlphas;
+    private readonly List<EquipmentButtonVisualState> equipmentButtonVisualStates = new List<EquipmentButtonVisualState>();
+    private readonly Dictionary<AttributeType, Sprite> battleAttributeSprites = new Dictionary<AttributeType, Sprite>();
+    private Image myBattleAttributeImage;
+    private Image oppBattleAttributeImage;
+
+    private const string BattleAttributeIconName = "__15D7C_AttributeIcon";
+    private static readonly Color32 EquipmentSelectedColor = new Color32(0xC6, 0xE8, 0xAD, 0xFF);
+    private static readonly Color32 EquipmentSelectedHighlightedColor = new Color32(0xD7, 0xF1, 0xC5, 0xFF);
+    private static readonly Color32 EquipmentSelectedPressedColor = new Color32(0xA9, 0xCF, 0x90, 0xFF);
+    private static readonly Color32 EquipmentSelectedDisabledColor = new Color32(0xB8, 0xD2, 0xA4, 0xFF);
+    private static readonly Color32 EquipmentSelectedTextColor = new Color32(0x35, 0x56, 0x2B, 0xFF);
+    private static readonly Color32 EquipmentSelectedOutlineColor = new Color32(0x82, 0xAD, 0x68, 0xFF);
+    private static readonly Color32 ReadyStateColor = new Color32(0x4F, 0x7F, 0x52, 0xFF);
+    private static readonly Color32 WaitingStateColor = new Color32(0x86, 0x68, 0x5D, 0xFF);
 
     [Header("Ready Panel/EquipSelectPanel")]
     [SerializeField]
@@ -190,6 +204,8 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
 
         CacheReadyButtonDefaultState();
         CacheOpponentInfoDefaultState();
+        CacheEquipmentButtonDefaultStates();
+        CacheBattleAttributeUI();
 
         matchStartButton.onClick.AddListener(OnClickStartMatchmaking);
         matchCancelButton.onClick.AddListener(OnClickCancelMatchmaking);
@@ -300,15 +316,16 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
         readyPanel.SetActive(false);
         battlePanel.SetActive(true);
         InitBattleUI(receivedBattleId);
+        RefreshBattleAttributeIcons();
     }
 
     private void ResetReadyUI()
     {
         isReady = false;
         isMeReadyText.text = "WAITING";
-        isMeReadyText.color = Color.black;
+        isMeReadyText.color = WaitingStateColor;
         isOppReadyText.text = "WAITING";
-        isOppReadyText.color = Color.black;
+        isOppReadyText.color = WaitingStateColor;
         readyButton.interactable = true;
 
         ClearSelectedConsumableItem();
@@ -319,6 +336,9 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
         {
             buttonText.text = readyButtonDefaultText;
         }
+
+        RefreshEquipmentSelectionUI();
+        ClearBattleAttributeIcons();
     }
 
     private void CacheReadyButtonDefaultState()
@@ -344,6 +364,136 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
         {
             oppAttrTextDefaultAlphas[i] = oppAttrTextCanvasGroup[i].alpha;
         }
+    }
+
+    private void CacheEquipmentButtonDefaultStates()
+    {
+        equipmentButtonVisualStates.Clear();
+        foreach (Button button in equipItemButtons)
+        {
+            EquipButtonInfo info = button != null ? button.GetComponent<EquipButtonInfo>() : null;
+            if (info == null) continue;
+
+            TMP_Text text = button.GetComponentInChildren<TMP_Text>(true);
+            Outline outline = button.GetComponent<Outline>();
+            equipmentButtonVisualStates.Add(new EquipmentButtonVisualState
+            {
+                Button = button,
+                Type = info.type,
+                DefaultColors = button.colors,
+                DefaultImageColor = button.image != null ? button.image.color : Color.white,
+                DefaultTextColor = text != null ? text.color : Color.white,
+                Outline = outline,
+                DefaultOutlineEnabled = outline != null && outline.enabled,
+                DefaultOutlineColor = outline != null ? outline.effectColor : Color.clear
+            });
+        }
+    }
+
+    private void RefreshEquipmentSelectionUI()
+    {
+        foreach (EquipmentButtonVisualState state in equipmentButtonVisualStates)
+        {
+            bool isEquipped = false;
+            if (InventoryManager.Instance != null)
+            {
+                List<InventoryItemViewData> items = InventoryManager.Instance.GetEquipmentItems(state.Type);
+                isEquipped = items.Exists(item =>
+                    item != null && item.Response != null && item.Response.IsEquipped);
+            }
+
+            ColorBlock colors = state.DefaultColors;
+            if (isEquipped)
+            {
+                colors.normalColor = EquipmentSelectedColor;
+                colors.highlightedColor = EquipmentSelectedHighlightedColor;
+                colors.pressedColor = EquipmentSelectedPressedColor;
+                colors.selectedColor = EquipmentSelectedHighlightedColor;
+                colors.disabledColor = EquipmentSelectedDisabledColor;
+            }
+
+            state.Button.colors = colors;
+            if (state.Button.image != null)
+            {
+                state.Button.image.color = isEquipped
+                    ? (state.Button.interactable ? colors.normalColor : colors.disabledColor)
+                    : state.DefaultImageColor;
+            }
+
+            TMP_Text text = state.Button.GetComponentInChildren<TMP_Text>(true);
+            if (text != null)
+                text.color = isEquipped ? (Color)EquipmentSelectedTextColor : state.DefaultTextColor;
+
+            if (state.Outline != null)
+            {
+                state.Outline.enabled = isEquipped || state.DefaultOutlineEnabled;
+                state.Outline.effectColor = isEquipped
+                    ? (Color)EquipmentSelectedOutlineColor
+                    : state.DefaultOutlineColor;
+            }
+        }
+    }
+
+    private void CacheBattleAttributeUI()
+    {
+        battleAttributeSprites.Clear();
+        foreach (Button button in attrButtons)
+        {
+            AttributeButtonInfo info = button != null ? button.GetComponent<AttributeButtonInfo>() : null;
+            if (info == null || info.attrType == AttributeType.None) continue;
+
+            foreach (Image image in button.GetComponentsInChildren<Image>(true))
+            {
+                if (image == button.image || image.sprite == null) continue;
+                battleAttributeSprites[info.attrType] = image.sprite;
+                break;
+            }
+        }
+
+        myBattleAttributeImage = FindBattleAttributeImage(myName);
+        oppBattleAttributeImage = FindBattleAttributeImage(oppName);
+        ClearBattleAttributeIcons();
+    }
+
+    private static Image FindBattleAttributeImage(TMP_Text battleName)
+    {
+        Transform card = battleName != null ? battleName.transform.parent : null;
+        return card != null ? card.Find(BattleAttributeIconName)?.GetComponent<Image>() : null;
+    }
+
+    private void RefreshBattleAttributeIcons()
+    {
+        ClearBattleAttributeIcons();
+        if (!TryResolvePhotonManager() ||
+            !photonManager.TryCreateBattleUnits(out BattleUnit myUnit, out BattleUnit oppUnit))
+            return;
+
+        SetBattleAttributeIcon(myBattleAttributeImage, myUnit.attribute);
+        SetBattleAttributeIcon(oppBattleAttributeImage, oppUnit.attribute);
+    }
+
+    private void SetBattleAttributeIcon(Image target, AttributeType attribute)
+    {
+        if (target == null || attribute == AttributeType.None ||
+            !battleAttributeSprites.TryGetValue(attribute, out Sprite sprite) || sprite == null)
+            return;
+
+        target.sprite = sprite;
+        target.preserveAspect = true;
+        target.enabled = true;
+    }
+
+    private void ClearBattleAttributeIcons()
+    {
+        ClearBattleAttributeIcon(myBattleAttributeImage);
+        ClearBattleAttributeIcon(oppBattleAttributeImage);
+    }
+
+    private static void ClearBattleAttributeIcon(Image target)
+    {
+        if (target == null) return;
+        target.sprite = null;
+        target.enabled = false;
     }
 
     private bool TryResolvePhotonManager()
@@ -671,6 +821,7 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
 
             List<InventoryItemViewData> items = InventoryManager.Instance.GetEquipmentItems(equipType);
             RenderItems(items);
+            RefreshEquipmentSelectionUI();
 
             InventoryItemViewData updatedItem = items.Find(item => item.Response.InventoryId == inventoryId);
             
@@ -792,7 +943,7 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
             readyButton.image.color = Color.red;
             buttonText.text = "준비 취소";
             isMeReadyText.text = "READY";
-            isMeReadyText.color = Color.green;
+            isMeReadyText.color = ReadyStateColor;
         }
         else
         {
@@ -800,7 +951,7 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
             readyButton.image.color = Color.blue;
             buttonText.text = "준비 완료";
             isMeReadyText.text = "WAITING";
-            isMeReadyText.color = Color.black;
+            isMeReadyText.color = WaitingStateColor;
         }
 
         RefreshConsumableItemUI();
@@ -817,7 +968,7 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
     public void RPC_UpdateOpponentReady(bool ready)
     {
         isOppReadyText.text = ready ? "READY" : "WAITING";
-        isOppReadyText.color = ready ? Color.green : Color.red;
+        isOppReadyText.color = ready ? ReadyStateColor : WaitingStateColor;
     }
 
     public void SetMyInfoUI(string name)
@@ -1135,5 +1286,17 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
     public void SetMatchStartButtonInteractable(bool interactable)
     {
         matchStartButton.interactable = interactable;
+    }
+
+    private sealed class EquipmentButtonVisualState
+    {
+        public Button Button;
+        public EquipmentType Type;
+        public ColorBlock DefaultColors;
+        public Color DefaultImageColor;
+        public Color DefaultTextColor;
+        public Outline Outline;
+        public bool DefaultOutlineEnabled;
+        public Color DefaultOutlineColor;
     }
 }
