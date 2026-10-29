@@ -1,13 +1,13 @@
+using LayerLab.ArtMakerUnity;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
 using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Threading.Tasks;
-using System.Text;
-using LayerLab.ArtMakerUnity;
 
 
 public class InventoryManager : SceneSingleton<InventoryManager>
@@ -698,13 +698,38 @@ public class InventoryManager : SceneSingleton<InventoryManager>
         {
             if (item.Response.Quantity <= 0) continue;
 
-            if (item.ItemSO is ConsumableDataSO consumableSO && consumableSO.useTiming == ItemUseTiming.BattlePreparation)
+            if (item.ItemSO is ConsumableDataSO consumableSO && consumableSO.useTiming == ItemUseTiming.BattlePreparation && consumableSO.effectType == ItemEffectType.BattleStatUp)
             {
                 result.Add(item);
             }
         }
 
         return result;
+    }
+
+    public InventoryItemViewData GetAttributeScouterData()
+    {
+        foreach (InventoryItemViewData item in consumableItems)
+        {
+            if (item.Response.Quantity <= 0) continue;
+
+            if (item.ItemSO is ConsumableDataSO consumableSO && consumableSO.useTiming == ItemUseTiming.BattlePreparation && consumableSO.effectType == ItemEffectType.AttributeScout)
+            {
+                return item;
+            }
+        }
+        return null;
+    }
+
+    // PvP에서 사용 후 로컬 상 차감처리(연속 전투 대비)
+    public void ApplyAttributeScoutUse()
+    {
+        InventoryItemViewData data = GetAttributeScouterData();
+
+        if (data != null)
+        {
+            data.Response.Quantity--;
+        }
     }
 
     public async Task<List<InventoryItemResponse>> UseInventoryItemAsync(long inventoryId)

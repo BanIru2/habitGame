@@ -20,7 +20,7 @@ public class BattleBackendManager : Singleton<BattleBackendManager>
         RankingboardManager.Instance.ApplyRemainCount(response);
     }
 
-    public async void SubmitBattleResult(string battleId, string result, long enemyUserId, BattleUnit myUnit, BattleUnit oppUnit)
+    public async void SubmitBattleResult(string battleId, string result, long enemyUserId, BattleUnit myUnit, BattleUnit oppUnit, bool isUsedAttributeScout)
     {
         if (string.IsNullOrWhiteSpace(battleId))
         {
@@ -54,13 +54,14 @@ public class BattleBackendManager : Singleton<BattleBackendManager>
                 MyPower = myPower,
                 EnemyPower = enemyPower,
                 GainedExp = result == "WIN" ? 30 : 0,
-                GainedGold = result == "WIN" ? 100 : 0
+                GainedGold = result == "WIN" ? 100 : 0,
+                IsUsedAttributeScout = isUsedAttributeScout
             };
 
             BattleResultResponse response =
                 await ServiceRegistry.Instance.Battle.SubmitResultAsync(request);
 
-            if (TryFinishConfirmedBattle(response, battleId))
+            if (TryFinishConfirmedBattle(response, battleId, isUsedAttributeScout))
                 return;
 
             if (!IsPending(response))
@@ -94,7 +95,7 @@ public class BattleBackendManager : Singleton<BattleBackendManager>
                     continue;
                 }
 
-                if (TryFinishConfirmedBattle(response, battleId))
+                if (TryFinishConfirmedBattle(response, battleId, isUsedAttributeScout))
                     return;
 
                 if (!IsPending(response))
@@ -126,7 +127,7 @@ public class BattleBackendManager : Singleton<BattleBackendManager>
         }
     }
 
-    private bool TryFinishConfirmedBattle(BattleResultResponse response, string battleId)
+    private bool TryFinishConfirmedBattle(BattleResultResponse response, string battleId, bool isUsedAttributeScout)
     {
         if (response == null
             || !string.Equals(response.Status, "CONFIRMED", StringComparison.Ordinal))
@@ -147,6 +148,10 @@ public class BattleBackendManager : Singleton<BattleBackendManager>
             return true;
 
         battleFinishHandled = true;
+        if (isUsedAttributeScout)
+        {
+            InventoryManager.Instance.ApplyAttributeScoutUse();
+        }
         BattleUIManager.Instance.FinishBattle(response);
         return true;
     }

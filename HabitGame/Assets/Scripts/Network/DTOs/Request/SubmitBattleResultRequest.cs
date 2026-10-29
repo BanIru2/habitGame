@@ -23,6 +23,10 @@ public class SubmitBattleResultRequest
     [JsonProperty("enemyPower")]
     public double EnemyPower { get; set; }
 
+    // 특성 탐색권 사용 여부를 저장하는 플래그
+    [JsonProperty("isUsedAttributeScout")]
+    public bool IsUsedAttributeScout { get; set; }
+
     // BattleBackendManager 호환용. Backend 요청에는 전송하지 않는다.
     [JsonIgnore]
     public int GainedExp { get; set; }

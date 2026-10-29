@@ -33,6 +33,7 @@ public class BattleManager : SceneSingleton<BattleManager>
 
     public bool IsBattleFinished => isBattleFinished;
     public string myResult { get; private set; }
+    private bool isUsedAttributeScout;
 
     protected override void Awake()
     {
@@ -175,6 +176,7 @@ public class BattleManager : SceneSingleton<BattleManager>
             return;
 
         CancelBattle();
+        isUsedAttributeScout = BattleUIManager.Instance.IsUsedAttributeScout;
 
         battleId = receivedBattleId;
         opponentUserId = receivedOpponentId;
@@ -210,7 +212,7 @@ public class BattleManager : SceneSingleton<BattleManager>
         myResult = ConvertMasterResultToLocalResult(masterResult);
 
         // 기존 서버 규약과 메서드는 유지한다. 표시용 유닛과 별도 사본을 전달한다.
-        BattleBackendManager.Instance.SubmitBattleResult(battleId, myResult, opponentUserId, CloneUnit(myUnit), CloneUnit(oppUnit));
+        BattleBackendManager.Instance.SubmitBattleResult(battleId, myResult, opponentUserId, CloneUnit(myUnit), CloneUnit(oppUnit), isUsedAttributeScout);
     }
 
     private string ConvertMasterResultToLocalResult(int masterResult)

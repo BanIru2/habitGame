@@ -5,14 +5,16 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Security.Cryptography;    // 모호성 방지
 using System.Threading.Tasks;
+using System.Text;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 
 public class BattleUIManager : SceneSingleton<BattleUIManager>
 {
+    private readonly StringBuilder sb = new StringBuilder(64);
+
     [SerializeField]
     private PhotonManager photonManager;
 
@@ -57,6 +59,14 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
     [SerializeField]
     private Button checkOppAttrButton;
     [SerializeField]
+    private GameObject attrScoutPppup;
+    [SerializeField]
+    private TextMeshProUGUI remainScouterCountText;
+    [SerializeField]
+    private Button useScouterButton;
+    [SerializeField]
+    private Button closeScoutButton;
+    [SerializeField]
     private TextMeshProUGUI[] oppAttrText;
     [SerializeField]
     private CanvasGroup[] oppAttrTextCanvasGroup;
@@ -83,6 +93,8 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
     private InventoryItemViewData selectedConsumableItem;
 
     private EquipmentType equipType;
+    private bool isUsedAttributeScout = false;
+    public bool IsUsedAttributeScout => isUsedAttributeScout;    // BattleManager 동기화 용 프로퍼티
     private bool isReady = false;
     private Color readyButtonDefaultColor;
     private string readyButtonDefaultText;
@@ -90,6 +102,7 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
     private string oppBattleNameDefaultText;
     private string[] oppAttrTextDefaultTexts;
     private float[] oppAttrTextDefaultAlphas;
+
 
     [Header("Ready Panel/EquipSelectPanel")]
     [SerializeField]
@@ -181,7 +194,6 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
     [SerializeField]
     private GameObject tapBar;
 
-
     protected override void Awake()
     {
         base.Awake();
@@ -208,6 +220,9 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
         }
         readyButton.onClick.AddListener(OnClickReadyButton);
         checkButton.onClick.AddListener(OnClickCheckButton);
+
+        useScouterButton.onClick.AddListener(UseAttrScouter);
+        closeScoutButton.onClick.AddListener(CloseAttrScoutPopup);
 
         equipSelectCloseButton.onClick.AddListener(CloseEquipSelectPanel);
 
@@ -310,6 +325,7 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
         isOppReadyText.text = "WAITING";
         isOppReadyText.color = Color.black;
         readyButton.interactable = true;
+        checkOppAttrButton.interactable = true;
 
         ClearSelectedConsumableItem();
 
@@ -362,13 +378,59 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
     // 상대 특성 확인 버튼 클릭 시 동작
     private void OnClickCheckOppAttr()
     {
-        // 사용 가능 여부 확인 및 횟수 차감
-        // 상대방 특성 레벨 체크(받아와야함)  << 이단계에서 이미 상대의 특성 정보를 갖고 있어야 함
-        // 텍스트 상대방 특성 레벨에 맞춰 변경
+        InventoryItemViewData data = InventoryManager.Instance.GetAttributeScouterData();
+        // 특성 탐색권을 보유하지 않은 경우
+        if (data == null)
+        {
+            ErrorPopupManager.Instance.ShowMessage("특성 탐색권을 보유하고 있지 않습니다.");
+            return;
+        }
+
+        OpenAttrScoutPopup(data);
+    }
+
+    // 특성 탐색권 팝업 활성화
+    private void OpenAttrScoutPopup(InventoryItemViewData data)
+    {
+        sb.Clear();
+        sb.Append("현재 남은 탐색권 개수 : ").Append(data.Response.Quantity);
+        remainScouterCountText.SetText(sb);
+
+        attrScoutPppup.SetActive(true);
+    }
+
+    // 특성 탐색권 팝업 UI 초기화
+    private void InitAttrScoutPopup()
+    {
+        remainScouterCountText.text = "현재 남은 탐색권 개수 : ";
+    }
+
+    // 특성 탐색권 팝업 닫기
+    private void CloseAttrScoutPopup()
+    {
+        attrScoutPppup.SetActive(false);
+        InitAttrScoutPopup();
+    }
+
+    // 특성 탐색권 사용
+    // 로컬 동작 후 전투 종료 시 서버 처리를 요청하여 전투가 정상종료 된 경우에만 사용처리되도록 구성
+    private void UseAttrScouter()
+    {
+        if (isUsedAttributeScout) return;
+
+        // 사용 플래그 활성화
+        isUsedAttributeScout = true;
+        // 특성 탐색권 팝업 여는 버튼 비활성화 (재사용 방지)
+        checkOppAttrButton.interactable = false;
+
         // 출력 (알파값 활성화)
-        foreach(var canvasGroup in oppAttrTextCanvasGroup){
+        foreach (var canvasGroup in oppAttrTextCanvasGroup)
+        {
             canvasGroup.alpha = 1f;
         }
+
+        // 사용 완료 후 팝업 닫기
+        CloseAttrScoutPopup();
     }
 
     // 사용할 특성 선택 버튼 클릭 시 동작
@@ -1054,6 +1116,7 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
         tapBar.SetActive(true);
 
         isMatching = false;
+        isUsedAttributeScout = false;
 
         UpdatePlayerCount(0);
         ResetReadyUI();
