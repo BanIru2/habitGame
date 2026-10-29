@@ -6,7 +6,8 @@ public enum ItemEffectType
     BattleStatUp,    // 전투 일회성 스탯 상승
     PermanentStatUp,   // 영구적 스탯 상승
     AttributeLevelUp,    // 영구적 특성 레벨 상승
-    ProtectStreak   // 습관 연속 달성 방어권
+    ProtectStreak,   // 습관 연속 달성 방어권
+    AttributeScout    // 특성 탐색권
 }
 
 public enum HabitDomainType
