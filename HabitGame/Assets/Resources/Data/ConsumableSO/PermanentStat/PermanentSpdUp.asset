@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5a0b544f77403114db58208ad6674b52, type: 3}
-  m_Name: consumable_permanent_spd
+  m_Name: PermanentSpdUp
   m_EditorClassIdentifier: 
   itemType: 1
   itemId: consumable_permanent_spd

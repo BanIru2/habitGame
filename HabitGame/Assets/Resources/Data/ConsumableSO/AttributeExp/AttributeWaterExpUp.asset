@@ -10,23 +10,23 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5a0b544f77403114db58208ad6674b52, type: 3}
-  m_Name: consumable_permanent_atk
+  m_Name: AttributeWaterExpUp
   m_EditorClassIdentifier: 
   itemType: 1
-  itemId: consumable_permanent_atk
-  displayName: "\uACF5\uACA9\uB825 \uC131\uC7A5 \uBB3C\uC57D"
-  description: "\uACF5\uACA9\uB825\uC774 \uC601\uAD6C\uC801\uC73C\uB85C 1 \uC99D\uAC00\uD569\uB2C8\uB2E4."
+  itemId: consumable_attribute_exp_water
+  displayName: "\uBB3C\uC758 \uACBD\uD5D8\uC11C"
+  description: "\uBB3C \uD2B9\uC131 \uACBD\uD5D8\uCE58\uB97C 100 \uD68D\uB4DD\uD569\uB2C8\uB2E4."
   cost: 0
-  icon: {fileID: 21300000, guid: 3fd3b6e7852304737b762513c3ae8836, type: 3}
+  icon: {fileID: 21300000, guid: 72656fea0772f47a7bc0ea0967e9ff7d, type: 3}
   unlockCondition:
     requiredAttributeLevel: 0
     requiredAttribute: 0
     requiredDailyStreak: 0
     requiredWeeklyStreak: 0
   useTiming: 1
-  effectType: 1
-  targetStat: 1
+  effectType: 2
+  targetStat: 0
   targetHabitDomain: 0
-  targetAttribute: 0
-  value: 1
+  targetAttribute: 2
+  value: 100
   maxStack: 99

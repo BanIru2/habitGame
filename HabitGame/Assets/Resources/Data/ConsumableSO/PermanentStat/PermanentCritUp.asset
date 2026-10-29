@@ -10,14 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5a0b544f77403114db58208ad6674b52, type: 3}
-  m_Name: consumable_permanent_hp
+  m_Name: PermanentCritUp
   m_EditorClassIdentifier: 
   itemType: 1
-  itemId: consumable_permanent_hp
-  displayName: "\uCCB4\uB825 \uC131\uC7A5 \uBB3C\uC57D"
-  description: "\uCCB4\uB825\uC774 \uC601\uAD6C\uC801\uC73C\uB85C 5 \uC99D\uAC00\uD569\uB2C8\uB2E4."
+  itemId: consumable_permanent_crit
+  displayName: "\uCE58\uBA85\uD0C0 \uC131\uC7A5 \uBB3C\uC57D"
+  description: "\uCE58\uBA85\uD0C0 \uD655\uB960\uC774 \uC601\uAD6C\uC801\uC73C\uB85C
+    1%p \uC99D\uAC00\uD569\uB2C8\uB2E4."
   cost: 0
-  icon: {fileID: 21300000, guid: b0d359c312dfa4661829040ebdf2786f, type: 3}
+  icon: {fileID: 21300000, guid: 7b2d428b9227c4c8dbda3dc5d1fbda00, type: 3}
   unlockCondition:
     requiredAttributeLevel: 0
     requiredAttribute: 0
@@ -25,8 +26,8 @@ MonoBehaviour:
     requiredWeeklyStreak: 0
   useTiming: 1
   effectType: 1
-  targetStat: 3
+  targetStat: 5
   targetHabitDomain: 0
   targetAttribute: 0
-  value: 5
+  value: 0.01
   maxStack: 99
