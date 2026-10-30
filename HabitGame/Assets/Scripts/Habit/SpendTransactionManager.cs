@@ -2,12 +2,16 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class SpendTransactionManager : MonoBehaviour
 {
     [Header("UI")]
     [SerializeField] private Transform content;
     [SerializeField] private GameObject transactionItemPrefab;
+    [SerializeField] private GameObject emptyState;
+    [SerializeField] private TMP_FontAsset itemFont;
+    [SerializeField] private Sprite itemCardSprite;
 
     [Header("Test Data")]
     [SerializeField] private bool useTestData = false;
@@ -58,6 +62,8 @@ public class SpendTransactionManager : MonoBehaviour
 
                 CreateTransactionItem(transaction);
             }
+
+            SetEmptyStateVisible(transactions.Count == 0);
         }
         catch (Exception e)
         {
@@ -98,6 +104,9 @@ public class SpendTransactionManager : MonoBehaviour
                 transactionItemPrefab,
                 content
             );
+
+        ApplyRuntimeStyle(newItem);
+        SetEmptyStateVisible(false);
 
         // -----------------------------------------
         // Category
@@ -297,6 +306,58 @@ public class SpendTransactionManager : MonoBehaviour
             Destroy(
                 content.GetChild(i).gameObject
             );
+        }
+
+        SetEmptyStateVisible(true);
+    }
+
+    private void SetEmptyStateVisible(bool visible)
+    {
+        if (emptyState != null)
+        {
+            emptyState.SetActive(visible);
+        }
+    }
+
+    private void ApplyRuntimeStyle(GameObject item)
+    {
+        if (item == null)
+            return;
+
+        Image cardImage = item.GetComponent<Image>();
+        if (cardImage != null && itemCardSprite != null)
+        {
+            cardImage.sprite = itemCardSprite;
+            cardImage.type = Image.Type.Sliced;
+            cardImage.color = Color.white;
+        }
+
+        LayoutElement layout = item.GetComponent<LayoutElement>();
+        if (layout == null)
+            layout = item.AddComponent<LayoutElement>();
+
+        layout.minHeight = 126f;
+        layout.preferredHeight = 126f;
+        layout.flexibleHeight = 0f;
+
+        foreach (TextMeshProUGUI text in
+                 item.GetComponentsInChildren<TextMeshProUGUI>(true))
+        {
+            if (itemFont != null)
+                text.font = itemFont;
+
+            text.enableWordWrapping = false;
+            text.overflowMode = TextOverflowModes.Ellipsis;
+
+            if (text.name == "AmountText")
+            {
+                text.color = new Color32(0x5B, 0x36, 0x39, 0xFF);
+                text.fontStyle = FontStyles.Bold;
+            }
+            else if (text.name == "DateText")
+            {
+                text.color = new Color32(0x86, 0x68, 0x5D, 0xFF);
+            }
         }
     }
 }

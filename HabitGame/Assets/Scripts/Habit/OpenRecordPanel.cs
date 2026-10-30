@@ -10,6 +10,7 @@ public class OpenRecordPanel : MonoBehaviour
 
     public void OpenRecord()
     {
+        SetTapBarActive(false);
         topTab.SetActive(false);
 
         spendPanel.SetActive(false);
@@ -18,9 +19,23 @@ public class OpenRecordPanel : MonoBehaviour
 
     public void BackToSpend()
     {
+        SetTapBarActive(true);
         topTab.SetActive(true);
 
         recordPanel.SetActive(false);
         spendPanel.SetActive(true);
+    }
+
+    private void SetTapBarActive(bool active)
+    {
+        Transform tapBar = transform.root.Find("TapBar");
+        if (tapBar != null)
+        {
+            tapBar.gameObject.SetActive(active);
+        }
+        else
+        {
+            Debug.LogError("Canvas/TapBar could not be found.");
+        }
     }
 }
