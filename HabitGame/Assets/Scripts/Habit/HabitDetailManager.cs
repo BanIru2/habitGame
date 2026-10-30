@@ -16,18 +16,22 @@ public class HabitDetailManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI periodText;
     [SerializeField] private TextMeshProUGUI rewardText;
 
-    // ÇöÀç »ó¼¼ È­¸é¿¡ Ç¥½Ã ÁßÀÎ Habit
+    [Header("Optional RPG summary badges")]
+    [SerializeField] private TextMeshProUGUI categoryBadgeText;
+    [SerializeField] private TextMeshProUGUI periodBadgeText;
+
+    // í˜„ì¬ ìƒì„¸ í™”ë©´ì— í‘œì‹œ ì¤‘ì¸ Habit
     private HabitGoalResponse currentHabit;
 
     // =========================================
-    // Habit »ó¼¼ È­¸é ¿­±â
+    // Habit ìƒì„¸ í™”ë©´ ì—´ê¸°
     // =========================================
     public void OpenDetail(HabitGoalResponse data)
     {
         if (data == null)
         {
             Debug.LogWarning(
-                "HabitDetail µ¥ÀÌÅÍ°¡ ¾ø½À´Ï´Ù."
+                "HabitDetail ë°ì´í„°ê°€ ì—†ìŠµë‹ˆë‹¤."
             );
             return;
         }
@@ -35,7 +39,7 @@ public class HabitDetailManager : MonoBehaviour
         currentHabit = data;
 
         // =========================================
-        // Habit ÀÌ¸§
+        // Habit ì´ë¦„
         // =========================================
         if (habitNameText != null)
         {
@@ -48,30 +52,24 @@ public class HabitDetailManager : MonoBehaviour
         // =========================================
         // Category
         // =========================================
-        if (categoryText != null)
-        {
-            categoryText.text =
-                $"Category : {GetDisplayValue(data.Category)}";
-        }
+        string categoryLabel = DisplayCategory(data.Category);
+        if (categoryText != null) categoryText.text = categoryLabel;
+        if (categoryBadgeText != null) categoryBadgeText.text = categoryLabel;
 
         // =========================================
         // Record Type
         // =========================================
         if (recordTypeText != null)
-        {
-            recordTypeText.text =
-                $"Record Type : {GetDisplayValue(data.RecordType)}";
-        }
+            recordTypeText.text = DisplayRecordType(data.RecordType);
 
         // =========================================
         // Target
         // =========================================
         if (targetText != null)
         {
-            if (data.RecordType == "check")
+            if (string.Equals(data.RecordType, "check", System.StringComparison.OrdinalIgnoreCase))
             {
-                targetText.text =
-                    "Target : Complete";
+                targetText.text = "ì™„ë£Œ";
             }
             else
             {
@@ -80,19 +78,16 @@ public class HabitDetailManager : MonoBehaviour
                         ? ""
                         : $" {data.Unit}";
 
-                targetText.text =
-                    $"Target : {data.TargetAmount}{unit}";
+                targetText.text = $"{data.TargetAmount}{unit}";
             }
         }
 
         // =========================================
         // Period
         // =========================================
-        if (periodText != null)
-        {
-            periodText.text =
-                $"Repeat : {GetDisplayValue(data.Period)}";
-        }
+        string periodLabel = DisplayPeriod(data.Period);
+        if (periodText != null) periodText.text = periodLabel;
+        if (periodBadgeText != null) periodBadgeText.text = periodLabel;
 
         // =========================================
         // Reward
@@ -100,20 +95,19 @@ public class HabitDetailManager : MonoBehaviour
         if (rewardText != null)
         {
             /*
-             * HabitGoalResponse¿¡´Â ÇöÀç
-             * º¸»ó °ü·Ã ÇÊµå°¡ Á¸ÀçÇÏÁö ¾ÊÀ½.
+             * HabitGoalResponseì—ëŠ” í˜„ì¬
+             * ë³´ìƒ ê´€ë ¨ í•„ë“œê°€ ì¡´ì¬í•˜ì§€ ì•ŠìŒ.
              *
-             * ½ÇÁ¦ º¸»óÀº HabitRecord »ı¼º ÈÄ
-             * HabitRewardClaimResponse¸¦ ÅëÇØ
-             * ¹Ş¾Æ¿À´Â ±¸Á¶ÀÌ¹Ç·Î ¿©±â¼­´Â
-             * ÀÓÀÇÀÇ º¸»ó°ªÀ» Ç¥½ÃÇÏÁö ¾ÊÀ½.
+             * ì‹¤ì œ ë³´ìƒì€ HabitRecord ìƒì„± í›„
+             * HabitRewardClaimResponseë¥¼ í†µí•´
+             * ë°›ì•„ì˜¤ëŠ” êµ¬ì¡°ì´ë¯€ë¡œ ì—¬ê¸°ì„œëŠ”
+             * ì„ì˜ì˜ ë³´ìƒê°’ì„ í‘œì‹œí•˜ì§€ ì•ŠìŒ.
              */
-            rewardText.text =
-                "Reward : Complete habit to claim";
+            rewardText.text = "ëª©í‘œë¥¼ ì™„ë£Œí•˜ê³  ë³´ìƒì„ ìˆ˜ë ¹í•˜ì„¸ìš”.";
         }
 
         // =========================================
-        // Panel ÀüÈ¯
+        // Panel ì „í™˜
         // =========================================
         if (detailPanel != null)
         {
@@ -122,7 +116,7 @@ public class HabitDetailManager : MonoBehaviour
         else
         {
             Debug.LogWarning(
-                "HabitDetailManagerÀÇ DetailPanelÀÌ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù."
+                "HabitDetailManagerì˜ DetailPanelì´ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤."
             );
         }
 
@@ -138,7 +132,7 @@ public class HabitDetailManager : MonoBehaviour
     }
 
     // =========================================
-    // »ó¼¼ È­¸é ´İ±â
+    // ìƒì„¸ í™”ë©´ ë‹«ê¸°
     // =========================================
     public void CloseDetail()
     {
@@ -161,8 +155,8 @@ public class HabitDetailManager : MonoBehaviour
     }
 
     // =========================================
-    // ÇöÀç »ó¼¼ Habit ¹İÈ¯
-    // ÃßÈÄ º¸»ó ±â´É¿¡¼­ »ç¿ë °¡´É
+    // í˜„ì¬ ìƒì„¸ Habit ë°˜í™˜
+    // ì¶”í›„ ë³´ìƒ ê¸°ëŠ¥ì—ì„œ ì‚¬ìš© ê°€ëŠ¥
     // =========================================
     public HabitGoalResponse GetCurrentHabit()
     {
@@ -170,8 +164,44 @@ public class HabitDetailManager : MonoBehaviour
     }
 
     // =========================================
-    // ºó ¹®ÀÚ¿­ Ç¥½Ã ¹æÁö
+    // ë¹ˆ ë¬¸ìì—´ í‘œì‹œ ë°©ì§€
     // =========================================
+    // Display-only localization. Unknown server values are shown unchanged.
+    private string DisplayCategory(string value)
+    {
+        switch ((value ?? "").Trim().ToLowerInvariant())
+        {
+            case "physical": return "ìš´ë™";
+            case "mental": return "ì •ì‹ ";
+            case "study": return "í•™ìŠµ";
+            default: return GetDisplayValue(value);
+        }
+    }
+
+    private string DisplayRecordType(string value)
+    {
+        switch ((value ?? "").Trim().ToLowerInvariant())
+        {
+            case "check": return "ì™„ë£Œ ì²´í¬";
+            case "value":
+            case "number": return "ìˆ˜ì¹˜ ì…ë ¥";
+            case "photo": return "ì‚¬ì§„ ì¸ì¦";
+            default: return GetDisplayValue(value);
+        }
+    }
+
+    private string DisplayPeriod(string value)
+    {
+        switch ((value ?? "").Trim().ToLowerInvariant())
+        {
+            case "daily": return "ë§¤ì¼";
+            case "weekly": return "ë§¤ì£¼";
+            case "long_term":
+            case "longterm": return "ì¥ê¸°";
+            default: return GetDisplayValue(value);
+        }
+    }
+
     private string GetDisplayValue(string value)
     {
         return string.IsNullOrWhiteSpace(value)
