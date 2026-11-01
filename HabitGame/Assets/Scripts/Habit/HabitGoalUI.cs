@@ -10,10 +10,11 @@ public class HabitGoalUI : MonoBehaviour
 
     [Header("Amount")]
     public CanvasGroup amountPanel;
-    public TMP_Text amountText;
+    public TMP_InputField amountInput;
     public TMP_Dropdown unitDropdown;
 
     private int amount = 3;
+
 
     [Header("Category")]
     public Button physicalButton;
@@ -130,8 +131,8 @@ public class HabitGoalUI : MonoBehaviour
         // -------------------------
         amount = 3;
 
-        if (amountText != null)
-            amountText.text = amount.ToString();
+        if (amountInput != null)
+            amountInput.SetTextWithoutNotify(amount.ToString());
 
         if (unitDropdown != null)
         {
@@ -189,35 +190,48 @@ public class HabitGoalUI : MonoBehaviour
     }
 
 
-    // =========================================
     // Amount 증가
-    // =========================================
     public void IncreaseAmount()
     {
-        amount++;
+        ApplyAmountInput();
 
-        if (amountText != null)
-        {
-            amountText.text =
-                amount.ToString();
-        }
+        if (amount < int.MaxValue)
+            amount++;
+
+        UpdateAmountInput();
     }
 
-
-    // =========================================
     // Amount 감소
-    // =========================================
     public void DecreaseAmount()
     {
+        ApplyAmountInput();
+
         if (amount > 1)
-        {
             amount--;
+
+        UpdateAmountInput();
+    }
+
+    // 직접 입력한 숫자 적용
+    public void ApplyAmountInput()
+    {
+        if (amountInput == null)
+            return;
+
+        if (int.TryParse(amountInput.text, out int value))
+        {
+            amount = Mathf.Max(1, value);
         }
 
-        if (amountText != null)
+        UpdateAmountInput();
+    }
+
+    // InputField 표시 업데이트
+    private void UpdateAmountInput()
+    {
+        if (amountInput != null)
         {
-            amountText.text =
-                amount.ToString();
+            amountInput.SetTextWithoutNotify(amount.ToString());
         }
     }
 
@@ -526,6 +540,8 @@ public class HabitGoalUI : MonoBehaviour
     // =========================================
     public async void SaveGoal()
     {
+        ApplyAmountInput();
+
         // Habit Name
         if (habitNameInput == null ||
             string.IsNullOrWhiteSpace(habitNameInput.text))
