@@ -112,3 +112,6 @@ InitTestScene*.unity*
 # Excluded from public repository due to asset licensing.
 /HabitGame/Assets/Skyden_Games/
 /HabitGame/Assets/Skyden_Games.meta
+
+# Free Title Assets
+**/Assets/TitleBadgeAssets*
