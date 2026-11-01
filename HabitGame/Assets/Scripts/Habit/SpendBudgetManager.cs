@@ -5,11 +5,19 @@ using UnityEngine.UI;
 
 public class SpendBudgetManager : MonoBehaviour
 {
+    private static readonly Color NormalUsageColor =
+        new Color32(0x6F, 0xA8, 0x63, 0xFF);
+
+    private static readonly Color OverBudgetColor =
+        new Color32(0xB8, 0x5C, 0x52, 0xFF);
+
     public static SpendBudgetManager Instance;
 
     [Header("UI")]
     [SerializeField] private TextMeshProUGUI budgetText;
     [SerializeField] private TextMeshProUGUI usedText;
+    [SerializeField] private TextMeshProUGUI usageText;
+    [SerializeField] private TextMeshProUGUI remainingText;
     [SerializeField] private Slider budgetSlider;
 
     // 서버 연결 실패 시 보여줄 임시 기본값
@@ -219,7 +227,9 @@ public class SpendBudgetManager : MonoBehaviour
         if (budgetText != null)
         {
             budgetText.text =
-                $"{weeklyBudget:N0}₩";
+                weeklyBudget > 0
+                    ? $"/ {weeklyBudget:N0}원"
+                    : "예산 미설정";
         }
 
         float percent =
@@ -230,16 +240,64 @@ public class SpendBudgetManager : MonoBehaviour
         float displayPercent =
             percent * 100f;
 
+        int remainingMoney =
+            weeklyBudget - usedMoney;
+
+        bool isOverBudget =
+            weeklyBudget > 0 && remainingMoney < 0;
+
         if (usedText != null)
         {
             usedText.text =
-                $"{usedMoney:N0}₩ ({displayPercent:0}%)";
+                $"{usedMoney:N0}원";
+
+            usedText.color =
+                isOverBudget
+                    ? OverBudgetColor
+                    : NormalUsageColor;
+        }
+
+        if (usageText != null)
+        {
+            usageText.text =
+                weeklyBudget > 0
+                    ? $"사용률 {displayPercent:0}%"
+                    : "사용률 —";
+        }
+
+        if (remainingText != null)
+        {
+            remainingText.text =
+                weeklyBudget <= 0
+                    ? "예산을 설정해 주세요"
+                    : remainingMoney >= 0
+                        ? $"잔여 {remainingMoney:N0}원"
+                        : $"초과 {-remainingMoney:N0}원";
+
+            remainingText.color =
+                isOverBudget
+                    ? OverBudgetColor
+                    : NormalUsageColor;
         }
 
         if (budgetSlider != null)
         {
             budgetSlider.value =
                 Mathf.Clamp01(percent);
+
+            if (budgetSlider.fillRect != null)
+            {
+                Image fillImage =
+                    budgetSlider.fillRect.GetComponent<Image>();
+
+                if (fillImage != null)
+                {
+                    fillImage.color =
+                        isOverBudget
+                            ? OverBudgetColor
+                            : NormalUsageColor;
+                }
+            }
         }
 
         if (SpendRewardManager.Instance != null)

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -20,6 +21,10 @@ public class TitleManager : MonoBehaviour
     private GameObject previewPopup;
     [SerializeField]
     private Image previewTitleImage;
+    [SerializeField]
+    private TextMeshProUGUI previewTitleNameText;
+    [SerializeField]
+    private TextMeshProUGUI previewRewardTypeText;
     [SerializeField]
     private DimCloser previewDimCloser;
 
@@ -293,12 +298,20 @@ public class TitleManager : MonoBehaviour
     }
 
     // ---------------------------------- 미리 보기 ---------------------------------------
-    public void ShowPreview(Sprite titleSprite)
+    public void ShowPreview(TitleDataSO titleData)
     {
-        if (titleSprite == null) return;
+        if (titleData == null || titleData.displaySprite == null) return;
         if (previewTitleImage != null)
         {
-            previewTitleImage.sprite = titleSprite;
+            previewTitleImage.sprite = titleData.displaySprite;
+        }
+        if (previewTitleNameText != null)
+        {
+            previewTitleNameText.text = titleData.displayName;
+        }
+        if (previewRewardTypeText != null)
+        {
+            previewRewardTypeText.text = "칭호 보상";
         }
         if (previewPopup != null)
         {

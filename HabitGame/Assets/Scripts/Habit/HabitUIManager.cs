@@ -105,6 +105,7 @@ public class HabitUIManager : SceneSingleton<HabitUIManager>
     // =========================================
     public void OpenSpend()
     {
+        SetTapBarActive(true);
         SetActive(topTab, true);
 
         SetActive(lifePanel, false);
@@ -152,6 +153,7 @@ public class HabitUIManager : SceneSingleton<HabitUIManager>
     // =========================================
     public void OpenSpendAddPanel()
     {
+        SetTapBarActive(false);
         SetActive(topTab, false);
 
         SetActive(lifePanel, false);
@@ -171,6 +173,7 @@ public class HabitUIManager : SceneSingleton<HabitUIManager>
     // =========================================
     public void OpenBudgetSetting()
     {
+        SetTapBarActive(false);
         SetActive(topTab, false);
 
         SetActive(lifePanel, false);
@@ -211,6 +214,7 @@ public class HabitUIManager : SceneSingleton<HabitUIManager>
     // =========================================
     public void OpenSpendHistory()
     {
+        SetTapBarActive(false);
         SetActive(topTab, false);
 
         SetActive(lifePanel, false);

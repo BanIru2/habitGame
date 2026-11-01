@@ -31,6 +31,9 @@ public class AchievementSlotUI : MonoBehaviour
     private static readonly Color32 InProgressTextColor = new Color32(220, 220, 220, 255); // 연회색
     private static readonly Color32 ClaimedTextColor = new Color32(140, 140, 140, 255);   // 어두운 회색
 
+    private bool HasConfiguredReward =>
+        viewData != null && viewData.AchievementSO != null && viewData.AchievementSO.rewardTitle != null;
+
     private Color GetAttributeColor(AttributeType attribute) => attribute switch
     {
         AttributeType.Fire => new Color32(255, 95, 75, 255),   // 불 - 코랄 레드
@@ -78,7 +81,8 @@ public class AchievementSlotUI : MonoBehaviour
         // 진행도 텍스트 표시
         if (progressText != null)
         {
-            progressText.text = $"{current} / {target}";
+            float displayRatio = target > 0 ? Mathf.Clamp01((float)current / target) : 0f;
+            progressText.text = $"현재 {current} / 목표 {target}  ({Mathf.RoundToInt(displayRatio * 100f)}%)";
         }
         // 게이지 비율 반영
         if (progressBarFill != null)
@@ -104,9 +108,13 @@ public class AchievementSlotUI : MonoBehaviour
             }
         }
         // 보상 확인 버튼
-        if (checkRewardButton != null && onCheckReward != null)
+        if (checkRewardButton != null)
         {
-            checkRewardButton.onClick.AddListener(() => onCheckReward(viewData));
+            checkRewardButton.interactable = HasConfiguredReward;
+            if (HasConfiguredReward && onCheckReward != null)
+            {
+                checkRewardButton.onClick.AddListener(() => onCheckReward(viewData));
+            }
         }
     }
 
@@ -123,6 +131,24 @@ public class AchievementSlotUI : MonoBehaviour
         }
 
         bool isClaimed = viewData.Response != null && viewData.Response.IsClaimed;
+
+        if (!HasConfiguredReward)
+        {
+            rewardClaimButton.interactable = false;
+
+            if (rewardClaimText != null)
+            {
+                rewardClaimText.text = "보상\n준비 중";
+                rewardClaimText.color = InProgressTextColor;
+            }
+
+            if (rewardClaimButton.image != null)
+            {
+                rewardClaimButton.image.color = InProgressColor;
+            }
+
+            return;
+        }
 
         if (isClaimed)
         {
@@ -169,7 +195,11 @@ public class AchievementSlotUI : MonoBehaviour
             progressBarFill.rectTransform.localScale = scale;
         }
         // 버튼에 걸려있던 이전 클릭 리스너 해제
-        if (checkRewardButton != null) checkRewardButton.onClick.RemoveAllListeners();
+        if (checkRewardButton != null)
+        {
+            checkRewardButton.onClick.RemoveAllListeners();
+            checkRewardButton.interactable = false;
+        }
         if (rewardClaimButton != null)
         {
             rewardClaimButton.onClick.RemoveAllListeners();
