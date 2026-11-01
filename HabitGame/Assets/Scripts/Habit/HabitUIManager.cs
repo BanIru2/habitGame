@@ -26,15 +26,40 @@ public class HabitUIManager : SceneSingleton<HabitUIManager>
     [SerializeField] private HabitListManager habitListManager;
     [SerializeField] private HabitGoalUI habitGoalUI;
 
+    [SerializeField] private ImportWeeklyPopupUI importWeeklyPopupUI;
+
     private void Start()
     {
         OpenLife();
     }
-
     // =========================================
+    // 지난주 목표 가져오기 완료 이벤트 연결
+    // =========================================
+    private void OnEnable()
+    {
+        if (importWeeklyPopupUI != null)
+        {
+            importWeeklyPopupUI.ImportCompleted += OnWeeklyImportCompleted;
+        }
+    }
+
+    // 이벤트 중복 등록 방지
+    private void OnDisable()
+    {
+        if (importWeeklyPopupUI != null)
+        {
+            importWeeklyPopupUI.ImportCompleted -= OnWeeklyImportCompleted;
+        }
+    }
+
+    // 지난주 목표 가져오기 성공 시 목록 자동 갱신
+    private async void OnWeeklyImportCompleted()
+    {
+        await OpenHabitTap();
+    }
+
     // Habit 탭 진입
     // MainTapManager 등에서 호출
-    // =========================================
     public async Task OpenHabitTap()
     {
         OpenLife();

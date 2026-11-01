@@ -42,6 +42,8 @@ public class HabitItem : MonoBehaviour
 
     // API 중복 요청 방지
     private bool isSubmitting = false;
+    // 현재 UI에서 CHECK 목표 기록 성공 여부
+    private bool recordedCheckToday = false;
     // 인증 성공 여부 저장
     private bool isSuccessVerify = false;
 
@@ -150,7 +152,17 @@ public class HabitItem : MonoBehaviour
             SetCompletedState();
             return;
         }
-
+        // 같은 실행 중 이미 기록한 CHECK 목표는 중복 제출하지 않음
+        if (recordedCheckToday &&
+            string.Equals(
+                habitData.RecordType,
+                "check",
+                System.StringComparison.OrdinalIgnoreCase))
+        {
+            ResetToggle();
+            completeToggle.interactable = false;
+            return;
+        }
         // 사진 인증 성공 자체를 목표 전체 완료로 처리
         if (habitData.VerificationType == "photo")
         {
@@ -468,12 +480,17 @@ public class HabitItem : MonoBehaviour
                 return;
             }
 
-            // =========================================
+            // CHECK 목표 기록 성공 여부 저장
+            if (string.Equals(
+                habitData.RecordType,
+                "check",
+                System.StringComparison.OrdinalIgnoreCase))
+            {
+                recordedCheckToday = true;
+            }
+
             // 기록 성공 → 현재 진행률 반영
-            // =========================================
-            AddProgress(
-                achievedAmount
-            );
+            AddProgress(achievedAmount);
 
 
             // =========================================
@@ -523,14 +540,10 @@ public class HabitItem : MonoBehaviour
         {
             isSubmitting = false;
 
-            /*
-             * 목표 미달 상태라면
-             * 다음 기록을 다시 입력할 수 있게 함.
-             */
-            if (completeToggle != null &&
-                !IsGoalCompleted())
+            if (completeToggle != null)
             {
-                completeToggle.interactable = true;
+                completeToggle.interactable =
+                    !IsGoalCompleted() && !recordedCheckToday;
             }
         }
     }
