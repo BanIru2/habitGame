@@ -18,4 +18,4 @@ MonoBehaviour:
   attribute: 4
   trackingType: 1
   targetCount: 5
-  rewardTitle: {fileID: 0}
+  rewardTitle: {fileID: 11400000, guid: 2a9c2ad0f08d6b44c9f9936bbe3b5d9c, type: 2}
