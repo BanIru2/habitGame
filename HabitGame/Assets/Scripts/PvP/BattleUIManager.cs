@@ -304,6 +304,8 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
         lobbyPanel.SetActive(false);
 
         isMatching = true;
+        isUsedAttributeScout = false;
+        CloseAttrScoutPopup();
         ResetReadyUI();
         ClearOpponentInfoUI();
 
@@ -1269,6 +1271,7 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
 
         isMatching = false;
         isUsedAttributeScout = false;
+        CloseAttrScoutPopup();
 
         UpdatePlayerCount(0);
         ResetReadyUI();
