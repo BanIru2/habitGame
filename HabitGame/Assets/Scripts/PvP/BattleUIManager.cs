@@ -328,6 +328,7 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
     // 준비 단계 완료 시(양 측 다 준비 완료 or 준비 시간 끝) 화면 전환
     public void ReadyComplete(string receivedBattleId)
     {
+        attrScoutPppup.SetActive(false);
         readyPanel.SetActive(false);
         battlePanel.SetActive(true);
         InitBattleUI(receivedBattleId);
