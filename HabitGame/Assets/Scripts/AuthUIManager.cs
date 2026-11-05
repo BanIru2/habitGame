@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
@@ -12,7 +13,8 @@ using UnityEngine.UI;
 public sealed class AuthUIManager : MonoBehaviour
 {
     private const float LoginStatusY = -220f;
-    private const float RegisterStatusY = -300f;
+    private const float LoginStatusHeight = 100f;
+    private const float RegisterStatusHeight = 72f;
     private const string RememberLoginIdKey = "HabitPVP.RememberLoginId";
     private const string SavedLoginIdKey = "HabitPVP.SavedLoginId";
 
@@ -40,14 +42,18 @@ public sealed class AuthUIManager : MonoBehaviour
     [SerializeField] private string gameplaySceneName = "MainScene";
 
     private bool requestInProgress;
+    private float registerStatusY = -225f;
 
     private void Awake()
     {
-        ConfigureEmailInput(loginEmailInput);
-        ConfigureEmailInput(registerEmailInput);
+        ConfigureLoginIdInput(loginEmailInput);
+        ConfigureRegistrationIdInput(registerEmailInput);
         ConfigurePasswordInput(loginPasswordInput);
         ConfigurePasswordInput(registerPasswordInput);
         ConfigurePasswordInput(registerPasswordConfirmationInput);
+        ConfigureIdPlaceholder(loginEmailInput);
+        ConfigureIdPlaceholder(registerEmailInput);
+        CreateRegistrationGuidanceTexts();
         BindControls();
         WarnAboutMissingReferences();
     }
@@ -295,7 +301,7 @@ public sealed class AuthUIManager : MonoBehaviour
 
         SetActive(loginPanel, false);
         SetActive(registerPanel, true);
-        SetStatusPosition(RegisterStatusY);
+        SetStatusLayout(registerStatusY, RegisterStatusHeight);
         ShowStatus(string.Empty);
         registerEmailInput?.Select();
     }
@@ -314,7 +320,7 @@ public sealed class AuthUIManager : MonoBehaviour
     {
         SetActive(loginPanel, true);
         SetActive(registerPanel, false);
-        SetStatusPosition(LoginStatusY);
+        SetStatusLayout(LoginStatusY, LoginStatusHeight);
 
         if (clearStatus)
             ShowStatus(string.Empty);
@@ -486,19 +492,20 @@ public sealed class AuthUIManager : MonoBehaviour
         statusText.gameObject.SetActive(!string.IsNullOrEmpty(message));
     }
 
-    private void SetStatusPosition(float y)
+    private void SetStatusLayout(float y, float height)
     {
         if (statusText == null)
             return;
 
         RectTransform rectTransform = statusText.rectTransform;
         rectTransform.anchoredPosition = new Vector2(rectTransform.anchoredPosition.x, y);
+        rectTransform.sizeDelta = new Vector2(rectTransform.sizeDelta.x, height);
     }
 
     private static string ValidateAccountInput(string email, string password)
     {
         if (string.IsNullOrWhiteSpace(email))
-            return "이메일을 입력해주세요.";
+            return "아이디를 입력해주세요.";
 
         if (string.IsNullOrEmpty(password))
             return "비밀번호를 입력해주세요.";
@@ -512,20 +519,81 @@ public sealed class AuthUIManager : MonoBehaviour
         string passwordConfirmation,
         string nickname)
     {
-        string accountValidation = ValidateAccountInput(email, password);
-        if (accountValidation != null)
-            return accountValidation;
+        if (string.IsNullOrWhiteSpace(email))
+            return "아이디를 입력해주세요.";
+
+        if (string.IsNullOrEmpty(password))
+            return "비밀번호를 입력해주세요.";
 
         if (string.IsNullOrEmpty(passwordConfirmation))
             return "비밀번호 확인을 입력해주세요.";
 
-        if (!string.Equals(password, passwordConfirmation, StringComparison.Ordinal))
-            return "비밀번호가 일치하지 않습니다.";
-
         if (string.IsNullOrWhiteSpace(nickname))
             return "닉네임을 입력해주세요.";
 
+        if (email.Length < 4)
+            return "아이디가 4자 미만입니다.";
+
+        if (email.Length > 20)
+            return "아이디는 20자 이하여야 합니다.";
+
+        foreach (char character in email)
+        {
+            if (!IsAsciiLetter(character)
+                && (character < '0' || character > '9')
+                && character != '_')
+            {
+                return "아이디는 영문, 숫자, 밑줄(_)만 사용할 수 있습니다.";
+            }
+        }
+
+        if (password.Length < 8)
+            return "비밀번호는 8자 이상이어야 합니다.";
+
+        if (password.Length > 64)
+            return "비밀번호는 64자 이하여야 합니다.";
+
+        if (string.Equals(password, email, StringComparison.Ordinal))
+            return "비밀번호는 아이디와 같을 수 없습니다.";
+
+        bool hasLetter = false;
+        bool hasDigit = false;
+        bool hasAsciiSpecial = false;
+
+        foreach (char character in password)
+        {
+            if (char.IsWhiteSpace(character))
+                return "비밀번호에는 공백을 사용할 수 없습니다.";
+
+            hasLetter |= IsAsciiLetter(character);
+            hasDigit |= character >= '0' && character <= '9';
+            hasAsciiSpecial |= IsAsciiSpecial(character);
+        }
+
+        if (!hasLetter || !hasDigit || !hasAsciiSpecial)
+            return "비밀번호에는 영문, 숫자, 특수문자가 각각 1개 이상 포함되어야 합니다.";
+
+        if (Encoding.UTF8.GetByteCount(password) > 72)
+            return "비밀번호는 UTF-8 기준 72바이트 이하여야 합니다.";
+
+        if (!string.Equals(password, passwordConfirmation, StringComparison.Ordinal))
+            return "비밀번호가 일치하지 않습니다.";
+
         return null;
+    }
+
+    private static bool IsAsciiLetter(char character)
+    {
+        return (character >= 'A' && character <= 'Z')
+            || (character >= 'a' && character <= 'z');
+    }
+
+    private static bool IsAsciiSpecial(char character)
+    {
+        return (character >= '!' && character <= '/')
+            || (character >= ':' && character <= '@')
+            || (character >= '[' && character <= '`')
+            || (character >= '{' && character <= '~');
     }
 
     private static string GetApiErrorMessage(ApiException exception, bool isRegistration)
@@ -541,7 +609,7 @@ public sealed class AuthUIManager : MonoBehaviour
 
         if (isRegistration
             && (exception.StatusCode == 409 || ContainsDuplicateAccountMessage(detail)))
-            return "이미 사용 중인 이메일입니다.";
+            return "이미 사용 중인 아이디입니다.";
 
         if (!isRegistration && (exception.StatusCode == 401
             || exception.StatusCode == 403
@@ -555,6 +623,9 @@ public sealed class AuthUIManager : MonoBehaviour
         if (exception.StatusCode >= 500)
             return "서버 오류가 발생했습니다.\n잠시 후 다시 시도해주세요.";
 
+        if (isRegistration && exception.StatusCode == 400 && !string.IsNullOrWhiteSpace(detail))
+            return detail;
+
         return isRegistration
             ? "입력 정보를 확인하고 다시 시도해주세요."
             : "아이디 또는 비밀번호를 확인해주세요.";
@@ -565,7 +636,17 @@ public sealed class AuthUIManager : MonoBehaviour
         if (exception.StatusCode <= 0)
             return "서버에 연결할 수 없어 자동 로그인에 실패했습니다. 직접 로그인해주세요.";
 
-        return "로그인 정보가 만료되었습니다. 다시 로그인해주세요.";
+        if (exception.StatusCode == 400
+            || exception.StatusCode == 401
+            || exception.StatusCode == 403)
+        {
+            return "로그인 유지 시간이 만료되었습니다. 다시 로그인해주세요.";
+        }
+
+        if (exception.StatusCode >= 500)
+            return "서버 오류로 자동 로그인에 실패했습니다. 직접 로그인해주세요.";
+
+        return "자동 로그인에 실패했습니다. 다시 로그인해주세요.";
     }
 
     private static bool IsTransientAuthenticationFailure(ApiException exception)
@@ -605,12 +686,22 @@ public sealed class AuthUIManager : MonoBehaviour
         return input == null ? string.Empty : input.text;
     }
 
-    private static void ConfigureEmailInput(TMP_InputField input)
+    private static void ConfigureLoginIdInput(TMP_InputField input)
     {
         if (input == null)
             return;
 
         input.contentType = TMP_InputField.ContentType.EmailAddress;
+        input.lineType = TMP_InputField.LineType.SingleLine;
+        input.ForceLabelUpdate();
+    }
+
+    private static void ConfigureRegistrationIdInput(TMP_InputField input)
+    {
+        if (input == null)
+            return;
+
+        input.contentType = TMP_InputField.ContentType.Standard;
         input.lineType = TMP_InputField.LineType.SingleLine;
         input.ForceLabelUpdate();
     }
@@ -623,6 +714,117 @@ public sealed class AuthUIManager : MonoBehaviour
         input.contentType = TMP_InputField.ContentType.Password;
         input.lineType = TMP_InputField.LineType.SingleLine;
         input.ForceLabelUpdate();
+    }
+
+    private static void ConfigureIdPlaceholder(TMP_InputField input)
+    {
+        if (input != null && input.placeholder is TMP_Text placeholder)
+            placeholder.text = "아이디";
+    }
+
+    private void CreateRegistrationGuidanceTexts()
+    {
+        if (registerPanel == null || statusText == null)
+            return;
+
+        TMP_Text idGuidance = GetOrCreateRegistrationGuidanceText(
+            "IdGuidanceText",
+            "아이디: 4~20자, 영문·숫자·_ 사용 가능",
+            242f
+        );
+        TMP_Text passwordGuidance = GetOrCreateRegistrationGuidanceText(
+            "PasswordGuidanceText",
+            "비밀번호: 8~64자, 영문·숫자·특수문자 포함",
+            107f
+        );
+
+        ConfigureRegistrationLayout(idGuidance, passwordGuidance);
+    }
+
+    private TMP_Text GetOrCreateRegistrationGuidanceText(
+        string objectName,
+        string message,
+        float fallbackAnchoredY)
+    {
+        Transform existing = registerPanel.transform.Find(objectName);
+        TMP_Text guidance = existing == null ? null : existing.GetComponent<TMP_Text>();
+
+        if (guidance == null)
+        {
+            guidance = Instantiate(statusText, registerPanel.transform);
+            guidance.name = objectName;
+        }
+
+        guidance.text = message;
+        guidance.fontSize = 20f;
+        guidance.fontStyle = FontStyles.Normal;
+        guidance.alignment = TextAlignmentOptions.Left;
+        guidance.enableWordWrapping = false;
+        guidance.color = new Color32(107, 78, 50, 255);
+        guidance.raycastTarget = false;
+        guidance.gameObject.SetActive(true);
+
+        RectTransform rectTransform = guidance.rectTransform;
+        rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+        rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        rectTransform.pivot = new Vector2(0.5f, 0.5f);
+        rectTransform.anchoredPosition = new Vector2(0f, fallbackAnchoredY);
+        rectTransform.sizeDelta = new Vector2(720f, 30f);
+        rectTransform.localScale = Vector3.one;
+
+        return guidance;
+    }
+
+    private void ConfigureRegistrationLayout(TMP_Text idGuidance, TMP_Text passwordGuidance)
+    {
+        RectTransform panel = registerPanel.transform as RectTransform;
+        RectTransform caption = panel == null
+            ? null
+            : panel.Find("RegisterCard/PanelHeader/Caption") as RectTransform;
+
+        if (panel == null || caption == null)
+        {
+            Debug.LogWarning(
+                "[Auth] Registration caption was not found; existing UI positions are preserved.",
+                this
+            );
+            return;
+        }
+
+        float nextTop = GetBottomInParent(caption, panel) - 18f;
+        nextTop = PlaceBelow(registerEmailInput?.transform as RectTransform, nextTop, 4f);
+        nextTop = PlaceBelow(idGuidance?.rectTransform, nextTop, 12f);
+        nextTop = PlaceBelow(registerPasswordInput?.transform as RectTransform, nextTop, 4f);
+        nextTop = PlaceBelow(passwordGuidance?.rectTransform, nextTop, 12f);
+        nextTop = PlaceBelow(
+            registerPasswordConfirmationInput?.transform as RectTransform,
+            nextTop,
+            18f
+        );
+        nextTop = PlaceBelow(registerNicknameInput?.transform as RectTransform, nextTop, 8f);
+
+        registerStatusY = nextTop - RegisterStatusHeight * 0.5f;
+        nextTop -= RegisterStatusHeight + 8f;
+        nextTop = PlaceBelow(registerButton?.transform as RectTransform, nextTop, 20f);
+        PlaceBelow(showLoginButton?.transform as RectTransform, nextTop, 0f);
+    }
+
+    private static float PlaceBelow(RectTransform target, float top, float followingGap)
+    {
+        if (target == null)
+            return top;
+
+        float height = target.rect.height;
+        Vector2 position = target.anchoredPosition;
+        position.y = top - height * (1f - target.pivot.y);
+        target.anchoredPosition = position;
+        return top - height - followingGap;
+    }
+
+    private static float GetBottomInParent(RectTransform target, RectTransform parent)
+    {
+        Vector3 bottomCenter = new Vector3(target.rect.center.x, target.rect.yMin, 0f);
+        return parent.InverseTransformPoint(target.TransformPoint(bottomCenter)).y;
     }
 
     private static void FocusInput(TMP_InputField input)
