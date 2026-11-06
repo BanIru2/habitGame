@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb3dd77c46ae0794cab4bbd523463fd6, type: 3}
   m_Name: Water_Lv_5
   m_EditorClassIdentifier: 
-  titleId: Water_Lv_5
+  titleId: Title_Water_Lv_5
+  displayName: 
   displaySprite: {fileID: 21300000, guid: b4af8d44bf250cc4fb7ebfbe2ad802f4, type: 3}
   acquisitionRoute: 
