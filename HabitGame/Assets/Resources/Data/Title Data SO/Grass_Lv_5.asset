@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb3dd77c46ae0794cab4bbd523463fd6, type: 3}
   m_Name: Grass_Lv_5
   m_EditorClassIdentifier: 
-  titleId: Grass_Lv_5
+  titleId: Title_Grass_Lv_5
+  displayName: 
   displaySprite: {fileID: 21300000, guid: c06e56ad37c904a4396f1fda509c2975, type: 3}
   acquisitionRoute: 

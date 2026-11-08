@@ -304,6 +304,8 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
         lobbyPanel.SetActive(false);
 
         isMatching = true;
+        isUsedAttributeScout = false;
+        CloseAttrScoutPopup();
         ResetReadyUI();
         ClearOpponentInfoUI();
 
@@ -328,6 +330,7 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
     // 준비 단계 완료 시(양 측 다 준비 완료 or 준비 시간 끝) 화면 전환
     public void ReadyComplete(string receivedBattleId)
     {
+        attrScoutPppup.SetActive(false);
         readyPanel.SetActive(false);
         battlePanel.SetActive(true);
         InitBattleUI(receivedBattleId);
@@ -1268,6 +1271,7 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
 
         isMatching = false;
         isUsedAttributeScout = false;
+        CloseAttrScoutPopup();
 
         UpdatePlayerCount(0);
         ResetReadyUI();

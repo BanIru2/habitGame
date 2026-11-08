@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb3dd77c46ae0794cab4bbd523463fd6, type: 3}
   m_Name: Fire_Lv_10
   m_EditorClassIdentifier: 
-  titleId: Fire_Lv_10
+  titleId: Title_Fire_Lv_10
+  displayName: 
   displaySprite: {fileID: 21300000, guid: 931ade46b553860469ca403526e4bf42, type: 3}
   acquisitionRoute: 

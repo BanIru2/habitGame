@@ -111,6 +111,10 @@ public class CharacterUIManager : SceneSingleton<CharacterUIManager>
 
         if (titleSprite != null)
         {
+            bool isLevel10Title = titleSprite == titleManager.GetTitleSprite("Aurora_Lv_10") || titleSprite == titleManager.GetTitleSprite("Fire_Lv_10") || titleSprite == titleManager.GetTitleSprite("Water_Lv_10") || titleSprite == titleManager.GetTitleSprite("Grass_Lv_10");
+
+            equippedTitleImage.rectTransform.sizeDelta = isLevel10Title ? new Vector2(520f, 120f) : new Vector2(520f, 90f);
+
             equippedTitleImage.sprite = titleSprite;
             equippedTitleImage.gameObject.SetActive(true);
         }

@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb3dd77c46ae0794cab4bbd523463fd6, type: 3}
   m_Name: Aurora_Lv_5
   m_EditorClassIdentifier: 
-  titleId: Aurora_Lv_5
+  titleId: Title_Aurora_Lv_5
+  displayName: 
   displaySprite: {fileID: 21300000, guid: 0c3dcbfa340bf2749b266f9432fb630e, type: 3}
   acquisitionRoute: 
