@@ -41,6 +41,29 @@ public class SpendingService
         );
     }
 
+
+    // 개발·시연용 더미 소비내역 생성
+    public Task<GenerateSpendingTestDataResponse> GenerateTestDataAsync(
+        GenerateSpendingTestDataRequest request)
+    {
+        if (request == null)
+            throw new System.ArgumentNullException(nameof(request));
+
+        if (request.Count < 1 || request.Count > 100)
+            throw new System.ArgumentOutOfRangeException(
+                nameof(request.Count),
+                "생성 개수는 1~100건이어야 합니다."
+            );
+
+        return apiClient.PostAsync<
+            GenerateSpendingTestDataRequest,
+            GenerateSpendingTestDataResponse>(
+            "/spending/test-data/generate",
+            request
+        );
+    }
+
+
     // 주간 예산 설정
     public Task<SpendingBudgetResponse> CreateBudgetAsync(CreateSpendingBudgetRequest request)
     {

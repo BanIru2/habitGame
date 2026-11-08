@@ -129,10 +129,7 @@ public class SpendTransactionManager : MonoBehaviour
             if (categoryText != null)
             {
                 categoryText.text =
-                    string.IsNullOrWhiteSpace(
-                        transaction.Category)
-                        ? "-"
-                        : transaction.Category;
+                    GetCategoryKorean(transaction.Category);
             }
         }
 
@@ -340,8 +337,8 @@ public class SpendTransactionManager : MonoBehaviour
         if (layout == null)
             layout = item.AddComponent<LayoutElement>();
 
-        layout.minHeight = 126f;
-        layout.preferredHeight = 126f;
+        layout.minHeight = 200f;
+        layout.preferredHeight = 200f;
         layout.flexibleHeight = 0f;
 
         foreach (TextMeshProUGUI text in
@@ -364,4 +361,148 @@ public class SpendTransactionManager : MonoBehaviour
             }
         }
     }
+
+
+    private bool isRefreshing = false;
+
+    // 거래내역 새로고침 버튼용
+    public async void RefreshTransactions()
+    {
+        if (isRefreshing)
+            return;
+
+        isRefreshing = true;
+
+        try
+        {
+            await LoadTransactions(true);
+
+            if (SpendBudgetManager.Instance != null)
+            {
+                await SpendBudgetManager.Instance.LoadOverview(true);
+            }
+
+            Debug.Log("소비내역 새로고침 완료");
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning(
+                "소비내역 새로고침 실패: " + e.Message
+            );
+        }
+        finally
+        {
+            isRefreshing = false;
+        }
+    }
+
+
+    private string GetCategoryKorean(string category)
+    {
+        switch (category?.Trim().ToUpperInvariant())
+        {
+            case "FOOD":
+                return "식비";
+
+            case "CAFE":
+                return "카페";
+
+            case "TRANSPORT":
+                return "교통";
+
+            case "SHOPPING":
+                return "쇼핑";
+
+            case "LIVING":
+                return "생활";
+
+            case "EDUCATION":
+                return "교육";
+
+            case "OTHER":
+                return "기타";
+
+            default:
+                return string.IsNullOrWhiteSpace(category)
+                    ? "-"
+                    : category;
+        }
+    }
+
+
+#if UNITY_EDITOR
+
+    [Header("Editor Test Data")]
+    [SerializeField, Range(1, 100)]
+    private int testDataCount = 20;
+
+    private bool isGeneratingTestData = false;
+
+    [ContextMenu("TEST - Generate Spending Transactions")]
+    private async void GenerateTestTransactions()
+    {
+        if (isGeneratingTestData)
+            return;
+
+        if (!Application.isPlaying)
+        {
+            Debug.LogWarning(
+                "Play 모드에서만 실행할 수 있습니다."
+            );
+            return;
+        }
+
+        isGeneratingTestData = true;
+
+        try
+        {
+            DateTime today = DateTime.Today;
+            int daysSinceMonday =
+                ((int)today.DayOfWeek + 6) % 7;
+
+            DateTime monday = today.AddDays(-daysSinceMonday);
+
+            var request = new GenerateSpendingTestDataRequest
+            {
+                Count = testDataCount,
+                StartDate = monday.ToString("yyyy-MM-dd"),
+                EndDate = today.ToString("yyyy-MM-dd")
+            };
+
+            var response =
+                await ServiceRegistry.Instance.Spending
+                    .GenerateTestDataAsync(request);
+
+            if (response == null || !response.Success)
+            {
+                Debug.LogWarning(
+                    "더미 거래내역 생성에 실패했습니다."
+                );
+                return;
+            }
+
+            Debug.Log(
+                $"더미 거래내역 {response.GeneratedCount}건 생성 완료"
+            );
+
+            // 생성 후 서버 목록과 소비 현황 새로고침
+            await LoadTransactions(true);
+
+            if (SpendBudgetManager.Instance != null)
+                await SpendBudgetManager.Instance.LoadOverview(true);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError(
+                "더미 거래내역 생성 실패: " + e.Message
+            );
+        }
+        finally
+        {
+            isGeneratingTestData = false;
+        }
+    }
+
+#endif
+
 }
