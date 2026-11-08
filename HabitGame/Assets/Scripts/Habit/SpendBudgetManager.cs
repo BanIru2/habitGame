@@ -53,7 +53,7 @@ public class SpendBudgetManager : MonoBehaviour
     // =========================================
     // 서버에서 현재 주간 소비 Overview 조회
     // =========================================
-    public async Task LoadOverview()
+    public async Task LoadOverview(bool throwOnFailure = false)
     {
         try
         {
@@ -69,6 +69,9 @@ public class SpendBudgetManager : MonoBehaviour
 
             if (response == null)
             {
+                if (throwOnFailure)
+                    throw new System.Exception("소비 현황 조회 응답이 없습니다.");
+
                 Debug.LogWarning(
                     "Spending Overview API 응답이 비어있습니다."
                 );
@@ -162,6 +165,9 @@ public class SpendBudgetManager : MonoBehaviour
                 "Spending Overview 조회 실패\n" +
                 e.Message
             );
+
+            if (throwOnFailure)
+                throw;
         }
     }
 

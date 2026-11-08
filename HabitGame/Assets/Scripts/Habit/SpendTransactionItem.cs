@@ -173,6 +173,24 @@ public class SpendTransactionItem : MonoBehaviour
 
             currentExceptionState = isException;
 
+
+            // 예외 처리 성공 후 서버 기준 소비 금액 갱신
+            if (SpendBudgetManager.Instance != null)
+            {
+                try
+                {
+                    await SpendBudgetManager.Instance.LoadOverview(true);
+                }
+                catch (Exception refreshError)
+                {
+                    Debug.LogWarning(
+                        "예외 처리는 저장됐지만 소비 현황 갱신에 실패했습니다: " +
+                        refreshError.Message
+                    );
+                }
+            }
+
+
             Debug.Log(
                 "===== 소비 예외 처리 성공 ====="
             );

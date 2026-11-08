@@ -258,15 +258,28 @@ public class HabitListManager : MonoBehaviour
         Toggle toggle =
             newHabit.GetComponentInChildren<Toggle>();
 
+
         if (toggle != null)
         {
-            toggle.SetIsOnWithoutNotify(
-                habit.CompletedToday
-            );
+            // 주간 CHECK 목표는 오늘 기록 여부로 판단
+            bool isWeeklyCheck =
+                habit.Period?.Equals(
+                    "WEEKLY",
+                    System.StringComparison.OrdinalIgnoreCase
+                ) == true &&
+                habit.RecordType?.Equals(
+                    "CHECK",
+                    System.StringComparison.OrdinalIgnoreCase
+                ) == true;
 
-            toggle.interactable =
-                !habit.CompletedToday;
+            bool isCheckedToday = isWeeklyCheck
+                ? habit.RecordedToday
+                : habit.CompletedToday;
+
+            toggle.SetIsOnWithoutNotify(isCheckedToday);
+            toggle.interactable = !isCheckedToday;
         }
+
 
         // =========================================
         // Habit 데이터 연결
