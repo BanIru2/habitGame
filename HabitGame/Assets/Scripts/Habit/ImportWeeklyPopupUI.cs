@@ -135,6 +135,8 @@ public class ImportWeeklyPopupUI : MonoBehaviour
             newItem.gameObject.SetActive(true);
             newItem.SetData(goal);
 
+            // 이미 가져온 목표는 선택하지 못하도록 설정
+
             createdItems.Add(newItem);
         }
     }
@@ -150,7 +152,9 @@ public class ImportWeeklyPopupUI : MonoBehaviour
 
         foreach (ImportGoalItemUI item in createdItems)
         {
-            if (item == null || !item.IsSelected)
+            if (item == null ||
+                item.AlreadyImported ||
+                !item.IsSelected)
                 continue;
 
             if (!item.TryGetTargetAmount(out int targetAmount))

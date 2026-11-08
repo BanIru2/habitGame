@@ -107,8 +107,18 @@ public class HabitItem : MonoBehaviour
         RefreshProgressUI();
         RefreshStreakUI();
 
-        // 이미 목표를 달성한 상태라면 완료 상태로 복원
-        if (habitData != null && IsGoalCompleted())
+        recordedCheckToday =
+    habitData != null && IsWeeklyCheck() && habitData.RecordedToday;
+
+        if (habitData == null)
+        {
+            SetInProgressState();
+        }
+        else if (IsWeeklyCheck())
+        {
+            RefreshWeeklyCheckToggle();
+        }
+        else if (IsGoalCompleted())
         {
             SetCompletedState();
         }
@@ -147,7 +157,15 @@ public class HabitItem : MonoBehaviour
         }
 
         // 이미 목표 달성 상태라면 추가 기록 방지
-        if (IsGoalCompleted())
+        if (IsWeeklyCheck())
+        {
+            if (habitData.RecordedToday || recordedCheckToday)
+            {
+                RefreshWeeklyCheckToggle();
+                return;
+            }
+        }
+        else if (IsGoalCompleted())
         {
             SetCompletedState();
             return;
@@ -487,6 +505,9 @@ public class HabitItem : MonoBehaviour
                 System.StringComparison.OrdinalIgnoreCase))
             {
                 recordedCheckToday = true;
+                // 주간 CHECK 목표는 서버 응답 상태도 갱신
+                if (IsWeeklyCheck())
+                    habitData.RecordedToday = true;
             }
 
             // 기록 성공 → 현재 진행률 반영
@@ -542,8 +563,15 @@ public class HabitItem : MonoBehaviour
 
             if (completeToggle != null)
             {
-                completeToggle.interactable =
-                    !IsGoalCompleted() && !recordedCheckToday;
+                if (IsWeeklyCheck())
+                {
+                    RefreshWeeklyCheckToggle();
+                }
+                else
+                {
+                    completeToggle.interactable =
+                        !IsGoalCompleted() && !recordedCheckToday;
+                }
             }
         }
     }
@@ -589,7 +617,11 @@ public class HabitItem : MonoBehaviour
         // =========================================
         // 목표 달성 여부에 따라 Toggle 상태 변경
         // =========================================
-        if (IsGoalCompleted())
+        if (IsWeeklyCheck())
+        {
+            RefreshWeeklyCheckToggle();
+        }
+        else if (IsGoalCompleted())
         {
             SetCompletedState();
         }
@@ -618,7 +650,25 @@ public class HabitItem : MonoBehaviour
 
         return habitData.TargetAmount;
     }
+    private bool IsWeeklyCheck()
+    {
+        return habitData != null &&
+            string.Equals(habitData.Period, "WEEKLY",
+                System.StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(habitData.RecordType, "CHECK",
+                System.StringComparison.OrdinalIgnoreCase);
+    }
 
+    private void RefreshWeeklyCheckToggle()
+    {
+        if (completeToggle == null || habitData == null)
+            return;
+
+        bool recorded = habitData.RecordedToday || recordedCheckToday;
+
+        completeToggle.SetIsOnWithoutNotify(recorded);
+        completeToggle.interactable = !recorded && !isSubmitting;
+    }
     // =========================================
     // 목표 완료 여부
     // =========================================

@@ -26,6 +26,21 @@ public class SpendingService
         );
     }
 
+    // 수동 소비내역 저장
+    public Task<SpendingTransactionResponse> CreateTransactionAsync(
+        CreateSpendingTransactionRequest request)
+    {
+        if (request == null)
+            throw new System.ArgumentNullException(nameof(request));
+
+        return apiClient.PostAsync<
+            CreateSpendingTransactionRequest,
+            SpendingTransactionResponse>(
+            "/spending/transactions",
+            request
+        );
+    }
+
     // 주간 예산 설정
     public Task<SpendingBudgetResponse> CreateBudgetAsync(CreateSpendingBudgetRequest request)
     {

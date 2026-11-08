@@ -32,7 +32,8 @@ public class SpendTransactionManager : MonoBehaviour
     // =========================================
     // 실제 API 거래내역 조회
     // =========================================
-    public async System.Threading.Tasks.Task LoadTransactions()
+    public async System.Threading.Tasks.Task LoadTransactions(
+    bool throwOnFailure = false)
     {
         try
         {
@@ -42,9 +43,10 @@ public class SpendTransactionManager : MonoBehaviour
 
             if (transactions == null)
             {
-                Debug.LogWarning(
-                    "거래내역 응답이 비어있습니다."
-                );
+                if (throwOnFailure)
+                    throw new Exception("거래내역 조회 응답이 없습니다.");
+
+                Debug.LogWarning("거래내역 조회 응답이 비어있습니다.");
                 return;
             }
 
@@ -68,9 +70,11 @@ public class SpendTransactionManager : MonoBehaviour
         catch (Exception e)
         {
             Debug.LogWarning(
-                "거래내역 API 조회 실패\n" +
-                e.Message
+                "거래내역 API 조회 실패\n" + e.Message
             );
+
+            if (throwOnFailure)
+                throw;
         }
     }
 
