@@ -118,11 +118,15 @@ public class GachaResultPopupManager : MonoBehaviour
         // 인트로 완료
         if (dimImage != null) dimImage.color = dimTargetColor;
         if (popupRect != null) popupRect.localScale = Vector3.one;
+
+        introRoutine = null;
     }
 
     public void OnTouchedDim()
     {
-        // 연출 중 터치하면 즉시 스킵! 완료 후 터치하면 닫기!
+        isAnimationPlaying = introRoutine != null || System.Array.Exists(slotPool, slot => slot != null && slot.gameObject.activeSelf && !slot.IsAnimationCompleted);
+        
+        // 연출 중 터치하면 즉시 스킵, 완료 후 터치하면 닫기
         if (isAnimationPlaying)
         {
             CompleteAnimation();
