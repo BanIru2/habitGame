@@ -65,6 +65,7 @@ public class MainTabManager : SceneSingleton<MainTabManager>
         habitTap.SetActive(false);
         characterTap.SetActive(false);
         inventoryTap.SetActive(false);
+        ShopUIManager.Instance.ClosePopups();
         shopTap.SetActive(false);
         battleTap.SetActive(false);
     }

@@ -69,7 +69,11 @@ public class GachaManager : MonoBehaviour
     }
 
     // °¡Ã­ÅÇ ´Ý±â
-    public void CloseGachaPanel() => gachaPanel.SetActive(false);
+    public void CloseGachaPanel()
+    {
+        ClosePopups();
+        gachaPanel.SetActive(false);
+    }
 
     // È¹µæ °¡´É Àåºñ ¸®½ºÆ® ¼¼ÆÃ
     private void GetList()
@@ -84,6 +88,12 @@ public class GachaManager : MonoBehaviour
         {
             totalWeight += GetItemWeight(item);
         }
+    }
+
+    public void ClosePopups()
+    {
+        CloseProbabilityPopup();
+        resultPopupManager.Close();
     }
 
     // --------------------------- »Ì±â ¹× °¡ÁßÄ¡ --------------------------------

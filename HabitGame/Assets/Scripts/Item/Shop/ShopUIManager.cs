@@ -504,4 +504,9 @@ public class ShopUIManager : SceneSingleton<ShopUIManager>
             goldText.SetText("{0} G", curGold);
         }
     }
+
+    public void ClosePopups()
+    {
+        gachaManager.ClosePopups();
+    }
 }
