@@ -456,18 +456,40 @@ public class ShopUIManager : SceneSingleton<ShopUIManager>
     public List<EquipmentDataSO> GetUnlockedEquipmnetList()
     {
         List<EquipmentDataSO> unlockedList = new List<EquipmentDataSO>();
+        var character = CharacterManager.Instance.characterStatusData;
 
-        foreach(var data in equipmentItems)
+        if (character == null)
+            return unlockedList;
+
+        int averageLevel = (character.FireLv + character.WaterLv + character.GrassLv + character.AuroraLv) / 4;
+
+        foreach (var data in equipmentItems)
         {
-            if (data == null || data.ItemSO == null || data.ItemResponse == null) continue;
+            if (data == null || data.ItemResponse == null || !(data.ItemSO is EquipmentDataSO equipSO))
+                continue;
 
-            if(data.ItemResponse.PurchaseStatus != "REQUIREMENT_NOT_MET")
+            var condition = equipSO.unlockCondition;
+
+            // 해금 조건이 없으면 처음부터 후보에 포함
+            if (condition == null || condition.requiredAttributeLevel <= 0)
             {
-                if(data.ItemSO is EquipmentDataSO equipSO)
-                {
-                    unlockedList.Add(equipSO);
-                }
+                unlockedList.Add(equipSO);
+                continue;
             }
+
+            int currentLevel = equipSO.equipmentType == EquipmentType.Weapon ? 
+                condition.requiredAttribute switch
+                {
+                    AttributeType.Fire => character.FireLv,
+                    AttributeType.Water => character.WaterLv,
+                    AttributeType.Grass => character.GrassLv,
+                    AttributeType.Aurora => character.AuroraLv,
+                    _ => -1
+                }
+                : averageLevel;
+
+            if (currentLevel >= condition.requiredAttributeLevel)
+                unlockedList.Add(equipSO);
         }
 
         return unlockedList;
