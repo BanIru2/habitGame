@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq.Expressions;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -23,6 +22,8 @@ public class ItemSlotUI : MonoBehaviour
     private TextMeshProUGUI quantityText;
     [SerializeField]
     private GameObject quantityBackground;
+    [SerializeField]
+    private GameObject equipTypeBadge;
     [SerializeField]
     private TextMeshProUGUI equipTypeText;
 
@@ -73,6 +74,7 @@ public class ItemSlotUI : MonoBehaviour
     private void ResetUI()
     {
         quantityBackground.SetActive(false);
+        equipTypeBadge.gameObject.SetActive(false);
         equipTypeText.gameObject.SetActive(false);
         iconImage.enabled = false;
         backgroundImage.color = normalColor;
@@ -135,6 +137,7 @@ public class ItemSlotUI : MonoBehaviour
         ApplyEquipLevel(equipSO);
 
         // 부위 표시
+        equipTypeBadge.gameObject.SetActive(true);
         equipTypeText.gameObject.SetActive(true);
         equipTypeText.text = GetEquipmentTypeName(equipSO.equipmentType);
 
