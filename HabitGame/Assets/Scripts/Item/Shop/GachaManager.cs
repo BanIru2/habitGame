@@ -162,6 +162,8 @@ public class GachaManager : MonoBehaviour
 
         try
         {
+            dim.SetActive(true);
+
             List<EquipmentDataSO> results = new List<EquipmentDataSO>(count);
             List<string> itemIds = new List<string>(count);
             // °¡Ã­µ¹¸®±â
@@ -200,6 +202,8 @@ public class GachaManager : MonoBehaviour
         }
         finally
         {
+            dim.SetActive(false);
+
             MainTabManager.Instance.UnlockNavigation();
 
             oneGachaButton.interactable = true;
