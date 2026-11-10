@@ -37,8 +37,8 @@ public class MainTabManager : SceneSingleton<MainTabManager>
     [SerializeField]
     private RankingboardManager rankingboardManager;
 
-    // 탭 전환 동작 요청중인지 체크
-    private bool isChangingTap;
+    // 네비게이터 잠금 여부(탭 전환 또는 가챠 요청 중)
+    private bool isNavigationLocked;
 
     protected override void Awake()
     {
@@ -72,10 +72,7 @@ public class MainTabManager : SceneSingleton<MainTabManager>
 
     private async void OnClickHabitTap()
     {
-        if (isChangingTap) return;
-
-        isChangingTap = true;
-        SetTabButtonsInteractable(false);
+        if (!TryLockNavigation()) return;
 
         try
         {
@@ -97,17 +94,13 @@ public class MainTabManager : SceneSingleton<MainTabManager>
         }
         finally
         {
-            isChangingTap = false;
-            SetTabButtonsInteractable(true);
+            UnlockNavigation();
         }
     }
 
     private async void OnClickCharacterTap()
     {
-        if (isChangingTap) return;
-
-        isChangingTap = true;
-        SetTabButtonsInteractable(false);
+        if (!TryLockNavigation()) return;
 
         try
         {
@@ -127,17 +120,13 @@ public class MainTabManager : SceneSingleton<MainTabManager>
         }
         finally
         {
-            isChangingTap = false;
-            SetTabButtonsInteractable(true);
+            UnlockNavigation();
         }
     }
 
     private async void OnClickInventoryTap()
     {
-        if (isChangingTap) return;
-
-        isChangingTap = true;
-        SetTabButtonsInteractable(false);
+        if (!TryLockNavigation()) return;
 
         try
         {
@@ -157,17 +146,13 @@ public class MainTabManager : SceneSingleton<MainTabManager>
         }
         finally
         {
-            isChangingTap = false;
-            SetTabButtonsInteractable(true);
+            UnlockNavigation();
         }
     }
 
     private async void OnClickShopTap()
     {
-        if (isChangingTap) return;
-
-        isChangingTap = true;
-        SetTabButtonsInteractable(false);
+        if (!TryLockNavigation()) return;
 
         try
         {
@@ -206,8 +191,7 @@ public class MainTabManager : SceneSingleton<MainTabManager>
         }
         finally
         {
-            isChangingTap = false;
-            SetTabButtonsInteractable(true);
+            UnlockNavigation();
         }
     }
 
@@ -250,10 +234,7 @@ public class MainTabManager : SceneSingleton<MainTabManager>
 
     private async void OnClickBattleTap()
     {
-        if (isChangingTap) return;
-
-        isChangingTap = true;
-        SetTabButtonsInteractable(false);
+        if (!TryLockNavigation()) return;
 
         try
         {
@@ -272,8 +253,7 @@ public class MainTabManager : SceneSingleton<MainTabManager>
         }
         finally
         {
-            isChangingTap = false;
-            SetTabButtonsInteractable(true);
+            UnlockNavigation();
         }
     }
 
@@ -284,5 +264,20 @@ public class MainTabManager : SceneSingleton<MainTabManager>
         if (inventoryTapButton != null) inventoryTapButton.interactable = interactable;
         if (shopTapButton != null) shopTapButton.interactable = interactable;
         if (battleTapButton != null) battleTapButton.interactable = interactable;
+    }
+
+    public bool TryLockNavigation()
+    {
+        if (isNavigationLocked) return false;
+
+        isNavigationLocked = true;
+        SetTabButtonsInteractable(false);
+        return true;
+    }
+
+    public void UnlockNavigation()
+    {
+        isNavigationLocked = false;
+        SetTabButtonsInteractable(true);
     }
 }

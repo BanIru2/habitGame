@@ -155,6 +155,8 @@ public class GachaManager : MonoBehaviour
             return;
         }
 
+        if (!MainTabManager.Instance.TryLockNavigation()) return;
+
         oneGachaButton.interactable = false;
         tenGachaButton.interactable = false;
 
@@ -198,6 +200,8 @@ public class GachaManager : MonoBehaviour
         }
         finally
         {
+            MainTabManager.Instance.UnlockNavigation();
+
             oneGachaButton.interactable = true;
             tenGachaButton.interactable = true;
         }
