@@ -31,8 +31,18 @@ public class TitleSlotUI : MonoBehaviour
         // 배지 이미지 적용
         if (titleBadgeImage != null && titleData.displaySprite != null)
         {
+            float imageHeight = 78.732f;
+
+            if (titleData.titleId != null && titleData.titleId.EndsWith("_Lv_10", StringComparison.Ordinal))
+            {
+                imageHeight = 102.06f;
+            }
+
+            titleBadgeImage.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, imageHeight);
+
             titleBadgeImage.sprite = titleData.displaySprite;
         }
+
         if (titleNameText != null)
         {
             titleNameText.text = titleData.displayName;
