@@ -202,6 +202,10 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
     [SerializeField]
     private Button checkButton;
 
+    private static readonly Color32 PositiveColor = new Color32(0x4F, 0x7F, 0x52, 0xFF);
+    private static readonly Color32 NegativeColor = new Color32(0xB8, 0x55, 0x4F, 0xFF);
+    private static readonly Color32 NeutralColor = new Color32(0x78, 0x68, 0x62, 0xFF);
+
     [SerializeField]
     private RankingboardManager rankingboardManager;
 
@@ -1348,6 +1352,22 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
         }
         resultRankingPointText.text = Mathf.Abs(delta).ToString();
 
+        // 랭킹 점수 변화값 색상 적용
+        Color deltaColor;
+        if (delta > 0)
+        {
+            deltaColor = PositiveColor;
+        }
+        else if (delta < 0)
+        {
+            deltaColor = NegativeColor;
+        }
+        else
+        {
+            deltaColor = NeutralColor;
+        }
+        operatorText.color = deltaColor;
+        resultRankingPointText.color = deltaColor;
     }
 
     public void SetMatchStartButtonInteractable(bool interactable)
