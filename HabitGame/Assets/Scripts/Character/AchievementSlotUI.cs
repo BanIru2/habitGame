@@ -82,7 +82,7 @@ public class AchievementSlotUI : MonoBehaviour
         if (progressText != null)
         {
             float displayRatio = target > 0 ? Mathf.Clamp01((float)current / target) : 0f;
-            progressText.text = $"현재 {current} / 목표 {target}  ({Mathf.RoundToInt(displayRatio * 100f)}%)";
+            progressText.SetText("{0} / {1}  ({2}%)", current, target, Mathf.RoundToInt(displayRatio * 100f));
         }
         // 게이지 비율 반영
         if (progressBarFill != null)
