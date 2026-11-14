@@ -187,12 +187,13 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
     private TextMeshProUGUI turnCountText;
 
     // BattlePanel / ResultPanel
-    [SerializeField]
-    private GameObject winImage;
-    [SerializeField]
-    private GameObject loseImage;
-    [SerializeField]
-    private GameObject drawImage;
+    [Header("Battle Panel/ResultPanel")]
+    [SerializeField] 
+    private TextMeshProUGUI resultTitleText;
+    [SerializeField] 
+    private TextMeshProUGUI myResultNameText;
+    [SerializeField] 
+    private TextMeshProUGUI oppResultNameText;
     [SerializeField]
     private TextMeshProUGUI currentRankingPointText;
     [SerializeField]
@@ -202,6 +203,11 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
     [SerializeField]
     private Button checkButton;
 
+    // 승패 제목 색상값
+    private static readonly Color32 VictoryColor = new Color32(0xB5, 0x82, 0x28, 0xFF);
+    private static readonly Color32 DefeatColor = new Color32(0xB8, 0x55, 0x4F, 0xFF);
+    private static readonly Color32 DrawColor = new Color32(0x78, 0x68, 0x62, 0xFF);
+    // 점수 변화 색상값
     private static readonly Color32 PositiveColor = new Color32(0x4F, 0x7F, 0x52, 0xFF);
     private static readonly Color32 NegativeColor = new Color32(0xB8, 0x55, 0x4F, 0xFF);
     private static readonly Color32 NeutralColor = new Color32(0x78, 0x68, 0x62, 0xFF);
@@ -1089,7 +1095,7 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
         activeBattleId = receivedBattleId;
 
         InitCharacterHp();
-        InitResultImage();
+        HideResultPanel();
         InitRankingPointText();
         UpdateTurnText(1);
     }
@@ -1117,11 +1123,8 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
         oppHpBar.fillAmount = 1f;
     }
 
-    private void InitResultImage()
+    private void HideResultPanel()
     {
-        winImage.SetActive(false);
-        loseImage.SetActive(false);
-        drawImage.SetActive(false);
         resultPanel.SetActive(false);
     }
 
@@ -1198,9 +1201,14 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
         resultDisplayed = true;
         HideResultWaiting();
 
-        InitResultImage();
-        PrintResultImage(savedResultResponse.Result);
+        HideResultPanel();
+        SetResultTitle(savedResultResponse.Result);
+
+        myResultNameText.text = myName.text;
+        oppResultNameText.text = oppName.text;
+
         SetRankingPointText(savedResultResponse);
+
         resultPanel.SetActive(true);
     }
 
@@ -1309,30 +1317,36 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
         }
 
 
-        InitResultImage();
+        HideResultPanel();
         InitRankingPointText();
         InitCharacterHp();
 
         UpdateTurnText(0);
     }
 
-    private void PrintResultImage(string result)
+    private void SetResultTitle(string result)
     {
         if (result == "WIN")
         {
-            winImage.SetActive(true);
+            resultTitleText.text = "VICTORY";
+            resultTitleText.color = VictoryColor;
         }
-        else if(result == "LOSE")
+        else if (result == "LOSE")
         {
-            loseImage.SetActive(true);
+            resultTitleText.text = "DEFEAT";
+            resultTitleText.color = DefeatColor;
         }
         else if (result == "DRAW")
         {
-            drawImage.SetActive(true);
+            resultTitleText.text = "DRAW";
+            resultTitleText.color = DrawColor;
         }
         else
         {
-            Debug.LogError("[BattleUIManager] PrintResultImage(string result) 매개 변수 명 오류");
+            resultTitleText.text = string.Empty;
+            resultTitleText.color = DrawColor;
+
+            Debug.LogError($"[BattleUIManager] 알 수 없는 전투 결과: {result}");
         }
     }
 
