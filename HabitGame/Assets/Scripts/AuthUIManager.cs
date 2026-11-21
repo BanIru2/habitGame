@@ -547,8 +547,8 @@ public sealed class AuthUIManager : MonoBehaviour
             }
         }
 
-        if (password.Length < 8)
-            return "비밀번호는 8자 이상이어야 합니다.";
+        if (password.Length < 4)
+            return "비밀번호는 4자 이상이어야 합니다.";
 
         if (password.Length > 64)
             return "비밀번호는 64자 이하여야 합니다.";
@@ -556,22 +556,11 @@ public sealed class AuthUIManager : MonoBehaviour
         if (string.Equals(password, email, StringComparison.Ordinal))
             return "비밀번호는 아이디와 같을 수 없습니다.";
 
-        bool hasLetter = false;
-        bool hasDigit = false;
-        bool hasAsciiSpecial = false;
-
         foreach (char character in password)
         {
             if (char.IsWhiteSpace(character))
                 return "비밀번호에는 공백을 사용할 수 없습니다.";
-
-            hasLetter |= IsAsciiLetter(character);
-            hasDigit |= character >= '0' && character <= '9';
-            hasAsciiSpecial |= IsAsciiSpecial(character);
         }
-
-        if (!hasLetter || !hasDigit || !hasAsciiSpecial)
-            return "비밀번호에는 영문, 숫자, 특수문자가 각각 1개 이상 포함되어야 합니다.";
 
         if (Encoding.UTF8.GetByteCount(password) > 72)
             return "비밀번호는 UTF-8 기준 72바이트 이하여야 합니다.";
@@ -588,14 +577,6 @@ public sealed class AuthUIManager : MonoBehaviour
             || (character >= 'a' && character <= 'z');
     }
 
-    private static bool IsAsciiSpecial(char character)
-    {
-        return (character >= '!' && character <= '/')
-            || (character >= ':' && character <= '@')
-            || (character >= '[' && character <= '`')
-            || (character >= '{' && character <= '~');
-    }
-
     private static string GetApiErrorMessage(ApiException exception, bool isRegistration)
     {
         if (exception.StatusCode <= 0)
@@ -609,7 +590,7 @@ public sealed class AuthUIManager : MonoBehaviour
 
         if (isRegistration
             && (exception.StatusCode == 409 || ContainsDuplicateAccountMessage(detail)))
-            return "이미 사용 중인 아이디입니다.";
+            return "이미 사용 중인 아이디입니다. 다른 아이디를 입력해주세요.";
 
         if (!isRegistration && (exception.StatusCode == 401
             || exception.StatusCode == 403
@@ -734,7 +715,7 @@ public sealed class AuthUIManager : MonoBehaviour
         );
         TMP_Text passwordGuidance = GetOrCreateRegistrationGuidanceText(
             "PasswordGuidanceText",
-            "비밀번호: 8~64자, 영문·숫자·특수문자 포함",
+            "비밀번호: 4자 이상",
             107f
         );
 
