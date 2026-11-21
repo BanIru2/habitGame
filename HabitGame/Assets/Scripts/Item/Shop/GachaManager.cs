@@ -38,14 +38,46 @@ public class GachaManager : MonoBehaviour
     [SerializeField]
     private TextMeshProUGUI tier4Text;
 
+    [SerializeField]
+    private Button fireTabButton;
+    [SerializeField]
+    private Button waterTabButton;
+    [SerializeField]
+    private Button grassTabButton;
+    [SerializeField]
+    private Button auroraTabButton;
+    [SerializeField]
+    private Button armorTabButton;
+    [SerializeField]
+    private Color selectedTabColor = new Color32(255, 220, 140, 255);
+    [SerializeField] 
+    private Color normalTabColor = Color.white;
+
+    private enum GachaProbabilityGroup
+    {
+        FireWeapon = 0,
+        WaterWeapon = 1,
+        GrassWeapon = 2,
+        AuroraWeapon = 3,
+        Armor = 4
+    }
+
+    private const int GroupCount = 5;
+    private const int TierCount = 4;
+
+    private Button[] probabilityTabButtons;
+    private readonly List<EquipmentDataSO> gachaPool = new List<EquipmentDataSO>();
+    private int totalWeight;
+    private readonly int[,] groupTierWeights = new int[GroupCount, TierCount];
+    private readonly int[] groupTotalWeights = new int[GroupCount];
+    private GachaProbabilityGroup selectedProbabilityGroup = GachaProbabilityGroup.FireWeapon;
+
+
     // 비용 임시값(G)
     // 1회 뽑기 비용
     private const int gachaCost = 500;
     // 10회 뽑기 비용
     private const int tenGachaCost = 5000;
-
-    private List<EquipmentDataSO> canGetList;
-    private int totalWeight;
 
     private ShopBackendManager shopBackendManager;
 
@@ -58,35 +90,59 @@ public class GachaManager : MonoBehaviour
         probabilityButton.onClick.AddListener(OpenProbabilityPopup);
         probabilityCloseButton.onClick.AddListener(CloseProbabilityPopup);
 
+        probabilityTabButtons = new[]
+        {
+            fireTabButton,
+            waterTabButton,
+            grassTabButton,
+            auroraTabButton,
+            armorTabButton
+        };
+
+        for (int i = 0; i < probabilityTabButtons.Length; i++)
+        {
+            if (probabilityTabButtons[i] == null) continue;
+            GachaProbabilityGroup group = (GachaProbabilityGroup)i;
+            probabilityTabButtons[i].onClick.AddListener(() => SelectProbabilityGroup(group));
+        }
     }
 
     // 가챠탭(상점)이 열릴 때 호출
     public void OpenGachaPanel()
     {
         gachaPanel.SetActive(true);
-        GetList();
-        CalcWeight();
+        RebuildGachaData();
     }
 
-    // 가챠탭 닫기
     public void CloseGachaPanel()
     {
         ClosePopups();
         gachaPanel.SetActive(false);
     }
 
-    // 획득 가능 장비 리스트 세팅
-    private void GetList()
+    private void RebuildGachaData()
     {
-        canGetList = ShopUIManager.Instance.GetUnlockedEquipmnetList();
-    }
-
-    private void CalcWeight()
-    {
+        gachaPool.Clear();
         totalWeight = 0;
-        foreach (var item in canGetList)
+        System.Array.Clear(groupTierWeights, 0, groupTierWeights.Length);
+        System.Array.Clear(groupTotalWeights, 0, groupTotalWeights.Length);
+
+        List<EquipmentDataSO> unlockedList = ShopUIManager.Instance.GetUnlockedEquipmnetList();
+        if (unlockedList == null) return;
+
+        foreach (var item in unlockedList)
         {
-            totalWeight += GetItemWeight(item);
+            if (item == null) continue;
+            if (!TryGetProbabilityGroup(item, out GachaProbabilityGroup group)) continue;
+
+            int weight = GetTierWeight(item.Tier);
+            int g = (int)group;
+            int t = item.Tier - 1;    // 인덱스 0-based로 맞추기 위해 -1
+
+            gachaPool.Add(item);
+            totalWeight += weight;
+            groupTierWeights[g, t] += weight;
+            groupTotalWeights[g] += weight;
         }
     }
 
@@ -97,40 +153,68 @@ public class GachaManager : MonoBehaviour
     }
 
     // --------------------------- 뽑기 및 가중치 --------------------------------
-    private int GetItemWeight(EquipmentDataSO item)
+    private static int GetTierWeight(int tier) => tier switch
     {
-        if (item == null) return 0;
-
-        // 요구 레벨이 높을수록 가중치를 낮게 하여 확률 낮추기
-        return item.Tier switch
+        4 => 5,
+        3 => 20,
+        2 => 50,
+        _ => 100
+    };
+    private static bool TryGetProbabilityGroup(EquipmentDataSO item, out GachaProbabilityGroup group)
+    {
+        group = default;
+        if (item.equipmentType == EquipmentType.Clothes || item.equipmentType == EquipmentType.Shoes || item.equipmentType == EquipmentType.Hat)
         {
-            4 => 5,
-            3 => 20,
-            2 => 50,
-            _ => 100
-        };
+            group = GachaProbabilityGroup.Armor;
+            return true;
+        }
+        if (item.equipmentType != EquipmentType.Weapon)
+        {
+            Debug.LogWarning($"[GachaManager] 지원하지 않는 장비 타입이라 가챠 풀에서 제외됨: {item.itemId} ({item.equipmentType})");
+            return false;
+        }
+        if (item.unlockCondition == null)
+        {
+            Debug.LogWarning($"[GachaManager] unlockCondition이 비어 있어 가챠 풀에서 제외됨: {item.itemId}");
+            return false;
+        }
+        switch (item.unlockCondition.requiredAttribute)
+        {
+            case AttributeType.Fire: 
+                group = GachaProbabilityGroup.FireWeapon; 
+                return true;
+            case AttributeType.Water: 
+                group = GachaProbabilityGroup.WaterWeapon; 
+                return true;
+            case AttributeType.Grass: 
+                group = GachaProbabilityGroup.GrassWeapon; 
+                return true;
+            case AttributeType.Aurora: 
+                group = GachaProbabilityGroup.AuroraWeapon; 
+                return true;
+            default:
+                Debug.LogWarning($"[GachaManager] 무기 속성이 유효하지 않아 가챠 풀에서 제외됨: {item.itemId} ({item.unlockCondition.requiredAttribute})");
+                return false;
+        }
     }
-
     private EquipmentDataSO PickOneItem()
     {
-        // 0 ~ totalWeight 사이 랜덤 숫자 뽑기
         int randomValue = Random.Range(0, totalWeight);
-        // 당첨 아이템 찾기 (누적 가중치 차감 방식)
-        foreach (var item in canGetList)
+        foreach (var item in gachaPool)
         {
-            int weight = GetItemWeight(item);
+            int weight = GetTierWeight(item.Tier);
             if (randomValue < weight)
-            {
-                return item;    // 결정된 아이템
-            }
-            randomValue -= weight; // 랜덤 값에서 이번 순서 아이템 가중치를 빼고 다음으로 넘김
+                return item;
+            randomValue -= weight;
         }
-        return canGetList[0];
+
+        // 가중치 총합에 대해 로직이 실패하는 예외상황 알림
+        throw new System.InvalidOperationException($"가챠 가중치 불일치 (totalWeight={totalWeight}, count={gachaPool.Count})");
     }
 
     public async void DoGacha(int count)
     {
-        if (canGetList == null || canGetList.Count == 0)
+        if (gachaPool.Count == 0 || totalWeight <= 0)
         {
             Debug.LogWarning("획득 가능한 장비 목록이 없습니다.");
             ErrorPopupManager.Instance.ShowMessage("장비 목록을 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
@@ -220,8 +304,8 @@ public class GachaManager : MonoBehaviour
     // --------------------------- 확률 팝업 --------------------------------
     public void OpenProbabilityPopup()
     {
-        UpdateProbabilityTexts();
-
+        RebuildGachaData();
+        SelectProbabilityGroup(GachaProbabilityGroup.FireWeapon);
         probabilityPopup.SetActive(true);
         dim.SetActive(true);
     }
@@ -232,13 +316,30 @@ public class GachaManager : MonoBehaviour
         dim.SetActive(false);
     }
 
-    private void UpdateProbabilityTexts()
+    private void SelectProbabilityGroup(GachaProbabilityGroup group)
     {
-        // 최신 해금 장비 목록 및 총 가중치 갱신
-        GetList();
-        CalcWeight();
+        selectedProbabilityGroup = group;
+        UpdateTabButtonVisuals();
+        RenderSelectedGroupProbabilities();
+    }
 
-        if (totalWeight <= 0)
+    private void UpdateTabButtonVisuals()
+    {
+        if (probabilityTabButtons == null) return;
+        for (int i = 0; i < probabilityTabButtons.Length; i++)
+        {
+            Button btn = probabilityTabButtons[i];
+            if (btn == null || btn.image == null) continue;
+            btn.image.color = (i == (int)selectedProbabilityGroup) ? selectedTabColor : normalTabColor;
+        }
+    }
+
+    private void RenderSelectedGroupProbabilities()
+    {
+        int g = (int)selectedProbabilityGroup;
+        int groupWeight = groupTotalWeights[g];
+
+        if (groupWeight <= 0)
         {
             tier1Text.SetText("1티어 : 0.00%");
             tier2Text.SetText("2티어 : 0.00%");
@@ -247,35 +348,14 @@ public class GachaManager : MonoBehaviour
             return;
         }
 
-        // 현재 풀(canGetList)에 있는 각 티어별 가중치 합산
-        int tier1Weight = 0;
-        int tier2Weight = 0;
-        int tier3Weight = 0;
-        int tier4Weight = 0;
+        float tier1Rate = (float)groupTierWeights[g, 0] / groupWeight * 100f;
+        float tier2Rate = (float)groupTierWeights[g, 1] / groupWeight * 100f;
+        float tier3Rate = (float)groupTierWeights[g, 2] / groupWeight * 100f;
+        float tier4Rate = (float)groupTierWeights[g, 3] / groupWeight * 100f;
 
-        foreach (var item in canGetList)
-        {
-            if (item == null) continue;
-            int weight = GetItemWeight(item);
-            switch (item.Tier)
-            {
-                case 4: tier4Weight += weight; break;
-                case 3: tier3Weight += weight; break;
-                case 2: tier2Weight += weight; break;
-                default: tier1Weight += weight; break;
-            }
-        }
-
-        // 각 티어별 총 확률(%) 계산
-        float tier4Rate = (float)tier4Weight / totalWeight * 100f;
-        float tier3Rate = (float)tier3Weight / totalWeight * 100f;
-        float tier2Rate = (float)tier2Weight / totalWeight * 100f;
-        float tier1Rate = (float)tier1Weight / totalWeight * 100f;
-
-        // 텍스트 반영 ({0:2}는 소수점 둘째 자리까지 표기)
-        tier4Text.SetText("4티어 : {0:2}%", tier4Rate);
-        tier3Text.SetText("3티어 : {0:2}%", tier3Rate);
-        tier2Text.SetText("2티어 : {0:2}%", tier2Rate);
         tier1Text.SetText("1티어 : {0:2}%", tier1Rate);
+        tier2Text.SetText("2티어 : {0:2}%", tier2Rate);
+        tier3Text.SetText("3티어 : {0:2}%", tier3Rate);
+        tier4Text.SetText("4티어 : {0:2}%", tier4Rate);
     }
 }
