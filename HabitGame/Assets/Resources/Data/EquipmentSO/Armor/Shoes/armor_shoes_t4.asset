@@ -18,7 +18,7 @@ MonoBehaviour:
   description: "\uAC70\uCE68\uC5C6\uC774 \uB2EC\uB9B4 \uC218 \uC788\uB3C4\uB85D \uBAB8\uC744
     \uBC1B\uCCD0\uC8FC\uB294 \uC7A5\uD654."
   cost: 0
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 5c52e80fc2d6d45488fe6e5e66e5a5d0, type: 3}
   unlockCondition:
     requiredAttributeLevel: 7
     requiredAttribute: 0
@@ -29,5 +29,5 @@ MonoBehaviour:
   - statType: 4
     value: 9
   tier: 4
-  partsType: 0
-  partsIndex: -1
+  partsType: 8
+  partsIndex: 10

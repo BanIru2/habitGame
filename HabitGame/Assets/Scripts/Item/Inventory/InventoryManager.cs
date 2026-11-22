@@ -2,10 +2,11 @@ using LayerLab.ArtMakerUnity;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -47,6 +48,10 @@ public class InventoryManager : SceneSingleton<InventoryManager>
     private Image equipIcon;
     [SerializeField]
     private TextMeshProUGUI equipNameText;
+    [SerializeField]
+    private TextMeshProUGUI equipTierText;
+    [SerializeField] 
+    private TextMeshProUGUI equipStatusText;
     [SerializeField]
     private TextMeshProUGUI equipDescText;
     [SerializeField]
@@ -309,10 +314,98 @@ public class InventoryManager : SceneSingleton<InventoryManager>
         }
     }
 
+    // ---------------------------------- 아이템 정렬 규칙 적용 ---------------------------------------
+    private static (ReadOnlyMemory<char> Prefix, int Number) GetItemIdSortKey(string itemId)
+    {
+        itemId ??= string.Empty;
+        int numberStart = itemId.Length;
+
+        while (numberStart > 0 && itemId[numberStart - 1] is >= '0' and <= '9')
+        {
+            numberStart--;
+        }
+
+        if (int.TryParse(itemId.AsSpan(numberStart), NumberStyles.None, CultureInfo.InvariantCulture, out int number))
+        {
+            return (itemId.AsMemory(0, numberStart), number);
+        }
+
+        return (itemId.AsMemory(), 0);
+    }
+
+    private readonly struct EquipmentSortEntry
+    {
+        public readonly InventoryItemViewData Item;
+        public readonly ReadOnlyMemory<char> Prefix;
+        public readonly int Number;
+
+        public EquipmentSortEntry(InventoryItemViewData item )
+        {
+            Item = item;
+            var idKey = GetItemIdSortKey(item.Response.ItemId);
+            Prefix = idKey.Prefix;
+            Number = idKey.Number;
+        }
+    }
+
+    private static int CompareEquipmentEntries(EquipmentSortEntry left, EquipmentSortEntry right)
+    {
+        var leftEquipment = (EquipmentDataSO)left.Item.ItemSO;
+        var rightEquipment = (EquipmentDataSO)right.Item.ItemSO;
+        var leftResponse = left.Item.Response;
+        var rightResponse = right.Item.Response;
+
+        int order = ((int)leftEquipment.equipmentType).CompareTo((int)rightEquipment.equipmentType);
+        if (order != 0) return order;
+
+        order = rightResponse.IsEquipped.CompareTo(leftResponse.IsEquipped);
+        if (order != 0) return order;
+
+        order = rightEquipment.Tier.CompareTo(leftEquipment.Tier);
+        if (order != 0) return order;
+
+        order = rightResponse.Level.CompareTo(leftResponse.Level);
+        if (order != 0) return order;
+
+        order = left.Prefix.Span.SequenceCompareTo(right.Prefix.Span);
+        if (order != 0) return order;
+
+        order = left.Number.CompareTo(right.Number);
+        if (order != 0) return order;
+
+        order = StringComparer.Ordinal.Compare(leftResponse.ItemId, rightResponse.ItemId);
+        if (order != 0) return order;
+
+        return leftResponse.InventoryId.CompareTo(rightResponse.InventoryId);
+    }
+
+    private static readonly Comparison<EquipmentSortEntry> EquipmentComparison = CompareEquipmentEntries;
+
+    private static List<InventoryItemViewData> SortEquipmentItems(IEnumerable<InventoryItemViewData> items)
+    {
+        var entries = items is ICollection<InventoryItemViewData> collection ? new List<EquipmentSortEntry>(collection.Count) : new List<EquipmentSortEntry>();
+
+        foreach (InventoryItemViewData item in items)
+        {
+            entries.Add(new EquipmentSortEntry(item));
+        }
+
+        entries.Sort(EquipmentComparison);
+
+        var result = new List<InventoryItemViewData>(entries.Count);
+        foreach (EquipmentSortEntry entry in entries)
+        {
+            result.Add(entry.Item);
+        }
+
+        return result;
+    }
+
+    // ------------------------------------------------------------------------------------
     // 장비 아이템 출력 (장비 버튼 onClick)
     public void ShowEquipmentItems()
     {
-        RenderItems(equipmentItems);
+        RenderItems(SortEquipmentItems(equipmentItems));
     }
 
     // 소비 아이템 출력 (소비 버튼 onClick)
@@ -386,7 +479,57 @@ public class InventoryManager : SceneSingleton<InventoryManager>
         equipDetail.SetActive(true);
         equipIcon.sprite = itemSO.icon;
         equipNameText.text = itemSO.displayName;
+        // 장비 상승 스탯 정보
+        if (equipStatusText != null)
+        {
+            sb.Clear();
+            double multiplier = EquipmentDataSO.GetStatMultiplier(Math.Max(1, data.Level));
+
+            foreach (var bonus in itemSO.statBonuses ?? Array.Empty<StatBonus>())
+            {
+                if (bonus == null || bonus.value == 0f)
+                    continue;
+
+                string statName = bonus.statType switch
+                {
+                    StatType.ATK => "공격력",
+                    StatType.DEF => "방어력",
+                    StatType.HP => "최대 체력",
+                    StatType.SPD => "속도",
+                    StatType.CRIT => "치명타율",
+                    _ => null
+                };
+
+                if (statName == null)
+                    continue;
+
+                if (sb.Length > 0)
+                    sb.AppendLine();
+
+                bool isCrit = bonus.statType == StatType.CRIT;
+                double baseValue = bonus.value;
+                double scaledValue = baseValue * multiplier;
+
+                double totalValue = isCrit ? scaledValue : Math.Round(scaledValue, MidpointRounding.AwayFromZero);
+
+                double enhancementGain = totalValue - baseValue;
+                string format = isCrit ? "0.##%" : "0.##";
+
+                sb.Append(statName)
+                  .Append(" +").Append(totalValue.ToString(format))
+                  .Append(" (").Append(baseValue.ToString(format))
+                  .Append(" + ").Append(enhancementGain.ToString(format))
+                  .Append(')');
+            }
+
+            equipStatusText.SetText(sb);
+        }
+
         equipDescText.text = itemSO.description;
+
+        // 티어 텍스트 및 색상 적용
+        equipTierText.SetText("{0}티어", itemSO.Tier);
+        equipTierText.color = itemSO.TierColor;
 
         doEquipButtonText.text = data.IsEquipped ? "해제하기" : "장착하기";
         doEquipButton.image.color = data.IsEquipped ? Color.red : Color.white;
@@ -677,17 +820,7 @@ public class InventoryManager : SceneSingleton<InventoryManager>
     // PvP 준비단계에서 각 부위에 해당하는 보유 장비 리스트를 보내주기 위한 함수
     public List<InventoryItemViewData> GetEquipmentItems(EquipmentType equipmentType)
     {
-        List<InventoryItemViewData> result = new List<InventoryItemViewData>();
-
-        foreach (InventoryItemViewData item in equipmentItems)
-        {
-            if (item.ItemSO is EquipmentDataSO equipmentSO && equipmentSO.equipmentType == equipmentType)
-            {
-                result.Add(item);
-            }
-        }
-
-        return result;
+        return SortEquipmentItems(equipmentItems.Where(item => item.ItemSO is EquipmentDataSO equipment && equipment.equipmentType == equipmentType));
     }
 
     public List<InventoryItemViewData> GetBattlePreparationConsumableItems()

@@ -51,6 +51,8 @@ public class CharacterUIManager : SceneSingleton<CharacterUIManager>
 
     [SerializeField]
     private TitleManager titleManager;
+    [SerializeField] 
+    private AchievementManager achievementManager;
 
     [SerializeField]
     private PartsManager characterPartsManager;
@@ -104,6 +106,17 @@ public class CharacterUIManager : SceneSingleton<CharacterUIManager>
         ApplyEquipmentAppearance(response.EquippedItems);
     }
 
+    public void ClosePopups()
+    {
+        if (titleManager != null)
+        {
+            titleManager.ClosePreview();
+            titleManager.ClosePopup();
+        }
+
+        if (achievementManager != null)
+            achievementManager.ClosePopup();
+    }
 
     public void SetEquippedTitle(Sprite titleSprite)
     {

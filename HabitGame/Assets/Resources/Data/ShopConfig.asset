@@ -13,9 +13,6 @@ MonoBehaviour:
   m_Name: ShopConfig
   m_EditorClassIdentifier: 
   equipmentItems:
-  - {fileID: 11400000, guid: 7942240c9678ded4f857f696c2c7af27, type: 2}
-  - {fileID: 11400000, guid: 5e4a1b16deeb44f44bd2f6c3e6fd1461, type: 2}
-  - {fileID: 11400000, guid: 19767d16c09203349933c4e2b62a76f1, type: 2}
   - {fileID: 11400000, guid: c926d7715df04400a49a7ad765ef9f56, type: 2}
   - {fileID: 11400000, guid: 030cbb2fe61e4df79ffb6c5b72934715, type: 2}
   - {fileID: 11400000, guid: 977c8227a20b4d5cb5a2644d427553bf, type: 2}

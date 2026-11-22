@@ -71,7 +71,7 @@ public class EquipmentDataSO : ItemDataSO
 
 
     // 강화 레벨에 따른 스탯 배율 (기본 스탯 * (1 + (Lv - 1) * 0.1))
-    public static float GetStatMultiplier(int level) => 1f + (level - 1) * 0.1f;
+    public static double GetStatMultiplier(int level) => 1.0 + (level - 1) * 0.1;
     // ---------------------------------------------------------------------
 
 

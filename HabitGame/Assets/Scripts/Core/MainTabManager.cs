@@ -63,6 +63,7 @@ public class MainTabManager : SceneSingleton<MainTabManager>
     private void CloseAllTaps()
     {
         habitTap.SetActive(false);
+        CharacterUIManager.Instance.ClosePopups();
         characterTap.SetActive(false);
         inventoryTap.SetActive(false);
         ShopUIManager.Instance.ClosePopups();
