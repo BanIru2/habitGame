@@ -42,6 +42,10 @@ public class HabitListManager : MonoBehaviour
     [SerializeField]
     private TextMeshProUGUI summaryStreakText;
 
+    [SerializeField]
+    private GameObject summaryStreakBackground;
+
+
     [Header("Period Tab Buttons")]
     [SerializeField]
     private Button dailyTabButton;
@@ -56,11 +60,13 @@ public class HabitListManager : MonoBehaviour
     private GameObject importWeeklyButton;
 
     // 선택 / 미선택 색상
+
     private readonly Color selectedTabColor =
-        new Color32(238, 252, 255, 255); // #EEFCFF
+        new Color32(243, 200, 197, 255); // #F3C8C5 연한 빨강
 
     private readonly Color unselectedTabColor =
-        new Color32(244, 244, 244, 255); // #F4F4F4
+        new Color32(255, 255, 255, 255); // 원본 베이지 스프라이트 색상 유지
+
 
     private string selectedPeriod = "DAILY";
     private int dailyStreak;
@@ -397,13 +403,16 @@ public class HabitListManager : MonoBehaviour
             }
         }
 
-        // 장기 목표에서는 Streak 표시하지 않음
+
+        // 장기 목표에서는 연속 달성 텍스트와 배경 숨기기
+        bool showStreak = selectedPeriod != "LONG-TERM";
+
         if (summaryStreakObject != null)
-        {
-            summaryStreakObject.SetActive(
-                selectedPeriod != "LONG-TERM"
-            );
-        }
+            summaryStreakObject.SetActive(showStreak);
+
+        if (summaryStreakBackground != null)
+            summaryStreakBackground.SetActive(showStreak);
+
 
         if (summaryStreakText != null)
         {

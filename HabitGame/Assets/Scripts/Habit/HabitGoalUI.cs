@@ -87,6 +87,8 @@ public class HabitGoalUI : MonoBehaviour
             growthButton.image.color = Color.white;
 
 
+        UpdateExpectedReward();
+
         // -------------------------
         // Record Type 초기화
         // -------------------------
