@@ -10,6 +10,8 @@ public class AchievedAmountOverlay : MonoBehaviour
     [Header("UI")]
     [SerializeField] private GameObject popup;
     [SerializeField] private TextMeshProUGUI goalText;
+    [SerializeField] private TextMeshProUGUI currentProgressText;
+    [SerializeField] private TextMeshProUGUI remainingAmountText;
     [SerializeField] private TMP_InputField amountInput;
     [SerializeField] private TextMeshProUGUI unitText;
     [SerializeField] private Button cancelButton;
@@ -55,13 +57,8 @@ public class AchievedAmountOverlay : MonoBehaviour
 
         if (goalText != null)
         {
-            string unit = string.IsNullOrWhiteSpace(habit.Unit)
-                ? string.Empty
-                : " " + habit.Unit;
-
             goalText.text =
-                habit.GoalName + "\n" +
-                habit.CurrentAmount + " / " + habit.TargetAmount + unit;
+                $"목표: {habit.GoalName}";
         }
 
         if (unitText != null)
@@ -69,6 +66,26 @@ public class AchievedAmountOverlay : MonoBehaviour
             unitText.text =
                 habit.Unit;
         }
+
+
+        int current = Mathf.Max(0, habit.CurrentAmount);
+        int target = Mathf.Max(1, habit.TargetAmount);
+        int remaining = Mathf.Max(0, target - current);
+
+        string unit = habit.Unit ?? "";
+
+        if (currentProgressText != null)
+        {
+            currentProgressText.text =
+                $"현재 {current} / {target}{unit} 달성";
+        }
+
+        if (remainingAmountText != null)
+        {
+            remainingAmountText.text =
+                $"남은 목표: {remaining}{unit}";
+        }
+
 
         if (amountInput != null)
         {

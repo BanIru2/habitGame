@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using TMPro;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -126,12 +127,17 @@ public class SpendBudgetManager : MonoBehaviour
             SpendListManager[] spendListManagers =
                 FindObjectsOfType<SpendListManager>(true);
 
+
+
             foreach (SpendListManager spendListManager in spendListManagers)
             {
                 spendListManager.RefreshMainGoals(
-                    response.Goals
+                    response.Goals,
+                    BudgetId
                 );
             }
+
+
 
             RefreshUI();
 

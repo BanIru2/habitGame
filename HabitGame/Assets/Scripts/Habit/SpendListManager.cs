@@ -289,29 +289,36 @@ public class SpendListManager : MonoBehaviour
     // =========================================================
     // 소비 메인 화면 Additional Goal 생성
     // =========================================================
+
+
     public void RefreshMainGoals(
-        List<SpendingSpecialGoalResponse> goals)
+        List<SpendingSpecialGoalResponse> goals,
+        long currentBudgetId)
     {
+        // 기존에 생성된 카드 정리
         foreach (GameObject item in runtimeMainGoalItems)
         {
             if (item != null)
+            {
+                item.SetActive(false);
                 Destroy(item);
+            }
         }
 
         runtimeMainGoalItems.Clear();
 
-        if (goals == null)
+        // 이번 주 예산이 없으면 목표도 표시하지 않음
+        if (currentBudgetId <= 0 || goals == null)
             return;
 
         foreach (SpendingSpecialGoalResponse response in goals)
         {
             if (response == null || response.Id <= 0)
-            {
-                Debug.LogWarning(
-                    "소비 목표 ID가 없어 UI 항목을 생성하지 않습니다."
-                );
                 continue;
-            }
+
+            // 이번 주 예산에 속하지 않는 목표는 제외
+            if (response.BudgetId != currentBudgetId)
+                continue;
 
             CreateMainGoalItem(
                 new CreateSpendingSpecialGoalData
@@ -325,6 +332,7 @@ public class SpendListManager : MonoBehaviour
             );
         }
     }
+
 
     private void CreateMainGoalItem(
         CreateSpendingSpecialGoalData goal,
