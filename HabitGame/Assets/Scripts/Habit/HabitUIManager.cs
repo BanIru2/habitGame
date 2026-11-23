@@ -1,11 +1,17 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 public class HabitUIManager : SceneSingleton<HabitUIManager>
 {
     [Header("Top Tab")]
     [SerializeField] private GameObject topTab;
+    [SerializeField] private Image lifeTabBackground;
+    [SerializeField] private Image spendTabBackground;
+    [SerializeField] private TMP_Text lifeTabLabel;
+    [SerializeField] private TMP_Text spendTabLabel;
 
     [Header("Main Panels")]
     [SerializeField] private GameObject lifePanel;
@@ -104,7 +110,16 @@ public class HabitUIManager : SceneSingleton<HabitUIManager>
             );
         }
     }
+    private void UpdateTabStyle(bool isLife)
+    {
+        Color brown = new Color32(73, 49, 39, 255);
 
+        lifeTabBackground.color = isLife ? Color.white : Color.clear;
+        spendTabBackground.color = isLife ? Color.clear : Color.white;
+
+        lifeTabLabel.color = isLife ? Color.white : brown;
+        spendTabLabel.color = isLife ? brown : Color.white;
+    }
     // =========================================
     // 생활습관 메인
     // =========================================
@@ -123,6 +138,8 @@ public class HabitUIManager : SceneSingleton<HabitUIManager>
         SetActive(spendHistoryPanel, false);
 
         SetActive(weeklyReportPanel, false);
+
+        UpdateTabStyle(true);
     }
 
     // =========================================
@@ -143,6 +160,8 @@ public class HabitUIManager : SceneSingleton<HabitUIManager>
         SetActive(spendHistoryPanel, false);
 
         SetActive(weeklyReportPanel, false);
+
+        UpdateTabStyle(false);
     }
 
     // =========================================

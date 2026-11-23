@@ -18,19 +18,13 @@ public class StreakRewardPopup : MonoBehaviour
     // Daily Streak 보상 팝업
     public void ShowDailyReward(int streakCount)
     {
-        Show(
-            $"{streakCount} Day Streak!",
-            "Trait Ticket x1"
-        );
+        Show($"{streakCount}일 연속 달성!", "특성 탐색권 1장");
     }
 
     // Weekly Streak 보상 팝업
     public void ShowWeeklyReward(int streakCount)
     {
-        Show(
-            $"{streakCount} Week Streak!",
-            "Trait Ticket x1"
-        );
+        Show($"{streakCount}주 연속 달성!", "특성 탐색권 1장");
     }
 
     private void Show(string streakMessage, string rewardMessage)

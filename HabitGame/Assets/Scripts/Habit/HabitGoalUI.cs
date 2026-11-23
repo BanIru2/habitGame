@@ -488,53 +488,10 @@ public class HabitGoalUI : MonoBehaviour
     // =========================================
     private string GetSelectedUnit()
     {
-        if (unitDropdown == null ||
-            unitDropdown.options == null ||
-            unitDropdown.options.Count == 0)
-        {
+        if (unitDropdown == null || unitDropdown.options.Count == 0)
             return "";
-        }
 
-        string selectedUnit =
-            unitDropdown.options[unitDropdown.value].text;
-
-        switch (selectedUnit)
-        {
-            case "회 (Count)":
-                return "회";
-
-            case "분 (Minute)":
-                return "분";
-
-            case "시간 (Hour)":
-                return "시간";
-
-            case "km (Distance)":
-                return "km";
-
-            case "m (Distance)":
-                return "m";
-
-            case "페이지 (Page)":
-                return "페이지";
-
-            case "잔 (Cup)":
-                return "잔";
-
-            case "ml (Volume)":
-                return "ml";
-
-            case "L (Volume)":
-                return "L";
-
-            default:
-                Debug.LogWarning(
-                    "등록되지 않은 Unit 옵션입니다: " +
-                    selectedUnit
-                );
-
-                return selectedUnit;
-        }
+        return unitDropdown.options[unitDropdown.value].text.Trim();
     }
 
     // =========================================

@@ -13,6 +13,9 @@ public class SpendTransactionManager : MonoBehaviour
     [SerializeField] private TMP_FontAsset itemFont;
     [SerializeField] private Sprite itemCardSprite;
 
+    [Header("시연용 설정")]
+    [SerializeField] private bool generateDemoOnRefresh = false;
+
     [Header("Test Data")]
     [SerializeField] private bool useTestData = false;
 
@@ -56,16 +59,26 @@ public class SpendTransactionManager : MonoBehaviour
                 $"거래내역 조회 성공 : {transactions.Count}건"
             );
 
-            foreach (SpendingTransactionResponse transaction
-                     in transactions)
+            DateTime today = DateTime.Today;
+            int daysSinceMonday = ((int)today.DayOfWeek + 6) % 7;
+            DateTime monday = today.AddDays(-daysSinceMonday);
+            DateTime nextMonday = monday.AddDays(7);
+            int visibleCount = 0;
+
+            foreach (var transaction in transactions)
             {
-                if (transaction == null)
+                if (transaction == null ||
+                    !DateTime.TryParse(transaction.RecordedAt, out DateTime recordedAt))
+                    continue;
+
+                if (recordedAt.Date < monday || recordedAt.Date >= nextMonday)
                     continue;
 
                 CreateTransactionItem(transaction);
+                visibleCount++;
             }
 
-            SetEmptyStateVisible(transactions.Count == 0);
+            SetEmptyStateVisible(visibleCount == 0);
         }
         catch (Exception e)
         {
@@ -433,6 +446,26 @@ public class SpendTransactionManager : MonoBehaviour
 
         try
         {
+            if (generateDemoOnRefresh)
+            {
+                string today = DateTime.Today.ToString("yyyy-MM-dd");
+
+                var request = new GenerateSpendingTestDataRequest
+                {
+                    Count = 1,
+                    StartDate = today,
+                    EndDate = today
+                };
+
+                var response = await ServiceRegistry.Instance.Spending
+                    .GenerateTestDataAsync(request);
+
+                if (response == null || !response.Success)
+                    throw new Exception("시연 거래 생성에 실패했습니다.");
+
+                Debug.Log($"시연 거래 {response.GeneratedCount}건 생성");
+            }
+
             await LoadTransactions(true);
 
             if (SpendBudgetManager.Instance != null)
