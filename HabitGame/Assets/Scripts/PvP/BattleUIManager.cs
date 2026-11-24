@@ -129,10 +129,12 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
     private Button equipSelectCloseButton;
     [SerializeField]
     private ItemSlotUI itemSlotPrefab;
+    [SerializeField]
+    private ScrollRect equipSelectScrollRect;
 
     private List<ItemSlotUI> itemSlotPool = new List<ItemSlotUI>();    // 아이템 슬롯 재사용을 위한 저장 풀
 
-    [Header("Ready/EquipeSelect/ItemDetailPopup")]
+    [Header("Ready/EquipSelect/ItemDetailPopup")]
     [SerializeField]
     private GameObject equipDetailPopup;
     [SerializeField]
@@ -806,6 +808,15 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
 
     private void OpenEquipSelectPanel(EquipmentType equipType)
     {
+        if (equipSelectScrollRect == null || equipSelectScrollRect.content == null)
+            return;
+
+        equipSelectScrollRect.StopMovement();
+
+        var position = equipSelectScrollRect.content.anchoredPosition;
+        position.y = 0f;
+        equipSelectScrollRect.content.anchoredPosition = position;
+
         equipSelectPanel.SetActive(true);
         switch (equipType)
         {
@@ -1274,6 +1285,8 @@ public class BattleUIManager : SceneSingleton<BattleUIManager>
         BattleManager.Instance.CancelBattle();
 
         ResetBattleResultState();
+
+        rankingboardManager.ResetScrollPosition();
 
         battlePanel.SetActive(false);
         readyPanel.SetActive(false);

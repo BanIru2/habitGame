@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using System.Threading.Tasks;
+using UnityEngine.UI;
 
 public class RankingboardManager : SceneSingleton<RankingboardManager>
 {
@@ -10,6 +11,8 @@ public class RankingboardManager : SceneSingleton<RankingboardManager>
 
     [SerializeField]
     private RankingRowUI rowPrefab;
+    [SerializeField]
+    private ScrollRect rankingScrollRect;
     [SerializeField]
     private Transform contentParent;
     // 최초로 생성해 둔 Row 프리팹 인스턴스를 저장해두고 사용하기 위한 리스트
@@ -115,6 +118,19 @@ public class RankingboardManager : SceneSingleton<RankingboardManager>
     {
         List<RankingEntryResponse> rankings = await ServiceRegistry.Instance.Ranking.GetRankingsAsync();
         ShowRankingBoard(rankings);
+    }
+
+    // 스크롤 뷰 최상단으로 재설정해주기 위한 메서드
+    public void ResetScrollPosition()
+    {
+        if (rankingScrollRect == null || rankingScrollRect.content == null)
+            return;
+
+        rankingScrollRect.StopMovement();
+
+        var position = rankingScrollRect.content.anchoredPosition;
+        position.y = 0f;
+        rankingScrollRect.content.anchoredPosition = position;
     }
 
     public async Task LoadRemainingCount()

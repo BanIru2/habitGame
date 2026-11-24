@@ -34,8 +34,11 @@ public class MainTabManager : SceneSingleton<MainTabManager>
     [SerializeField]
     private Button battleTapButton;
 
+    [Header("그 외")]
     [SerializeField]
     private RankingboardManager rankingboardManager;
+    [SerializeField]
+    private ScrollRect inventoryScrollRect;
 
     // 네비게이터 잠금 여부(탭 전환 또는 가챠 요청 중)
     private bool isNavigationLocked;
@@ -133,6 +136,16 @@ public class MainTabManager : SceneSingleton<MainTabManager>
         {
             await InventoryManager.Instance.OpenInventory();
             CloseAllTaps();
+
+            if (inventoryScrollRect == null || inventoryScrollRect.content == null)
+                return;
+
+            inventoryScrollRect.StopMovement();
+
+            var position = inventoryScrollRect.content.anchoredPosition;
+            position.y = 0f;
+            inventoryScrollRect.content.anchoredPosition = position;
+
             inventoryTap.SetActive(true);
         }
         catch (ApiException exception)
@@ -242,6 +255,7 @@ public class MainTabManager : SceneSingleton<MainTabManager>
             await LoadBattleTapDataAsync();
             BattleUIManager.Instance.SetMatchStartButtonInteractable(true);
             CloseAllTaps();
+            rankingboardManager.ResetScrollPosition();
             battleTap.SetActive(true);
         }
         catch (ApiException exception)

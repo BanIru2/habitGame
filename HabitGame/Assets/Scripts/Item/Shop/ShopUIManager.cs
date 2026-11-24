@@ -22,6 +22,7 @@ public class ShopUIManager : SceneSingleton<ShopUIManager>
     private Transform itemSlotParent;
     [SerializeField]
     private GameObject shopScrollView;
+    private ScrollRect shopScrollRect;
 
     private readonly List<ShopItemSlotUI> slotPool = new List<ShopItemSlotUI>();    // 아이템 정보를 출력할 슬롯 pool
 
@@ -72,8 +73,10 @@ public class ShopUIManager : SceneSingleton<ShopUIManager>
     {
         base.Awake();
 
+        shopScrollRect = shopScrollView.GetComponent<ScrollRect>();
+
         equipmentPanelButton.onClick.AddListener(ShowEquipmentItems);
-        consumablePanelButton.onClick.AddListener(ShowConsumableItems);
+        consumablePanelButton.onClick.AddListener(OnClickConsumableTab);
 
         buyButton.onClick.AddListener(BuyItem);
         closeButton.onClick.AddListener(ClosePopup);
@@ -217,12 +220,27 @@ public class ShopUIManager : SceneSingleton<ShopUIManager>
         gachaManager.OpenGachaPanel();
     }
 
-    // 소비 아이템 출력 (소비 버튼 onClick)
+    // 소비 아이템 출력
     public void ShowConsumableItems()
     {
         gachaManager.CloseGachaPanel();
         shopScrollView.SetActive(true);
         RenderItems(consumableItems);
+    }
+
+    // 소비 버튼 onClick용 래퍼함수
+    private void OnClickConsumableTab()
+    {
+        if (shopScrollRect == null || shopScrollRect.content == null)
+            return;
+
+        shopScrollRect.StopMovement();
+
+        var position = shopScrollRect.content.anchoredPosition;
+        position.y = 0f;
+        shopScrollRect.content.anchoredPosition = position;
+
+        ShowConsumableItems();
     }
 
     // 슬롯 온클릭 함수 - 상세 팝업 출력

@@ -15,6 +15,8 @@ public class TitleManager : MonoBehaviour
     private GameObject titlePopup;       // TitlePopup 오브젝트
     [SerializeField]
     private Transform slotParent;        // 슬롯을 소환할 Content transform
+    [SerializeField]
+    private ScrollRect titleScrollRect;
 
     [Header("보상 미리보기")]
     [SerializeField]
@@ -91,6 +93,17 @@ public class TitleManager : MonoBehaviour
 
     public async void OpenPopup()
     {
+        RectTransform content = titleScrollRect != null ? titleScrollRect.content : null;
+
+        if (content != null)
+        {
+            titleScrollRect.StopMovement();
+
+            Vector2 position = content.anchoredPosition;
+            position.y = 0f;
+            content.anchoredPosition = position;
+        }
+
         if (titlePopup != null)
         {
             titlePopup.SetActive(true);
@@ -99,11 +112,12 @@ public class TitleManager : MonoBehaviour
         if (useLocalTestData)
         {
             LoadLocalTestData();
-            RefreshTitleUI();
-            return;
+        }
+        else
+        {
+            await FetchTitlesFromServer();
         }
 
-        await FetchTitlesFromServer();
         RefreshTitleUI();
     }
 

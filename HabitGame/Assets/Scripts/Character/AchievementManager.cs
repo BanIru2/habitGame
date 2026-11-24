@@ -18,6 +18,8 @@ public class AchievementManager : MonoBehaviour
     private GameObject achievementPopup;
     [SerializeField]
     private Transform slotParent;
+    [SerializeField]
+    private ScrollRect achievementScrollRect;
 
     [Header("프리팹 & 데이터")]
     [SerializeField]
@@ -72,6 +74,23 @@ public class AchievementManager : MonoBehaviour
             }
         };
 
+        foreach (AchievementDataSO achievement in registeredAchievements)
+        {
+            if (achievement == null ||
+                string.IsNullOrEmpty(achievement.achievementId) ||
+                dummyResponses.Exists(r => r.AchievementId == achievement.achievementId))
+            {
+                continue;
+            }
+
+            dummyResponses.Add(new AchievementResponse
+            {
+                AchievementId = achievement.achievementId,
+                CurrentCount = 0,
+                IsClaimed = false
+            });
+        }
+
         // 데이터 세팅
         SetAchievementResponses(dummyResponses);
     }
@@ -79,17 +98,27 @@ public class AchievementManager : MonoBehaviour
 
     public async void OpenPopup()
     {
+        RectTransform content = achievementScrollRect != null ? achievementScrollRect.content : null;
+
+        if (content != null)
+        {
+            achievementScrollRect.StopMovement();
+
+            Vector2 position = content.anchoredPosition;
+            position.y = 0f;
+            content.anchoredPosition = position;
+        }
+
         achievementPopup.SetActive(true);
 
-        // 로컬 테스트 분기
         if (useLocalTestData)
         {
             LoadLocalTestData();
-            RefreshAchievementUI();
-            return;
         }
-
-        await FetchAchievementsFromServer();
+        else
+        {
+            await FetchAchievementsFromServer();
+        }
     }
 
     public void ClosePopup()

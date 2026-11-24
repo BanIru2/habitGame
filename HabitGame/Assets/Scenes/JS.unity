@@ -288,6 +288,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 6082744863022348844, guid: 545caedeb10c82c40bb4f0cfefc436ff, type: 3}
   m_PrefabInstance: {fileID: 4729249235596113407}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &119500398 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1847932933404744999, guid: 545caedeb10c82c40bb4f0cfefc436ff, type: 3}
+  m_PrefabInstance: {fileID: 4729249235596113407}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1aa08ab6e0800fa44ae55d278d1423e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &144595872 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2249356085651728362, guid: 545caedeb10c82c40bb4f0cfefc436ff, type: 3}
@@ -1141,6 +1152,7 @@ MonoBehaviour:
   itemSlotParent: {fileID: 418913261}
   equipSelectCloseButton: {fileID: 1780671012}
   itemSlotPrefab: {fileID: 700265050493897518, guid: ddcb4aff674ed9c45b825d1339194107, type: 3}
+  equipSelectScrollRect: {fileID: 1237498195}
   equipDetailPopup: {fileID: 909187077}
   equipIcon: {fileID: 313985563}
   equipNameText: {fileID: 1932451614}
@@ -1324,6 +1336,7 @@ MonoBehaviour:
   shopTapButton: {fileID: 150844959}
   battleTapButton: {fileID: 1197002679}
   rankingboardManager: {fileID: 1486303163}
+  inventoryScrollRect: {fileID: 1528844859}
 --- !u!4 &872861376
 Transform:
   m_ObjectHideFlags: 0
@@ -1607,6 +1620,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1237498195 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3227651483632885318, guid: 545caedeb10c82c40bb4f0cfefc436ff, type: 3}
+  m_PrefabInstance: {fileID: 4729249235596113407}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1aa08ab6e0800fa44ae55d278d1423e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!114 &1249660496 stripped
@@ -1968,6 +1992,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   titleManager: {fileID: 2019406967}
   rowPrefab: {fileID: 2439406585135329756, guid: 6b4f4937da6e46d46852aefbefd52ca4, type: 3}
+  rankingScrollRect: {fileID: 2127901735}
   contentParent: {fileID: 664154533}
   myRankingText: {fileID: 1400707391}
   myScoreText: {fileID: 1038287218}
@@ -1987,6 +2012,28 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1498659939 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8856295298420383066, guid: 545caedeb10c82c40bb4f0cfefc436ff, type: 3}
+  m_PrefabInstance: {fileID: 4729249235596113407}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1aa08ab6e0800fa44ae55d278d1423e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1528844859 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4269305099850976676, guid: 545caedeb10c82c40bb4f0cfefc436ff, type: 3}
+  m_PrefabInstance: {fileID: 4729249235596113407}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1aa08ab6e0800fa44ae55d278d1423e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &1540404654 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 5957464198408840189, guid: 545caedeb10c82c40bb4f0cfefc436ff, type: 3}
@@ -2602,6 +2649,7 @@ MonoBehaviour:
   closeButton: {fileID: 4729249235596113413}
   achievementPopup: {fileID: 4729249235596113414}
   slotParent: {fileID: 4729249235596113411}
+  achievementScrollRect: {fileID: 1498659939}
   slotPrefab: {fileID: 7454485908958210363, guid: 46f6991b3360cbd489a612886f390433, type: 3}
   registeredAchievements:
   - {fileID: 11400000, guid: 3320912635ebb0949bca3ed459908e27, type: 2}
@@ -2865,6 +2913,7 @@ MonoBehaviour:
   closeButton: {fileID: 872065969}
   titlePopup: {fileID: 1255014142}
   slotParent: {fileID: 10158831}
+  titleScrollRect: {fileID: 119500398}
   previewPopup: {fileID: 1404065939}
   previewTitleImage: {fileID: 909170956}
   previewTitleNameText: {fileID: 0}
@@ -2872,14 +2921,14 @@ MonoBehaviour:
   previewDimCloser: {fileID: 1404065938}
   slotPrefab: {fileID: 5455036929620854891, guid: 0410089586fc39f4993cd0803d32ec43, type: 3}
   registeredTitles:
-  - {fileID: 11400000, guid: 2a9c2ad0f08d6b44c9f9936bbe3b5d9c, type: 2}
-  - {fileID: 11400000, guid: 29d5fea2710cd9545af1dfa939773a13, type: 2}
   - {fileID: 11400000, guid: 9aa88167fe4735444aa88a0c9765a500, type: 2}
   - {fileID: 11400000, guid: 036af660a0347114f89e267c881f9649, type: 2}
-  - {fileID: 11400000, guid: 27f98a5b51cb79a48b22825034035d55, type: 2}
-  - {fileID: 11400000, guid: 43c22d5a67df9ad409ab0e3863c50433, type: 2}
   - {fileID: 11400000, guid: f872206f31f83bc45834c028d123bcef, type: 2}
   - {fileID: 11400000, guid: 3c17da320319aff4db6cbbdaad192a6e, type: 2}
+  - {fileID: 11400000, guid: 27f98a5b51cb79a48b22825034035d55, type: 2}
+  - {fileID: 11400000, guid: 43c22d5a67df9ad409ab0e3863c50433, type: 2}
+  - {fileID: 11400000, guid: 2a9c2ad0f08d6b44c9f9936bbe3b5d9c, type: 2}
+  - {fileID: 11400000, guid: 29d5fea2710cd9545af1dfa939773a13, type: 2}
   backendManager: {fileID: 596811455}
   useLocalTestData: 0
   equippedTitleId: 
@@ -2967,6 +3016,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &2127901735 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8322433935495536838, guid: 545caedeb10c82c40bb4f0cfefc436ff, type: 3}
+  m_PrefabInstance: {fileID: 4729249235596113407}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1aa08ab6e0800fa44ae55d278d1423e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!114 &2141974181 stripped
