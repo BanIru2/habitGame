@@ -42,6 +42,8 @@ public class MainTabManager : SceneSingleton<MainTabManager>
 
     // 네비게이터 잠금 여부(탭 전환 또는 가챠 요청 중)
     private bool isNavigationLocked;
+    // 현재 열린 탭 정보 저장
+    private GameObject currentTab;
 
     protected override void Awake()
     {
@@ -72,10 +74,12 @@ public class MainTabManager : SceneSingleton<MainTabManager>
         ShopUIManager.Instance.ClosePopups();
         shopTap.SetActive(false);
         battleTap.SetActive(false);
+        currentTab = null;
     }
 
     private async void OnClickHabitTap()
     {
+        if (currentTab == habitTap) return;
         if (!TryLockNavigation()) return;
 
         try
@@ -85,6 +89,7 @@ public class MainTabManager : SceneSingleton<MainTabManager>
 
             CloseAllTaps();
             habitTap.SetActive(true);
+            currentTab = habitTap;
         }
         catch (ApiException exception)
         {
@@ -104,6 +109,7 @@ public class MainTabManager : SceneSingleton<MainTabManager>
 
     private async void OnClickCharacterTap()
     {
+        if (currentTab == characterTap) return;
         if (!TryLockNavigation()) return;
 
         try
@@ -111,6 +117,7 @@ public class MainTabManager : SceneSingleton<MainTabManager>
             await CharacterUIManager.Instance.OpenCharacterTap();
             CloseAllTaps();
             characterTap.SetActive(true);
+            currentTab = characterTap;
         }
         catch (ApiException exception)
         {
@@ -166,6 +173,7 @@ public class MainTabManager : SceneSingleton<MainTabManager>
 
     private async void OnClickShopTap()
     {
+        if (currentTab == shopTap) return;
         if (!TryLockNavigation()) return;
 
         try
@@ -173,6 +181,7 @@ public class MainTabManager : SceneSingleton<MainTabManager>
             await ShopUIManager.Instance.OpenShop();
             CloseAllTaps();
             shopTap.SetActive(true);
+            currentTab = shopTap;
         }
         // 다중 에러 보따리가 날아온 경우 풀어헤치기
         catch (AggregateException aggEx)
@@ -248,6 +257,7 @@ public class MainTabManager : SceneSingleton<MainTabManager>
 
     private async void OnClickBattleTap()
     {
+        if (currentTab == battleTap) return;
         if (!TryLockNavigation()) return;
 
         try
@@ -257,6 +267,7 @@ public class MainTabManager : SceneSingleton<MainTabManager>
             CloseAllTaps();
             rankingboardManager.ResetScrollPosition();
             battleTap.SetActive(true);
+            currentTab = battleTap;
         }
         catch (ApiException exception)
         {
